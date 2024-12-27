@@ -76,4 +76,6 @@ public:
 	bool operator!=(const GameObject& p2) const;
 	void setLayer(int layer);
 	int getLayer();
+	std::string getTextOver();
+	void setTextOver(std::string textOver);
 };

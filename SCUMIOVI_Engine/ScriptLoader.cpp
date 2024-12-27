@@ -101,7 +101,7 @@ void ScriptLoader::loadAndRunGame() {
 	//});
 
 	//scummBarWalkableArea.addInteraction(walkVerb, pathEvent);
-	scummBarWalkableArea.addInteraction(walkVerb, moveToEvent);
+	scummBarWalkableArea.addVerbInteraction(walkVerb, moveToEvent);
 	scene.setWalkableArea(&scummBarWalkableArea);
 
 
@@ -110,7 +110,7 @@ void ScriptLoader::loadAndRunGame() {
 		WalkableArea* walkableArea = game.getScene().getWalkableArea();
 		if (walkableArea != nullptr) {
 			Vector2<> walkTo = walkableArea->getClosestPoint(clickPos);
-			walkableArea->interact(walkTo, game.getVerb("walk"));
+			walkableArea->interact(walkTo, game.getCurrentPlayer().getVerb("walk"));
 		}
 	}));
 
@@ -219,12 +219,19 @@ void ScriptLoader::loadAndRunGame() {
 	scene.addGameObject(door);
 	Verb openVerb = Verb("Open");
 	door.setDefaultVerb(&openVerb);
-	door.addInteraction(openVerb, Event([] {
+	door.addVerbInteraction(openVerb, Event([] {
 		Game& game = Game::getInstance();
 		game.getScene().getGameObject("door")->toggleVisibility();
 		}));
 
 	scummBarWalkableArea.showDebug();
+
+	Texture tableTexture = Texture("table", "table.png");
+	GameObject table = GameObject("table", Vector2<>(157, 115), Vector2<>(-1, -1), &tableTexture);
+	table.setLayer(1);
+	scene.addGameObject(table);
+
+	//player.setTextOver("This is a test.");
 
 	//game.setStartEvent(startEvent);
 

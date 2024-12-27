@@ -87,19 +87,6 @@ void Game::setEndEvent(Event event) {
 	endEvent = event;
 }
 
-Verb* Game::getVerb(std::string verbName) {
-	for (Verb& v : verbs) {
-		if (v.getName() == verbName) {
-			return &v;
-		}
-	}
-	return nullptr;
-}
-
-void Game::addVerb(Verb& verb) {
-	verbs.push_back(verb);
-}
-
 void Game::setDefaultClickEvent(Event event) {
 	defaultClickEvent = event;
 }

@@ -14,5 +14,5 @@ public:
 	bool onClick(Vector2<> clickPos);
 	bool interact(Vector2<> clickPos, Verb* verb);
 	void setDefaultVerb(Verb* verb);
-	void addInteraction(Verb& verb, Event event);
+	void addVerbInteraction(Verb& verb, Event event);
 };

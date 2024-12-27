@@ -2,6 +2,8 @@
 
 #include "Common.hpp"
 
+#include <SDL3_ttf/SDL_ttf.h>
+
 Renderer::Renderer() {
 	int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 	if (result < 0) {
@@ -44,6 +46,22 @@ void Renderer::applyCameraTransform(Camera& camera, Vector2<>& point) {
 void Renderer::applyScreenTransform(Vector2<>& point) {
 	point.x *= WINDOW_WIDTH / RENDER_WIDTH;
 	point.y *= WINDOW_HEIGHT / RENDER_HEIGHT;
+}
+
+// TODO: text class instead of string?
+void Renderer::renderText(Vector2<> position, std::string text) {
+	Vector2<> positionRounded = Vector2<>((int)position.x, (int)position.y);
+	TTF_Font* font = resourceManager.loadFont("arial.ttf", 32);
+
+	SDL_Color White = { 200, 200, 200 };
+	SDL_Surface* surface = TTF_RenderText_Solid(font, text.c_str(), 0, White);
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
+	SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+	SDL_DestroySurface(surface);
+	SDL_FRect dstRect{ positionRounded.x, positionRounded.y, 100, 20 };
+	SDL_RenderTexture(sdlRenderer, texture, NULL, &dstRect);
+	SDL_DestroyTexture(texture);
+
 }
 
 void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
@@ -120,6 +138,15 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 	}
 	//SDL_SetRenderDrawColor(sdlRenderer, 0xff * object->getPosition().x, 0xff * object->getPosition().x, 0xff * object->getPosition().x, 0xff);
 	//SDL_RenderFillRect(sdlRenderer, &dstRect);
+
+	if (gameObject.getTextOver() != "") {
+		Vector2<> textPosition = gameObject.getPosition() - Vector2<>(20,20);
+		applyCameraTransform(camera, textPosition);
+#ifndef PIXEL_PERFECT
+		applyScreenTransform(textPosition);
+#endif
+		renderText(textPosition, gameObject.getTextOver());
+	}
 }
 
 void Renderer::checkOverlaps(GameObject& gameObject1, GameObject& gameObject2) {

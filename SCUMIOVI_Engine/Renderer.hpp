@@ -21,6 +21,7 @@ class Renderer {
 	std::vector<std::array<GameObject*, 2>> currentlyOverlapping;
 	void renderGameObject(GameObject& gameObject, Camera& camera);
 	void checkOverlaps(GameObject& gameObject1, GameObject& gameObject2);
+	void renderText(Vector2<>, std::string);
 public:
 	Renderer();
 	~Renderer();

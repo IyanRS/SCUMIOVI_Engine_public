@@ -3,7 +3,7 @@
 #include "Game.hpp"
 
 Verb::Verb() {
-	Game::getInstance().addVerb(*this);
+	Game::getInstance().getCurrentPlayer().addVerb(*this); // TODO: maybe it shouldn't be added to the current player
 }
 
 Verb::Verb(std::string name, bool showInUI) {

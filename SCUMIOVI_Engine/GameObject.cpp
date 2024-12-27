@@ -8,7 +8,7 @@
 // TODO: avoid code repetition with camera moveTo
 #define SECONDS_TO_MILLISECONDS 1000
 #define UPDATE_FREQUENCY_MS 16 // ~60 times/second
-#define EPSILON 0.00001
+#define EPSILON 0.001f
 
 GameObject::GameObject(
 	std::string name,
@@ -166,8 +166,14 @@ void GameObject::moveToTask(Vector2<> targetPosition, float seconds, Event callb
 	moving = false;
 }
 
+#include <SDL3/SDL.h>
+
 void GameObject::moveTo(Vector2<> pos, float seconds, Event callback) {
-	if (pos.x == currentMovingTarget.x && pos.y == currentMovingTarget.y) {
+	if (pos.distanceTo(currentMovingTarget) < EPSILON) {
+		return;
+	}
+	if (position.distanceTo(pos) < EPSILON) {
+		callback.execute();
 		return;
 	}
 	if (seconds <= EPSILON) {
@@ -250,4 +256,13 @@ void GameObject::setLayer(int layer) {
 
 int GameObject::getLayer() {
 	return layer;
+}
+
+std::string GameObject::getTextOver() {
+	return textOver;
+}
+
+// TODO: Time, run in thread, callback event, etc.
+void GameObject::setTextOver(std::string textOver) {
+	this->textOver = textOver;
 }

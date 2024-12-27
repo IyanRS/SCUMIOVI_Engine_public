@@ -1,6 +1,12 @@
 #include "ResourceManager.hpp"
 #include <SDL3_image/SDL_image.h>
 
+#include <SDL3/SDL.h>
+
+ResourceManager::ResourceManager() {
+	TTF_Init();
+}
+
 //SDL_Surface* ResourceManager::loadTexture(Texture texture) {
 SDL_Texture* ResourceManager::loadTexture(SDL_Renderer* sdlRenderer, Texture& texture, SDL_FRect* srcRect) {
 	std::string textureFilePath = TEXTURES_DIRECTORY + texture.getSource();
@@ -70,4 +76,14 @@ ResourceManager::~ResourceManager() {
 	{
 		SDL_DestroyTexture(it->second);
 	}
+}
+
+// TODO: cache
+TTF_Font* ResourceManager::loadFont(std::string fontFile, int size) {
+	TTF_Font* font = TTF_OpenFont((FONTS_DIRECTORY + fontFile).c_str(), size);
+	if (font == nullptr) {
+		SDL_Log("TTF_OpenFont() Error: %s", SDL_GetError());
+		return nullptr;
+	}
+	return font;
 }

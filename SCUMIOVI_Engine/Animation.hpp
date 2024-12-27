@@ -6,7 +6,7 @@
 
 class Animation {
 	std::vector<Texture> frames;
-	int frameRate = 9;
+	int frameRate = 7; // TODO: frameRate and loop in constructor
 	bool loop = true;
 	std::string name;
 public:

@@ -21,7 +21,7 @@ protected:
 	Player* currentPlayer;
 	Event startEvent;
 	Event endEvent;
-	std::list<Verb> verbs;
+
 	Event defaultClickEvent; // When the player clicks but no object interaction is found
 public:
 	Game(Game& other) = delete;
@@ -38,7 +38,5 @@ public:
 	void changeScene(Scene& newScene);
 	void setStartEvent(Event);
 	void setEndEvent(Event);
-	void addVerb(Verb&);
-	Verb* getVerb(std::string);
 	void setDefaultClickEvent(Event);
 };

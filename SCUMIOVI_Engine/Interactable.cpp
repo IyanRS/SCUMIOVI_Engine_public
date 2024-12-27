@@ -4,7 +4,8 @@
 
 bool Interactable::onClick(Vector2<> clickPos) {
 	//interact(Game::getInstance().getCurrentPlayer().getSelected)
-	return interact(clickPos, nullptr); // TODO: get selected verb and interact using it
+	Game& game = Game::getInstance();
+	return interact(clickPos, game.getCurrentPlayer().getSelectedVerb());
 }
 
 bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
@@ -26,6 +27,6 @@ void Interactable::setDefaultVerb(Verb* verb) {
 	defaultVerb = verb;
 }
 
-void Interactable::addInteraction(Verb& verb, Event event) {
+void Interactable::addVerbInteraction(Verb& verb, Event event) {
 	interactions[verb.getName()] = event;
 }
