@@ -74,7 +74,7 @@ void Game::startGame() {
 		}
 
 		// Main loop
-		renderer.render(*Game::currentScene);
+		renderer.render(*currentScene, ui);
 	}
 	endEvent.execute();
 }

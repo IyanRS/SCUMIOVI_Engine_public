@@ -19,11 +19,17 @@ Renderer::Renderer() {
 	if (sdlRenderer == NULL) {
 		SDL_Log("SDL_CreateRenderer error %s", SDL_GetError());
 	}
+
+	textEngine = TTF_CreateRendererTextEngine(sdlRenderer);
+	if (textEngine == NULL) {
+		SDL_Log("TTF_CreateRendererTextEngine error %s", SDL_GetError());
+	}
 }
 
 Renderer::~Renderer() {
 	SDL_DestroyRenderer(sdlRenderer);
 	SDL_DestroyWindow(sdlWindow);
+	TTF_DestroyRendererTextEngine(textEngine);
 }
 
 void Renderer::applyCameraTransform(Camera& camera, SDL_FRect& rect) {
@@ -48,20 +54,44 @@ void Renderer::applyScreenTransform(Vector2<>& point) {
 	point.y *= WINDOW_HEIGHT / RENDER_HEIGHT;
 }
 
+void Renderer::renderUI(UI& ui) {
+	//for (Texture texture) {
+
+	//}
+}
+
 // TODO: text class instead of string?
 void Renderer::renderText(Vector2<> position, std::string text) {
 	Vector2<> positionRounded = Vector2<>((int)position.x, (int)position.y);
-	TTF_Font* font = resourceManager.loadFont("arial.ttf", 32);
+	TTF_Font* font = resourceManager.loadFont("arial.ttf", 12);
+
+	TTF_Text* ttfText = TTF_CreateText(textEngine, font, text.c_str(), text.size());
+
+	int w, h;
+
+	TTF_GetTextSize(ttfText, &w, &h);
+
+#ifndef PIXEL_PERFECT
+	Vector2<> textSize = Vector2<>(w, h);
+	applyScreenTransform(textSize);
+	w = textSize.x;
+	h = textSize.y;
+#endif
+
+	positionRounded.x -= w / 2;
+	positionRounded.y -= h;
 
 	SDL_Color White = { 200, 200, 200 };
 	SDL_Surface* surface = TTF_RenderText_Solid(font, text.c_str(), 0, White);
+
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
 	SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
-	SDL_DestroySurface(surface);
-	SDL_FRect dstRect{ positionRounded.x, positionRounded.y, 100, 20 };
+	SDL_FRect dstRect{ positionRounded.x, positionRounded.y, w, h};
 	SDL_RenderTexture(sdlRenderer, texture, NULL, &dstRect);
-	SDL_DestroyTexture(texture);
 
+	SDL_DestroySurface(surface);
+	SDL_DestroyTexture(texture);
+	TTF_DestroyText(ttfText);
 }
 
 void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
@@ -140,7 +170,7 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 	//SDL_RenderFillRect(sdlRenderer, &dstRect);
 
 	if (gameObject.getTextOver() != "") {
-		Vector2<> textPosition = gameObject.getPosition() - Vector2<>(20,20);
+		Vector2<> textPosition = gameObject.getPosition() + Vector2<>(gameObject.getSize().x/2, 0);
 		applyCameraTransform(camera, textPosition);
 #ifndef PIXEL_PERFECT
 		applyScreenTransform(textPosition);
@@ -182,7 +212,7 @@ void Renderer::checkOverlaps(GameObject& gameObject1, GameObject& gameObject2) {
 }
 
 
-void Renderer::renderDebugElements(Scene scene) {
+void Renderer::renderDebugElements(Scene& scene) {
 	SDL_SetRenderDrawColor(sdlRenderer, 0xff, 0, 0, 0xff);
 
 	for (Vector2<> point : scene.getDebugPoints()) {
@@ -205,7 +235,7 @@ void Renderer::renderDebugElements(Scene scene) {
 }
 
 
-void Renderer::render(Scene scene) {
+void Renderer::render(Scene& scene, UI& ui) {
 	// TODO: sort rendering by layers
 
 	auto now = std::chrono::system_clock::now();
@@ -251,6 +281,8 @@ void Renderer::render(Scene scene) {
 #ifdef _DEBUG
 	renderDebugElements(scene);
 #endif
+
+	renderUI(ui);
 
 #ifdef PIXEL_PERFECT
 	SDL_SetRenderTarget(sdlRenderer, NULL);

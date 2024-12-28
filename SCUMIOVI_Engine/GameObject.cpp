@@ -162,8 +162,9 @@ void GameObject::moveToTask(Vector2<> targetPosition, float seconds, Event callb
 		std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_FREQUENCY_MS));
 		position = position + moveStep;
 	}
-	callback.execute();
+	currentMovingTarget = Vector2<>(-INFINITY, -INFINITY);
 	moving = false;
+	callback.execute();
 }
 
 #include <SDL3/SDL.h>
@@ -265,4 +266,32 @@ std::string GameObject::getTextOver() {
 // TODO: Time, run in thread, callback event, etc.
 void GameObject::setTextOver(std::string textOver) {
 	this->textOver = textOver;
+}
+
+void GameObject::sayTask(std::string textOver, float seconds, Event callback) {
+	setTextOver(textOver);
+	std::this_thread::sleep_for(std::chrono::milliseconds((int)(seconds*1000)));
+	if (getTextOver() != textOver)
+		return;
+	setTextOver("");
+	callback.execute();
+}
+
+#define TEXT_SPEED 10.0f
+
+void GameObject::say(std::string textOver, float seconds, Event callback) {
+	if (seconds <= 0) { // Calculate seconds based on length
+		seconds = textOver.size() / TEXT_SPEED;
+	}
+	auto task = std::bind(&GameObject::sayTask, this, textOver, seconds, callback);
+	std::thread backgroundTask(task);
+	backgroundTask.detach();
+}
+
+void GameObject::setState(int state) {
+	this->state = state;
+}
+
+int GameObject::getState() {
+	return state;
 }

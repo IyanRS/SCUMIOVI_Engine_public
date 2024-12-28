@@ -10,6 +10,7 @@
 
 class ResourceManager {
 	std::map<std::string, SDL_Texture*> cachedSources;
+	std::map<std::string, TTF_Font*> cachedFonts;
 public:
 	ResourceManager();
 	//SDL_Surface* loadTexture(Texture texture);

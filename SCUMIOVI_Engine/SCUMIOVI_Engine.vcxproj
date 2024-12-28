@@ -157,6 +157,7 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="ScriptLoader.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="UI.cpp" />
     <ClCompile Include="Verb.cpp" />
     <ClCompile Include="WalkableArea.cpp" />
   </ItemGroup>
@@ -176,6 +177,7 @@
     <ClInclude Include="Scene.hpp" />
     <ClInclude Include="ScriptLoader.hpp" />
     <ClInclude Include="Texture.hpp" />
+    <ClInclude Include="UI.hpp" />
     <ClInclude Include="Vector2.hpp" />
     <ClInclude Include="Verb.hpp" />
     <ClInclude Include="WalkableArea.hpp" />

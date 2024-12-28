@@ -5,6 +5,7 @@
 #include "Player.hpp"
 #include "Renderer.hpp"
 #include "InputManager.hpp"
+#include "UI.hpp"
 
 class Game {
 	// Singleton
@@ -21,6 +22,7 @@ protected:
 	Player* currentPlayer;
 	Event startEvent;
 	Event endEvent;
+	UI ui;
 
 	Event defaultClickEvent; // When the player clicks but no object interaction is found
 public:

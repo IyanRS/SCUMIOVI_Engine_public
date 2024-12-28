@@ -9,6 +9,8 @@
 #include <vector>
 #include <array>
 
+#include "UI.hpp"
+
 class Renderer {
 	SDL_Window* sdlWindow;
 	SDL_Renderer* sdlRenderer;
@@ -22,10 +24,12 @@ class Renderer {
 	void renderGameObject(GameObject& gameObject, Camera& camera);
 	void checkOverlaps(GameObject& gameObject1, GameObject& gameObject2);
 	void renderText(Vector2<>, std::string);
+	void renderUI(UI& ui);
+	void renderDebugElements(Scene& scene);
+	TTF_TextEngine* textEngine;
 public:
 	Renderer();
 	~Renderer();
-	void render(Scene scene);
-	void renderDebugElements(Scene scene);
+	void render(Scene& scene, UI& ui);
 	//void render(UI ui);
 };

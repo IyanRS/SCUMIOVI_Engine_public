@@ -71,19 +71,34 @@ SDL_Texture* ResourceManager::loadTexture(SDL_Renderer* sdlRenderer, Texture& te
 
 ResourceManager::~ResourceManager() {
 	std::map<std::string, SDL_Texture*>::iterator it;
-
 	for (it = cachedSources.begin(); it != cachedSources.end(); it++)
 	{
 		SDL_DestroyTexture(it->second);
 	}
+
+	std::map<std::string, TTF_Font*>::iterator it1;
+	for (it1 = cachedFonts.begin(); it1 != cachedFonts.end(); it1++)
+	{
+		TTF_CloseFont(it1->second);
+	}
 }
 
-// TODO: cache
 TTF_Font* ResourceManager::loadFont(std::string fontFile, int size) {
-	TTF_Font* font = TTF_OpenFont((FONTS_DIRECTORY + fontFile).c_str(), size);
-	if (font == nullptr) {
-		SDL_Log("TTF_OpenFont() Error: %s", SDL_GetError());
-		return nullptr;
+
+	TTF_Font* font;
+
+	std::map<std::string, TTF_Font*>::iterator it = cachedFonts.find(fontFile + std::to_string(size));
+	if (it != cachedFonts.end()) {
+		font = it->second;
 	}
+	else {
+		font = TTF_OpenFont((FONTS_DIRECTORY + fontFile).c_str(), size);
+		if (font == nullptr) {
+			SDL_Log("TTF_OpenFont() Error: %s", SDL_GetError());
+			return nullptr;
+		}
+		cachedFonts[fontFile + std::to_string(size)] = font;
+	}
+	
 	return font;
 }

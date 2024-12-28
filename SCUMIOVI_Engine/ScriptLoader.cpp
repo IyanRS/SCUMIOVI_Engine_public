@@ -48,6 +48,17 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 	});
 }
 
+GameObject& ScriptLoader::addBackground(Scene& scene, std::string source, Vector2<int> size) {
+	// TODO: handle pointers memory
+	Texture* scummBarBackgroundTexture = new Texture("", "SCUMM_Bar.png", Vector2<int>(), Vector2<int>(640, 144));
+	GameObject* scummBarBackground = new GameObject("background", Vector2<>(0, 0), Vector2<>(-1, -1), scummBarBackgroundTexture);
+	scummBarBackground->setLayer(-100);
+	scene.addGameObject(*scummBarBackground);
+	return *scummBarBackground;
+}
+
+
+
 //Event ScriptLoader::pathEvent() {
 //
 //}
@@ -57,11 +68,7 @@ void ScriptLoader::loadAndRunGame() {
 
 	Scene scene;
 
-	Texture scummBarBackgroundTexture = Texture("", "SCUMM_Bar.png", Vector2<int>(), Vector2<int>(640, 144));
-	GameObject scummBarBackground = GameObject("background", Vector2<>(0, 0), Vector2<>(-1, -1), &scummBarBackgroundTexture);
-	scummBarBackground.setLayer(-100);
-
-	//gameObject.getClickEvent().addAction(test);
+	GameObject& background = addBackground(scene, "SCUMM_Bar.png");
 
 	WalkableArea scummBarWalkableArea = WalkableArea(
 		{
@@ -89,6 +96,8 @@ void ScriptLoader::loadAndRunGame() {
 
 	Verb walkVerb = Verb("walk");
 	scummBarWalkableArea.setDefaultVerb(&walkVerb);
+	scummBarWalkableArea.addVerbInteraction(walkVerb, moveToEvent);
+	scene.setWalkableArea(&scummBarWalkableArea);
 	
 	//Event walkEvent = createWalkEvent();
 	//Event pathEvent = Event([this] (Vector2<> clickPos) {
@@ -101,8 +110,6 @@ void ScriptLoader::loadAndRunGame() {
 	//});
 
 	//scummBarWalkableArea.addInteraction(walkVerb, pathEvent);
-	scummBarWalkableArea.addVerbInteraction(walkVerb, moveToEvent);
-	scene.setWalkableArea(&scummBarWalkableArea);
 
 
 	game.setDefaultClickEvent(Event([](Vector2<> clickPos) {
@@ -122,7 +129,6 @@ void ScriptLoader::loadAndRunGame() {
 	//}));
 
 
-	scene.addGameObject(scummBarBackground);
 	//scene.getCamera().moveTo(Vector2<>(320, 0), 0, Event());
 	game.changeScene(scene);
 
@@ -134,8 +140,6 @@ void ScriptLoader::loadAndRunGame() {
 	Texture idleDown = Texture("idleDown", "Guybrush.png", Vector2<int>(5, 7), Vector2<int>(32, 47));
 	Texture idleRight = Texture("idleRight", "Guybrush_walk_side.png", Vector2<int>(0, 0), Vector2<int>(32, 47));
 	Texture idleLeft = idleRight.getMirrored("idleLeft");
-
-
 
 	Player player = Player("Guybrush", Vector2<>(80, 80));
 	player.setLayer(0);
@@ -221,8 +225,19 @@ void ScriptLoader::loadAndRunGame() {
 	door.setDefaultVerb(&openVerb);
 	door.addVerbInteraction(openVerb, Event([] {
 		Game& game = Game::getInstance();
+		Player& player = game.getCurrentPlayer();
 		game.getScene().getGameObject("door")->toggleVisibility();
-		}));
+		if (game.getScene().getGameObject("door")->isVisible()) {
+			player.say("Abierta", 0, Event([] {
+				Game& game = Game::getInstance();
+				Player& player = game.getCurrentPlayer();
+				player.say("Prueba");
+			}));
+		}
+		else {
+			player.say("Cerrada");
+		}
+	}));
 
 	scummBarWalkableArea.showDebug();
 
@@ -231,7 +246,7 @@ void ScriptLoader::loadAndRunGame() {
 	table.setLayer(1);
 	scene.addGameObject(table);
 
-	//player.setTextOver("This is a test.");
+	player.setTextOver("This is a test.");
 
 	//game.setStartEvent(startEvent);
 

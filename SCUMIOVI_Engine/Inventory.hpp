@@ -7,6 +7,5 @@
 
 class Inventory {
 	std::list<GameObject> items;
-	Verb selectedVerb;
 	GameObject selectedItem;
 };

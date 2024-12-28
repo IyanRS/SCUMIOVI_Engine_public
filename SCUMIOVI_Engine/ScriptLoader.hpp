@@ -8,9 +8,11 @@ class ScriptLoader {
 	//Scene& currentScene;
 	//Camera& currentCamera;
 
-	// Useful events and scripts that could be reused in different games
+	// Useful events and functions that could be reused in different games
 	Event moveToEvent;
 	Event pathEvent;
+
+	GameObject& addBackground(Scene& scene, std::string source, Vector2<int> size = Vector2<int>());
 
 public:
 	ScriptLoader();

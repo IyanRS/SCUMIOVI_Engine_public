@@ -32,8 +32,10 @@ class GameObject : public Interactable {
 	std::string textOver;
 	Vector2<> currentMovingTarget = Vector2<>(-INFINITY, -INFINITY);
 	void moveToTask(Vector2<> position, float seconds = 0, Event callback = Event());
+	void sayTask(std::string textOver, float seconds, Event callback = Event());
 	bool moving = false;
 	bool visibility = true;
+	int state;
 public:
 	GameObject(std::string name,
 			   Vector2<> position = Vector2<>(), 
@@ -78,4 +80,7 @@ public:
 	int getLayer();
 	std::string getTextOver();
 	void setTextOver(std::string textOver);
+	void say(std::string textOver, float seconds = 0, Event callback = Event());
+	void setState(int state);
+	int getState();
 };
