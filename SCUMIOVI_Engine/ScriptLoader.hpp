@@ -11,8 +11,11 @@ class ScriptLoader {
 	// Useful events and functions that could be reused in different games
 	Event moveToEvent;
 	Event pathEvent;
+	Verb selectVerb;
+	Verb anyVerb; // Represents any possible verb to allow interactions that don't depend on selected verb
 
 	GameObject& addBackground(Scene& scene, std::string source, Vector2<int> size = Vector2<int>());
+	GameObject& createUIVerbButton(std::string verbName, std::string displayedVerbName, Vector2<> position, Vector2<> size, Texture* verbBackground);
 
 public:
 	ScriptLoader();

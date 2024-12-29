@@ -15,4 +15,6 @@ public:
 	bool interact(Vector2<> clickPos, Verb* verb);
 	void setDefaultVerb(Verb* verb);
 	void addVerbInteraction(Verb& verb, Event event);
+	void removeInteraction(Verb& verb);
+	void removeInteraction(std::string verbName);
 };

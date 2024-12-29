@@ -9,17 +9,11 @@ ResourceManager::ResourceManager() {
 
 //SDL_Surface* ResourceManager::loadTexture(Texture texture) {
 SDL_Texture* ResourceManager::loadTexture(SDL_Renderer* sdlRenderer, Texture& texture, SDL_FRect* srcRect) {
+	if (texture.getSource() == "") {
+		return nullptr;
+	}
+
 	std::string textureFilePath = TEXTURES_DIRECTORY + texture.getSource();
-	//SDL_Surface* surface = IMG_Load(textureFilePath.c_str());
-	//if (surface == nullptr) {
-	//	SDL_Log("Could not load surface: %s.", SDL_GetError());
-	//	// TODO: Return some invalid texture placeholder
-	//}
-	//SDL_Texture* textureImg = SDL_CreateTextureFromSurface(sdlRenderer, surface);
-	//if (textureImg == nullptr) {
-	//	SDL_Log("Could not load texture: %s.", SDL_GetError());
-	//	// TODO: Return some invalid texture placeholder
-	//}
 
 	SDL_Texture* textureImg;
 

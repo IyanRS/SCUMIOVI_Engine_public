@@ -1,5 +1,7 @@
 #include "Player.hpp"
 
+#include "Game.hpp"
+
 void Player::disableMovement() {
     canPlayerMove = false;
 }
@@ -12,31 +14,15 @@ bool Player::canMove() {
     return canPlayerMove;
 }
 
-Verb* Player::getVerb(std::string verbName) {
-	for (Verb& v : verbs) {
-		if (v.getName() == verbName) {
-			return &v;
-		}
-	}
-	return nullptr;
-}
-
-void Player::addVerb(Verb& verb) {
-	verbs.push_back(verb);
-}
-
 void Player::setVerb(std::string verbName) {
-	for (Verb& v : verbs) {
-		if (v.getName() == verbName) {
-			selectedVerb = &v;
-		}
-	}
+	Game& game = Game::getInstance();
+	selectedVerb = game.getVerb(verbName);
 }
 
 void Player::setVerb(Verb* verb) {
 	selectedVerb = verb;
 }
 
-Verb* Player::getSelectedVerb() {
+Verb* Player::getVerb() {
 	return selectedVerb;
 }

@@ -19,14 +19,38 @@ Vector2<> InputManager::getClickPosition(Camera& camera) {
 	return Vector2<>(xMouse, yMouse);
 }
 
-bool InputManager::click(Scene& scene) {
+bool InputManager::checkObjectClicked(float xMouse, float yMouse, GameObject* object) {
+	if (object == nullptr) {
+		SDL_Log("Invalid gameObject.");
+	}
+
+	if (xMouse >= object->getPosition().x && xMouse < object->getPosition().x + object->getSize().x &&
+		yMouse >= object->getPosition().y && yMouse < object->getPosition().y + object->getSize().y) {
+		//SDL_Log("Object clicked");
+		if (object->onClick(Vector2<>(xMouse, yMouse))) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool InputManager::click(UI& ui, Scene& scene) {
 	float xMouse;
 	float yMouse;
 
 	SDL_GetMouseState(&xMouse, &yMouse);
 
+	// TODO: iterate in reverse order to prioritize clicks on top layers
+
+	// Transform click screen position to game position
 	xMouse /= WINDOW_WIDTH / RENDER_WIDTH;
 	yMouse /= WINDOW_HEIGHT / RENDER_HEIGHT;
+
+	for (GameObject& uiElement : ui.getUIElements()) {
+		if (checkObjectClicked(xMouse, yMouse, &uiElement)) {
+			return true;
+		}
+	}
 
 	Camera& camera = scene.getCamera();
 	xMouse += camera.getPosition().x;
@@ -34,17 +58,8 @@ bool InputManager::click(Scene& scene) {
 
 	SDL_Log("MouseX = %f, MouseY = %f", xMouse, yMouse);
 	for (GameObject* object : scene.getGameObjects()) {
-		if (object == nullptr) {
-			SDL_Log("Invalid gameObject.");
-		}
-		// TODO: sort by layers to prioritize clicks on top layers
-
-		if (xMouse >= object->getPosition().x && xMouse < object->getPosition().x + object->getSize().x &&
-			yMouse >= object->getPosition().y && yMouse < object->getPosition().y + object->getSize().y) {
-			//SDL_Log("Object clicked");
-			if (object->onClick(Vector2<>(xMouse, yMouse))) {
-				return true;
-			}
+		if (checkObjectClicked(xMouse, yMouse, object)) {
+			return true;
 		}
 	}
 	return false;

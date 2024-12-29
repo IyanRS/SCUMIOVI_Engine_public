@@ -2,8 +2,14 @@
 
 #include "Texture.hpp"
 
-#include <list>
+#include <vector>
+#include "GameObject.hpp"
 
 class UI {
-	std::list<Texture> textures;
+	std::vector<GameObject> uiElements; //TODO: Create Wrapper class for GameObject "UIElement"
+	bool visible = true;
+public:
+	std::vector<GameObject> getUIElements();
+	void addUIElement(GameObject& uiElement);
+	void toggleVisibility();
 };

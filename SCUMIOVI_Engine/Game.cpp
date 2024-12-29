@@ -21,20 +21,20 @@ Game& Game::getInstance() {
 }
 
 void Game::addPlayer(Player& player) {
-	Game::players.push_back(player);
+	Game::players.push_back(&player);
 }
 
 void Game::removePlayer(Player& player) {
-	Game::players.remove(player);
+	Game::players.remove(&player);
 }
 
-std::list<Player> Game::getPlayers() {
+std::list<Player*> Game::getPlayers() {
 	return Game::players;
 }
 
-Player Game::getPlayerByName(std::string name) {
-	for (Player p : Game::players) {
-		if (p.getName() == name) {
+Player* Game::getPlayerByName(std::string name) {
+	for (Player* p : Game::players) {
+		if (p->getName() == name) {
 			return p;
 		}
 	}
@@ -62,8 +62,17 @@ void Game::startGame() {
 				SDL_Log("SDL3 event quit");
 				break;
 			case SDL_EVENT_MOUSE_BUTTON_DOWN:
-				if (!inputManager.click(*currentScene)) {
+				// TODO: maybe move this click handling to inputManager
+				SDL_MouseButtonFlags mouseButtonFlags = SDL_GetMouseState(nullptr, nullptr);
+				switch (mouseButtonFlags) {
+				case SDL_BUTTON_LEFT:
 					defaultClickEvent.execute(inputManager.getClickPosition(currentScene->getCamera()));
+					break;
+				case 4: // TODO: should be SDL_BUTTON_RIGHT (3) SDL bug?
+					if (!inputManager.click(ui, *currentScene)) {
+						defaultClickEvent.execute(inputManager.getClickPosition(currentScene->getCamera()));
+					}
+					break;
 				}
 				//float xMouse;
 				//float yMouse;
@@ -89,4 +98,21 @@ void Game::setEndEvent(Event event) {
 
 void Game::setDefaultClickEvent(Event event) {
 	defaultClickEvent = event;
+}
+
+UI& Game::getUI() {
+	return ui;
+}
+
+Verb* Game::getVerb(std::string verbName) {
+	for (Verb& v : verbs) {
+		if (v.getName() == verbName) {
+			return &v;
+		}
+	}
+	return nullptr;
+}
+
+void Game::addVerb(Verb& verb) {
+	verbs.push_back(verb);
 }

@@ -3,6 +3,7 @@
 #include "Common.hpp"
 
 #include <SDL3_ttf/SDL_ttf.h>
+#include <thread>
 
 Renderer::Renderer() {
 	int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
@@ -24,6 +25,8 @@ Renderer::Renderer() {
 	if (textEngine == NULL) {
 		SDL_Log("TTF_CreateRendererTextEngine error %s", SDL_GetError());
 	}
+
+	lastRenderTime = std::chrono::system_clock::now();
 }
 
 Renderer::~Renderer() {
@@ -54,14 +57,19 @@ void Renderer::applyScreenTransform(Vector2<>& point) {
 	point.y *= WINDOW_HEIGHT / RENDER_HEIGHT;
 }
 
-void Renderer::renderUI(UI& ui) {
-	//for (Texture texture) {
+void Renderer::renderUIElement(GameObject& uiElement) {
+	Camera staticCamera = Camera(); // UI does not depend on camera
+	renderGameObject(uiElement, staticCamera);
+}
 
-	//}
+void Renderer::renderUI(UI& ui) {
+	for (GameObject uiElement : ui.getUIElements()) {
+		renderUIElement(uiElement);
+	}
 }
 
 // TODO: text class instead of string?
-void Renderer::renderText(Vector2<> position, std::string text) {
+void Renderer::renderText(Vector2<> position, std::string text, TextOverMode textOverMode) {
 	Vector2<> positionRounded = Vector2<>((int)position.x, (int)position.y);
 	TTF_Font* font = resourceManager.loadFont("arial.ttf", 12);
 
@@ -79,7 +87,10 @@ void Renderer::renderText(Vector2<> position, std::string text) {
 #endif
 
 	positionRounded.x -= w / 2;
-	positionRounded.y -= h;
+	if (textOverMode == TEXT_ON_TOP)
+		positionRounded.y -= h;
+	else if (textOverMode == TEXT_CENTERED)
+		positionRounded.y -= h/2;
 
 	SDL_Color White = { 200, 200, 200 };
 	SDL_Surface* surface = TTF_RenderText_Solid(font, text.c_str(), 0, White);
@@ -92,6 +103,48 @@ void Renderer::renderText(Vector2<> position, std::string text) {
 	SDL_DestroySurface(surface);
 	SDL_DestroyTexture(texture);
 	TTF_DestroyText(ttfText);
+}
+
+void Renderer::renderTexture(Vector2<> position, Vector2<> size, Texture* textureToRender, Camera& camera) {
+	SDL_FRect srcRect;
+	SDL_Texture* texture = resourceManager.loadTexture(sdlRenderer, *textureToRender, &srcRect);
+	if (textureToRender->getSource() == "" || texture == nullptr) {
+		// If there is no texture source file, it might be a solid color texture
+		int color[4];
+		textureToRender->getColor(color);
+		if (color[0] == -1 || color[1] == -1 || color[2] == -1 || color[3] == -1) {
+			SDL_Log("Invalid texture without source file");
+			return;
+		}
+
+		SDL_FRect colorRect = { position.x, position.y, size.x, size.y };
+
+		SDL_SetRenderDrawColor(sdlRenderer, color[0], color[1], color[2], color[3]);
+		SDL_RenderFillRect(sdlRenderer, &colorRect);
+		return;
+	}
+	SDL_FRect dstRect;
+	dstRect.x = position.x;
+	dstRect.y = position.y;
+	dstRect.w = size.x;
+	dstRect.h = size.y;
+	applyCameraTransform(camera, dstRect);
+#ifndef PIXEL_PERFECT
+	applyScreenTransform(dstRect);
+#endif
+	bool renderTextureSuccess = false;
+	if (textureToRender->isMirrored()) {
+		SDL_FPoint spriteCenter = { textureToRender->getSize().x / 2, textureToRender->getSize().y / 2 };
+		renderTextureSuccess = SDL_RenderTextureRotated(sdlRenderer, texture, &srcRect, &dstRect, 0, &spriteCenter, SDL_FLIP_HORIZONTAL);
+	}
+	else {
+		renderTextureSuccess = SDL_RenderTexture(sdlRenderer, texture, &srcRect, &dstRect);
+	}
+	if (!renderTextureSuccess) {
+		SDL_Log("Failed to render texture: %s.\nPath: %s%s", SDL_GetError(), TEXTURES_DIRECTORY, textureToRender->getSource().c_str());
+	}
+	//SDL_SetRenderDrawColor(sdlRenderer, 0xff * object->getPosition().x, 0xff * object->getPosition().x, 0xff * object->getPosition().x, 0xff);
+	//SDL_RenderFillRect(sdlRenderer, &dstRect);
 }
 
 void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
@@ -124,58 +177,28 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 		}
 	}
 	else {
-		// There is no animation, we render the texture
-		if (gameObject.getTexture() == nullptr) {
-			return;
-		}
+		// There is no animation, we render the static texture
 		textureToRender = gameObject.getTexture();
 	}
-	//SDL_Surface* surface = resourceManager.loadTexture(sdlRenderer, object.getTexture().getSource());
-	//SDL_Texture* texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
-	SDL_FRect srcRect;
-	SDL_Texture* texture = resourceManager.loadTexture(sdlRenderer, *textureToRender, &srcRect);
-	SDL_FRect dstRect;
-	dstRect.x = gameObject.getPosition().x;
-	dstRect.y = gameObject.getPosition().y;
-	//if (object->getSize().x == -1) {
-	//	dstRect.w = srcRect.w;
-	//}
-	//else {
-	//	dstRect.w = object->getSize().x;
-	//}
-	//if (object->getSize().y == -1) {
-	//	dstRect.h = srcRect.h;
-	//}
-	//else {
-	//	dstRect.h = object->getSize().y;
-	//}
-	dstRect.w = gameObject.getSize().x;
-	dstRect.h = gameObject.getSize().y;
-	applyCameraTransform(camera, dstRect);
-#ifndef PIXEL_PERFECT
-	applyScreenTransform(dstRect);
-#endif
-	bool renderTextureSuccess = false;
-	if (textureToRender->isMirrored()) {
-		SDL_FPoint spriteCenter = { textureToRender->getSize().x / 2, textureToRender->getSize().y / 2 };
-		renderTextureSuccess = SDL_RenderTextureRotated(sdlRenderer, texture, &srcRect, &dstRect, 0, &spriteCenter, SDL_FLIP_HORIZONTAL);
+	if (textureToRender != nullptr) {
+		renderTexture(gameObject.getPosition(), gameObject.getSize(), textureToRender, camera);
 	}
-	else {
-		renderTextureSuccess = SDL_RenderTexture(sdlRenderer, texture, &srcRect, &dstRect);
-	}
-	if (!renderTextureSuccess) {
-		SDL_Log("Failed to render texture: %s.\nPath: %s%s", SDL_GetError(), TEXTURES_DIRECTORY, textureToRender->getSource().c_str());
-	}
-	//SDL_SetRenderDrawColor(sdlRenderer, 0xff * object->getPosition().x, 0xff * object->getPosition().x, 0xff * object->getPosition().x, 0xff);
-	//SDL_RenderFillRect(sdlRenderer, &dstRect);
 
 	if (gameObject.getTextOver() != "") {
-		Vector2<> textPosition = gameObject.getPosition() + Vector2<>(gameObject.getSize().x/2, 0);
+		Vector2<> textPosition;
+		if (gameObject.getTextOverMode() == TEXT_ON_TOP) {
+			textPosition = gameObject.getPosition() + Vector2<>(gameObject.getSize().x / 2, 0);
+		}
+		else if (gameObject.getTextOverMode() == TEXT_CENTERED) {
+			textPosition = gameObject.getPosition() + Vector2<>(gameObject.getSize().x / 2, gameObject.getSize().y / 2);
+		}
+		
+		//Vector2<> textPosition = gameObject.getPosition() + Vector2<>(gameObject.getSize().x / 2, 0);
 		applyCameraTransform(camera, textPosition);
 #ifndef PIXEL_PERFECT
 		applyScreenTransform(textPosition);
 #endif
-		renderText(textPosition, gameObject.getTextOver());
+		renderText(textPosition, gameObject.getTextOver(), gameObject.getTextOverMode());
 	}
 }
 
@@ -236,20 +259,17 @@ void Renderer::renderDebugElements(Scene& scene) {
 
 
 void Renderer::render(Scene& scene, UI& ui) {
-	// TODO: sort rendering by layers
+
 
 	auto now = std::chrono::system_clock::now();
 	auto lastRenderTimeDiff = now - lastRenderTime;
 	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(lastRenderTimeDiff).count();
 
-	if (ms < 1000 / FPS) {
-		return;
+	auto msUntilNextFrame = (1000 / FPS) - ms;
+
+	if (msUntilNextFrame > 0) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(msUntilNextFrame));
 	}
-	lastRenderTime = now;
-	//if (lastRenderTime < )
-	//SDL_SetRenderDrawColor(sdlRenderer, 0, 0, 0x0, 0xff);
-	//SDL_RenderClear(sdlRenderer);
-	//Camera camera = scene.getCamera
 
 #ifdef PIXEL_PERFECT
 	SDL_Texture* lowResScreen = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_RGBA8888,
@@ -294,4 +314,5 @@ void Renderer::render(Scene& scene, UI& ui) {
 #ifdef PIXEL_PERFECT
 	SDL_DestroyTexture(lowResScreen);
 #endif
+	lastRenderTime = now;
 }

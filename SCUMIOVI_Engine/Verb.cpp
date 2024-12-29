@@ -3,12 +3,12 @@
 #include "Game.hpp"
 
 Verb::Verb() {
-	Game::getInstance().getCurrentPlayer().addVerb(*this); // TODO: maybe it shouldn't be added to the current player
+	Game::getInstance().addVerb(*this); // TODO: maybe it shouldn't be added to the current player
 }
 
-Verb::Verb(std::string name, bool showInUI) {
+Verb::Verb(std::string name) {
 	this->name = name;
-	this->showInUI = showInUI;
+	Game::getInstance().addVerb(*this);
 }
 
 std::string& Verb::getName() {

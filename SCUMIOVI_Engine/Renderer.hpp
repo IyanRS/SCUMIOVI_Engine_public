@@ -23,9 +23,11 @@ class Renderer {
 	std::vector<std::array<GameObject*, 2>> currentlyOverlapping;
 	void renderGameObject(GameObject& gameObject, Camera& camera);
 	void checkOverlaps(GameObject& gameObject1, GameObject& gameObject2);
-	void renderText(Vector2<>, std::string);
+	void renderText(Vector2<>, std::string, TextOverMode);
 	void renderUI(UI& ui);
+	void renderUIElement(GameObject& uiElement);
 	void renderDebugElements(Scene& scene);
+	void renderTexture(Vector2<> position, Vector2<> size, Texture* texture, Camera& camera);
 	TTF_TextEngine* textEngine;
 public:
 	Renderer();

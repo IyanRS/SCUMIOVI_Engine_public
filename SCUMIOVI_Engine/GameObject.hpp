@@ -15,6 +15,11 @@ class Scene;
 
 #include <string>
 
+enum TextOverMode {
+	TEXT_ON_TOP,
+	TEXT_CENTERED
+};
+
 class GameObject : public Interactable {
 	std::string name;
 	Vector2<> position;
@@ -36,6 +41,9 @@ class GameObject : public Interactable {
 	bool moving = false;
 	bool visibility = true;
 	int state;
+	TextOverMode textOverMode = TEXT_ON_TOP;
+	int dialogDefaultTextColor[4];
+	
 public:
 	GameObject(std::string name,
 			   Vector2<> position = Vector2<>(), 
@@ -83,4 +91,6 @@ public:
 	void say(std::string textOver, float seconds = 0, Event callback = Event());
 	void setState(int state);
 	int getState();
+	void setTextOverMode(TextOverMode textOverMode);
+	TextOverMode getTextOverMode();
 };

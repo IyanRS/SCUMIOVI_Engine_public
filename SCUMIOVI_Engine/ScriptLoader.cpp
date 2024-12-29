@@ -46,18 +46,34 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 
 
 	});
+
+	selectVerb = Verb("selectVerb");
+	anyVerb = Verb("any");
 }
 
 GameObject& ScriptLoader::addBackground(Scene& scene, std::string source, Vector2<int> size) {
 	// TODO: handle pointers memory
-	Texture* scummBarBackgroundTexture = new Texture("", "SCUMM_Bar.png", Vector2<int>(), Vector2<int>(640, 144));
+	Texture* scummBarBackgroundTexture = new Texture("", "SCUMM_Bar.png", Vector2<int>(), size);
 	GameObject* scummBarBackground = new GameObject("background", Vector2<>(0, 0), Vector2<>(-1, -1), scummBarBackgroundTexture);
 	scummBarBackground->setLayer(-100);
 	scene.addGameObject(*scummBarBackground);
 	return *scummBarBackground;
 }
 
-
+GameObject& ScriptLoader::createUIVerbButton(std::string verbName, std::string displayedVerbName, Vector2<> position, Vector2<> size, Texture* verbBackground) {
+	GameObject uiVerbText = GameObject(verbName + "Text", position, size, verbBackground);
+	uiVerbText.setTextOver(displayedVerbName);
+	uiVerbText.setDefaultVerb(&selectVerb);
+	uiVerbText.addVerbInteraction(anyVerb, Event([verbName] {
+		Game& game = Game::getInstance();
+		Player& player = game.getCurrentPlayer();
+		player.setVerb(verbName);
+		}));
+	uiVerbText.setTextOverMode(TEXT_CENTERED);
+	Game& game = Game::getInstance();
+	game.getUI().addUIElement(uiVerbText);
+	return uiVerbText;
+}
 
 //Event ScriptLoader::pathEvent() {
 //
@@ -68,7 +84,7 @@ void ScriptLoader::loadAndRunGame() {
 
 	Scene scene;
 
-	GameObject& background = addBackground(scene, "SCUMM_Bar.png");
+	GameObject& background = addBackground(scene, "SCUMM_Bar.png", Vector2<int>(640, 144));
 
 	WalkableArea scummBarWalkableArea = WalkableArea(
 		{
@@ -117,7 +133,7 @@ void ScriptLoader::loadAndRunGame() {
 		WalkableArea* walkableArea = game.getScene().getWalkableArea();
 		if (walkableArea != nullptr) {
 			Vector2<> walkTo = walkableArea->getClosestPoint(clickPos);
-			walkableArea->interact(walkTo, game.getCurrentPlayer().getVerb("walk"));
+			walkableArea->interact(walkTo, game.getVerb("walk"));
 		}
 	}));
 
@@ -221,13 +237,19 @@ void ScriptLoader::loadAndRunGame() {
 	GameObject door = GameObject("door", Vector2<>(32, 72), Vector2<>(-1, -1), &doorTexture);
 	door.setLayer(-1);
 	scene.addGameObject(door);
-	Verb openVerb = Verb("Open");
+	Verb openVerb = Verb("open");
 	door.setDefaultVerb(&openVerb);
 	door.addVerbInteraction(openVerb, Event([] {
 		Game& game = Game::getInstance();
 		Player& player = game.getCurrentPlayer();
-		game.getScene().getGameObject("door")->toggleVisibility();
-		if (game.getScene().getGameObject("door")->isVisible()) {
+		GameObject* door = game.getScene().getGameObject("door");
+		door->toggleVisibility();
+		if (door->isVisible()) {
+			door->addVerbInteraction(*game.getVerb("walk"), Event([] {
+				Game& game = Game::getInstance();
+				game.getCurrentPlayer().say("Salir");
+			}));
+
 			player.say("Abierta", 0, Event([] {
 				Game& game = Game::getInstance();
 				Player& player = game.getCurrentPlayer();
@@ -235,6 +257,7 @@ void ScriptLoader::loadAndRunGame() {
 			}));
 		}
 		else {
+			door->removeInteraction("walk");
 			player.say("Cerrada");
 		}
 	}));
@@ -246,9 +269,52 @@ void ScriptLoader::loadAndRunGame() {
 	table.setLayer(1);
 	scene.addGameObject(table);
 
-	player.setTextOver("This is a test.");
-
 	//game.setStartEvent(startEvent);
+
+	int blackColor[] = { 0x00, 0x00, 0x00, 0xff };
+	Texture blackImage = Texture("black", blackColor);
+	GameObject uiBackground = GameObject("uiBackground", Vector2<>(0, 144), Vector2<>(640, 56), &blackImage);
+
+	game.getUI().addUIElement(uiBackground);
+
+	/* Monkey island UI:
+	Verbs:						Inventory:
+	
+	Give	Pick up	Use		|	# # #
+	Open	Look at	Push	
+	Close	Talk to	Pull	|	# # #
+	*/
+
+	int verbBackgroundColor[] = { 0x16, 0, 0x16, 0xff };
+	Texture verbBackground = Texture("white", verbBackgroundColor);
+
+	// TODO: make a function to create the whole matrix directly
+	Verb giveVerb = Verb("give");
+	Verb pickupVerb = Verb("pickup");
+	Verb useVerb = Verb("use");
+	//Verb openVerb = Verb("open"); // Already defined before
+	Verb lookAtVerb = Verb("lookat");
+	Verb pushVerb = Verb("push");
+	Verb closeVerb = Verb("close");
+	Verb talkVerb = Verb("talk");
+	Verb pullVerb = Verb("pull");
+
+	createUIVerbButton("give", "Give", Vector2<>(2, 150), Vector2<>(32, 16), &verbBackground);
+	createUIVerbButton("pickup", "Pick up", Vector2<>(36, 150), Vector2<>(60, 16), &verbBackground);
+	createUIVerbButton("use", "Use", Vector2<>(98, 150), Vector2<>(32, 16), &verbBackground);
+	createUIVerbButton("open", "Open", Vector2<>(2, 168), Vector2<>(32, 16), &verbBackground);
+	createUIVerbButton("lookat", "Look at", Vector2<>(36, 168), Vector2<>(60, 16), &verbBackground);
+	createUIVerbButton("push", "Push", Vector2<>(98, 168), Vector2<>(32, 16), &verbBackground);
+	createUIVerbButton("close", "Close", Vector2<>(2, 186), Vector2<>(32, 16), &verbBackground);
+	createUIVerbButton("talk", "Talk to", Vector2<>(36, 186), Vector2<>(60, 16), &verbBackground);
+	createUIVerbButton("pull", "Pull", Vector2<>(98, 186), Vector2<>(32, 16), &verbBackground);
+
+	door.addVerbInteraction(pushVerb, Event([] {
+		Game& game = Game::getInstance();
+		game.getCurrentPlayer().say("Pushing door", 1.0f);
+	}));
+
+	player.setVerb("walk");
 
 	game.startGame();
 }

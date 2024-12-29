@@ -13,7 +13,7 @@ protected:
 	Game();
 	static Game* game_;
 
-	std::list<Player> players;
+	std::list<Player*> players;
 	bool gameIsRunning = true;
 	Renderer renderer;
 	InputManager inputManager;
@@ -22,6 +22,7 @@ protected:
 	Player* currentPlayer;
 	Event startEvent;
 	Event endEvent;
+	std::list<Verb> verbs;
 	UI ui;
 
 	Event defaultClickEvent; // When the player clicks but no object interaction is found
@@ -33,12 +34,15 @@ public:
 	void setCurrentPlayer(Player& player);
 	void addPlayer(Player& player);
 	void removePlayer(Player& player);
-	std::list<Player> getPlayers();
-	Player getPlayerByName(std::string name);
+	std::list<Player*> getPlayers();
+	Player* getPlayerByName(std::string name);
 	void startGame();
 	Scene& getScene();
 	void changeScene(Scene& newScene);
 	void setStartEvent(Event);
 	void setEndEvent(Event);
 	void setDefaultClickEvent(Event);
+	UI& getUI();
+	Verb* getVerb(std::string verbName);
+	void addVerb(Verb& verb);
 };

@@ -295,3 +295,11 @@ void GameObject::setState(int state) {
 int GameObject::getState() {
 	return state;
 }
+
+void GameObject::setTextOverMode(TextOverMode textOverMode) {
+	this->textOverMode = textOverMode;
+}
+
+TextOverMode GameObject::getTextOverMode() {
+	return textOverMode;
+}
