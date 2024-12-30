@@ -156,6 +156,8 @@
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="ScriptLoader.cpp" />
+    <ClCompile Include="Text.cpp" />
+    <ClCompile Include="Text.hpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="UI.cpp" />
     <ClCompile Include="Verb.cpp" />

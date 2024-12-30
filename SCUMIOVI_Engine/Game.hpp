@@ -32,6 +32,7 @@ protected:
 
 	Verb* rightClickVerb;
 	Verb* leftClickVerb;
+	Verb* defaultVerb;
 
 public:
 	Game(Game& other) = delete;
@@ -57,4 +58,7 @@ public:
 	void bindRightClickToVerb(std::string verbName);
 	void bindLeftClickToVerb(Verb* verb);
 	void bindLeftClickToVerb(std::string verbName);
+	void setDefaultVerb(Verb* verb);
+	void setDefaultVerb(std::string verbName);
+	void changeToDefaultVerb();
 };

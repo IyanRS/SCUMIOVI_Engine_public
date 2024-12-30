@@ -259,33 +259,42 @@ int GameObject::getLayer() {
 	return layer;
 }
 
-std::string GameObject::getTextOver() {
+Text& GameObject::getTextOver() {
 	return textOver;
 }
 
-// TODO: Time, run in thread, callback event, etc.
-void GameObject::setTextOver(std::string textOver) {
+void GameObject::setTextOver(Text& textOver) {
 	this->textOver = textOver;
 }
 
-void GameObject::sayTask(std::string textOver, float seconds, Event callback) {
+void GameObject::sayTask(Text& textOver, float seconds, Event callback) {
 	setTextOver(textOver);
 	std::this_thread::sleep_for(std::chrono::milliseconds((int)(seconds*1000)));
-	if (getTextOver() != textOver)
+	if (getTextOver().toString() != getTextOver().toString()) // If some other action has changed the text after the delay, we don't do anything
 		return;
-	setTextOver("");
+	Text emptyText = Text();
+	setTextOver(emptyText); // Otherwise we clear the text
 	callback.execute();
 }
 
 #define TEXT_SPEED 10.0f
 
-void GameObject::say(std::string textOver, float seconds, Event callback) {
+void GameObject::say(Text& textOver, float seconds, Event callback) {
 	if (seconds <= 0) { // Calculate seconds based on length
-		seconds = textOver.size() / TEXT_SPEED;
+		seconds = textOver.toString().size() / TEXT_SPEED;
 	}
 	auto task = std::bind(&GameObject::sayTask, this, textOver, seconds, callback);
 	std::thread backgroundTask(task);
 	backgroundTask.detach();
+}
+
+void GameObject::say(std::string text, float seconds, Event callback) {
+	//if (textFormat == nullptr) {
+	//	SDL_Log("Tried to say \"%s\" without a defined text format.", text);
+	//	return;
+	//}
+	Text textToSay = Text(text, textFormat);
+	say(textToSay, seconds, callback);
 }
 
 void GameObject::setState(int state) {
@@ -296,10 +305,6 @@ int GameObject::getState() {
 	return state;
 }
 
-void GameObject::setTextOverMode(TextOverMode textOverMode) {
-	this->textOverMode = textOverMode;
-}
-
-TextOverMode GameObject::getTextOverMode() {
-	return textOverMode;
+void GameObject::setTextFormat(Text& text) {
+	this->textFormat = text;
 }

@@ -75,16 +75,18 @@ GameObject& ScriptLoader::addBackground(Scene& scene, std::string source, Vector
 	return *background;
 }
 
+// TODO: text format as parameter
 GameObject& ScriptLoader::createUIVerbButton(std::string verbName, std::string displayedVerbName, Vector2<> position, Vector2<> size, Texture* verbBackground) {
 	GameObject uiVerbText = GameObject(verbName + "Text", position, size, verbBackground);
-	uiVerbText.setTextOver(displayedVerbName);
+	int color[4] = { 125, 44, 125, 0xff };
+	Text text = Text(displayedVerbName, 12, color, false, TEXT_CENTERED);
+	uiVerbText.setTextOver(text);
 	uiVerbText.setDefaultVerb(&selectVerb);
 	uiVerbText.addVerbInteraction(anyVerb, Event([verbName] {
 		Game& game = Game::getInstance();
 		Player& player = game.getCurrentPlayer();
 		player.setVerb(verbName);
-		}));
-	uiVerbText.setTextOverMode(TEXT_CENTERED);
+	}));
 	Game& game = Game::getInstance();
 	game.getUI().addUIElement(uiVerbText);
 	return uiVerbText;
@@ -124,11 +126,12 @@ void ScriptLoader::loadAndRunGame() {
 	);
 
 	Verb walkVerb = Verb("walk");
-	Event setWalkVerb = Event([] {
-		Game& game = Game::getInstance();
-		game.getCurrentPlayer().setVerb("walk");
-	});
-	walkVerb.setDefaultEvent(&setWalkVerb);
+	//Event setWalkVerb = Event([] {
+	//	Game& game = Game::getInstance();
+	//	game.getCurrentPlayer().setVerb("walk");
+	//});
+	//walkVerb.setDefaultEvent(&setWalkVerb);
+	game.setDefaultVerb(&walkVerb);
 	scummBarWalkableArea.setDefaultVerb(&walkVerb);
 	scummBarWalkableArea.addVerbInteraction(walkVerb, moveToEvent);
 	scene.setWalkableArea(&scummBarWalkableArea);
@@ -190,6 +193,11 @@ void ScriptLoader::loadAndRunGame() {
 	player.setTexture("walkLeft");
 
 	player.moveToScene(scene);
+
+	int textColor[] = { 0xff,0xff,0xff,0xff };
+	Text guybrushTextFormat = Text("", 12, textColor, true);
+	player.setTextFormat(guybrushTextFormat);
+
 	game.addPlayer(player);
 	game.setCurrentPlayer(player);
 
@@ -305,7 +313,7 @@ void ScriptLoader::loadAndRunGame() {
 	Close	Talk to	Pull	|	# # #
 	*/
 
-	int verbBackgroundColor[] = { 0x16, 0, 0x16, 0xff };
+	int verbBackgroundColor[] = { 20, 0, 20, 0xff };
 	Texture verbBackground = Texture("white", verbBackgroundColor);
 
 	// TODO: make a function to create the whole matrix directly
@@ -341,8 +349,12 @@ void ScriptLoader::loadAndRunGame() {
 	Texture customCursorTexture = Texture("", "cursor.png");
 	game.setCustomCursor(customCursorTexture, Vector2<>(-1, -1));
 
-	game.bindLeftClickToVerb("walk");
-	game.bindRightClickToVerb(nullptr);
+	game.bindLeftClickToVerb(nullptr);
+
+	Texture tableTexture2 = Texture("table2", "table2.png");
+	GameObject table2 = GameObject("table2", Vector2<>(20, 118), Vector2<>(-1, -1), &tableTexture2);
+	table2.setLayer(1);
+	scene.addGameObject(table2);
 
 	game.startGame();
 }

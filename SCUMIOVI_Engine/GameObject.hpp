@@ -14,11 +14,7 @@ class Scene;
 #include <vector>
 
 #include <string>
-
-enum TextOverMode {
-	TEXT_ON_TOP,
-	TEXT_CENTERED
-};
+#include "Text.hpp"
 
 class GameObject : public Interactable {
 	std::string name;
@@ -34,14 +30,14 @@ class GameObject : public Interactable {
 	//Event clickEvent;
 	Scene* currentScene;
 	std::map<GameObject*, Event> overlapEvents;
-	std::string textOver;
+	Text textOver;
+	Text textFormat;
 	Vector2<> currentMovingTarget = Vector2<>(-INFINITY, -INFINITY);
 	void moveToTask(Vector2<> position, float seconds = 0, Event callback = Event());
-	void sayTask(std::string textOver, float seconds, Event callback = Event());
+	void sayTask(Text& textOver, float seconds, Event callback = Event());
 	bool moving = false;
 	bool visibility = true;
 	int state;
-	TextOverMode textOverMode = TEXT_ON_TOP;
 	int dialogDefaultTextColor[4];
 	
 public:
@@ -86,11 +82,11 @@ public:
 	bool operator!=(const GameObject& p2) const;
 	void setLayer(int layer);
 	int getLayer();
-	std::string getTextOver();
-	void setTextOver(std::string textOver);
-	void say(std::string textOver, float seconds = 0, Event callback = Event());
+	Text& getTextOver();
+	void setTextOver(Text& textOver);
+	void say(Text& textOver, float seconds = 0, Event callback = Event());
+	void say(std::string text, float seconds = 0, Event callback = Event());
 	void setState(int state);
 	int getState();
-	void setTextOverMode(TextOverMode textOverMode);
-	TextOverMode getTextOverMode();
+	void setTextFormat(Text& text);
 };

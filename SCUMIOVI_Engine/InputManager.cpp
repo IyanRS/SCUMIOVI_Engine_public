@@ -38,14 +38,13 @@ bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
 
 	SDL_GetMouseState(&xMouse, &yMouse);
 
-	// TODO: iterate in reverse order to prioritize clicks on top layers
-
 	// Transform click screen position to game position
 	xMouse /= WINDOW_WIDTH / RENDER_WIDTH;
 	yMouse /= WINDOW_HEIGHT / RENDER_HEIGHT;
 
-	for (GameObject& uiElement : ui.getUIElements()) {
-		if (checkObjectClicked(xMouse, yMouse, &uiElement, verb)) {
+	std::vector uiElements = ui.getUIElements();
+	for (int i = uiElements.size()-1; i >= 0; i--) {
+		if (checkObjectClicked(xMouse, yMouse, &uiElements[i], verb)) {
 			return true;
 		}
 	}
@@ -54,9 +53,9 @@ bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
 	xMouse += camera.getPosition().x;
 	yMouse += camera.getPosition().y;
 
-	SDL_Log("MouseX = %f, MouseY = %f", xMouse, yMouse);
-	for (GameObject* object : scene.getGameObjects()) {
-		if (checkObjectClicked(xMouse, yMouse, object, verb)) {
+	std::vector gameObjects = scene.getGameObjects();
+	for (int i = gameObjects.size() - 1; i >= 0; i--) {
+		if (checkObjectClicked(xMouse, yMouse, gameObjects[i], verb)) {
 			return true;
 		}
 	}

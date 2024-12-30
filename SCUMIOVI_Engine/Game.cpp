@@ -66,11 +66,17 @@ void Game::startGame() {
 				SDL_MouseButtonFlags mouseButtonFlags = SDL_GetMouseState(nullptr, nullptr);
 				switch (mouseButtonFlags) {
 				case SDL_BUTTON_LEFT:
-					inputManager.click(ui, *currentScene, leftClickVerb);
+					if (leftClickVerb == nullptr)
+						inputManager.click(ui, *currentScene, currentPlayer->getVerb());
+					else
+						inputManager.click(ui, *currentScene, leftClickVerb);
 					//defaultClickEvent.execute(inputManager.getClickPosition(currentScene->getCamera()));
 					break;
 				case 4: // TODO: should be SDL_BUTTON_RIGHT (3) SDL bug?
-					inputManager.click(ui, *currentScene, rightClickVerb);
+					if (rightClickVerb == nullptr)
+						inputManager.click(ui, *currentScene, currentPlayer->getVerb());
+					else
+						inputManager.click(ui, *currentScene, rightClickVerb);
 					//if (!inputManager.click(ui, *currentScene)) {
 					//	defaultClickEvent.execute(inputManager.getClickPosition(currentScene->getCamera()));
 					//}
@@ -138,4 +144,18 @@ void Game::bindLeftClickToVerb(Verb* verb) {
 
 void Game::bindLeftClickToVerb(std::string verbName) {
 	leftClickVerb = getVerb(verbName);
+}
+
+void Game::setDefaultVerb(Verb* verb) {
+	defaultVerb = verb;
+}
+
+void Game::setDefaultVerb(std::string verbName) {
+	defaultVerb = getVerb(verbName);
+}
+
+void Game::changeToDefaultVerb() {
+	if (defaultVerb != nullptr) {
+		currentPlayer->setVerb(defaultVerb);
+	}
 }

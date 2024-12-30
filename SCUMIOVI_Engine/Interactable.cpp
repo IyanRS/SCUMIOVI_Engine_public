@@ -23,6 +23,8 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 			defaultEvent->execute();
 		}
 		it->second.execute(clickPos);
+		Game& game = Game::getInstance();
+		game.changeToDefaultVerb();
 		return true;
 	}
 	// TODO: handle invalid verbs, allow characters to say predefined lines such as "I can't do that".
@@ -36,6 +38,8 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 			return true;
 		}
 	}
+	Game& game = Game::getInstance();
+	game.changeToDefaultVerb();
 	return false;
 }
 
