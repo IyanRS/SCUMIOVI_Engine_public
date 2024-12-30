@@ -22,10 +22,17 @@ protected:
 	Player* currentPlayer;
 	Event startEvent;
 	Event endEvent;
-	std::list<Verb> verbs;
+	std::list<Verb*> verbs;
 	UI ui;
 
+	Texture* customCursorTexture;
+	Vector2<> customCursorHotspot;
+
 	Event defaultClickEvent; // When the player clicks but no object interaction is found
+
+	Verb* rightClickVerb;
+	Verb* leftClickVerb;
+
 public:
 	Game(Game& other) = delete;
 	void operator=(const Game&) = delete;
@@ -44,5 +51,10 @@ public:
 	void setDefaultClickEvent(Event);
 	UI& getUI();
 	Verb* getVerb(std::string verbName);
-	void addVerb(Verb& verb);
+	void addVerb(Verb* verb);
+	void setCustomCursor(Texture& customCursorTexture, Vector2<> hotspot);
+	void bindRightClickToVerb(Verb* verb);
+	void bindRightClickToVerb(std::string verbName);
+	void bindLeftClickToVerb(Verb* verb);
+	void bindLeftClickToVerb(std::string verbName);
 };

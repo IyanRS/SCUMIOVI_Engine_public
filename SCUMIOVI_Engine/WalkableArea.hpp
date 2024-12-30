@@ -7,6 +7,7 @@
 #include <initializer_list>
 
 class WalkableArea : public Interactable {
+	// TODO: add hole polygons to represent more complex shapes
 	std::vector<Vector2<>> walkablePolygon;
 	std::vector<std::tuple<Vector2<>, float>> depthGradient;
 	Vector2<> getClosestPointToSegment(Vector2<>, Vector2<>, Vector2<>);

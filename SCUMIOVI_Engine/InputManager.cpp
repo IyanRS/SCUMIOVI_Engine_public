@@ -19,7 +19,7 @@ Vector2<> InputManager::getClickPosition(Camera& camera) {
 	return Vector2<>(xMouse, yMouse);
 }
 
-bool InputManager::checkObjectClicked(float xMouse, float yMouse, GameObject* object) {
+bool InputManager::checkObjectClicked(float xMouse, float yMouse, GameObject* object, Verb* verb) {
 	if (object == nullptr) {
 		SDL_Log("Invalid gameObject.");
 	}
@@ -27,14 +27,12 @@ bool InputManager::checkObjectClicked(float xMouse, float yMouse, GameObject* ob
 	if (xMouse >= object->getPosition().x && xMouse < object->getPosition().x + object->getSize().x &&
 		yMouse >= object->getPosition().y && yMouse < object->getPosition().y + object->getSize().y) {
 		//SDL_Log("Object clicked");
-		if (object->onClick(Vector2<>(xMouse, yMouse))) {
-			return true;
-		}
+		return object->onClick(Vector2<>(xMouse, yMouse), verb);
 	}
 	return false;
 }
 
-bool InputManager::click(UI& ui, Scene& scene) {
+bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
 	float xMouse;
 	float yMouse;
 
@@ -47,7 +45,7 @@ bool InputManager::click(UI& ui, Scene& scene) {
 	yMouse /= WINDOW_HEIGHT / RENDER_HEIGHT;
 
 	for (GameObject& uiElement : ui.getUIElements()) {
-		if (checkObjectClicked(xMouse, yMouse, &uiElement)) {
+		if (checkObjectClicked(xMouse, yMouse, &uiElement, verb)) {
 			return true;
 		}
 	}
@@ -58,7 +56,7 @@ bool InputManager::click(UI& ui, Scene& scene) {
 
 	SDL_Log("MouseX = %f, MouseY = %f", xMouse, yMouse);
 	for (GameObject* object : scene.getGameObjects()) {
-		if (checkObjectClicked(xMouse, yMouse, object)) {
+		if (checkObjectClicked(xMouse, yMouse, object, verb)) {
 			return true;
 		}
 	}

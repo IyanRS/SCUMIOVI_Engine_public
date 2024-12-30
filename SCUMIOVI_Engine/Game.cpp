@@ -66,12 +66,14 @@ void Game::startGame() {
 				SDL_MouseButtonFlags mouseButtonFlags = SDL_GetMouseState(nullptr, nullptr);
 				switch (mouseButtonFlags) {
 				case SDL_BUTTON_LEFT:
-					defaultClickEvent.execute(inputManager.getClickPosition(currentScene->getCamera()));
+					inputManager.click(ui, *currentScene, leftClickVerb);
+					//defaultClickEvent.execute(inputManager.getClickPosition(currentScene->getCamera()));
 					break;
 				case 4: // TODO: should be SDL_BUTTON_RIGHT (3) SDL bug?
-					if (!inputManager.click(ui, *currentScene)) {
-						defaultClickEvent.execute(inputManager.getClickPosition(currentScene->getCamera()));
-					}
+					inputManager.click(ui, *currentScene, rightClickVerb);
+					//if (!inputManager.click(ui, *currentScene)) {
+					//	defaultClickEvent.execute(inputManager.getClickPosition(currentScene->getCamera()));
+					//}
 					break;
 				}
 				//float xMouse;
@@ -105,14 +107,35 @@ UI& Game::getUI() {
 }
 
 Verb* Game::getVerb(std::string verbName) {
-	for (Verb& v : verbs) {
-		if (v.getName() == verbName) {
-			return &v;
+	for (Verb* v : verbs) {
+		if (v->getName() == verbName) {
+			return v;
 		}
 	}
 	return nullptr;
 }
 
-void Game::addVerb(Verb& verb) {
+void Game::addVerb(Verb* verb) {
 	verbs.push_back(verb);
+}
+
+void Game::setCustomCursor(Texture& customCursorTexture, Vector2<> hotspot) {
+	renderer.setCustomMouse(customCursorTexture, hotspot);
+}
+
+// nullptr binds the click to the selected verb
+void Game::bindRightClickToVerb(Verb* verb) {
+	rightClickVerb = verb;
+}
+
+void Game::bindRightClickToVerb(std::string verbName) {
+	rightClickVerb = getVerb(verbName);
+}
+
+void Game::bindLeftClickToVerb(Verb* verb) {
+	leftClickVerb = verb;
+}
+
+void Game::bindLeftClickToVerb(std::string verbName) {
+	leftClickVerb = getVerb(verbName);
 }

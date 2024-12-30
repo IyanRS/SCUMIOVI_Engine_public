@@ -29,9 +29,14 @@ class Renderer {
 	void renderDebugElements(Scene& scene);
 	void renderTexture(Vector2<> position, Vector2<> size, Texture* texture, Camera& camera);
 	TTF_TextEngine* textEngine;
+	SDL_Cursor* customCursor;
+
+	Texture* mouseTexture;
+	Vector2<> mouseHotspot;
 public:
 	Renderer();
 	~Renderer();
 	void render(Scene& scene, UI& ui);
+	void setCustomMouse(Texture& mouseTexture, Vector2<> mouseHotspot);
 	//void render(UI ui);
 };

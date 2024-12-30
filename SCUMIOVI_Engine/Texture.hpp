@@ -12,6 +12,9 @@ class Texture {
 	std::string name;
 	bool mirror = false;
 	int color[4] = {-1, -1, -1, -1};
+
+
+
 public:
 	Texture(std::string name = "", std::string source = "", Vector2<int> position = Vector2<int>(), Vector2<int> size = Vector2<int>(-1, -1));
 	Texture(std::string name, int color[4], Vector2<int> position = Vector2<int>(), Vector2<int> size = Vector2<int>(-1, -1));

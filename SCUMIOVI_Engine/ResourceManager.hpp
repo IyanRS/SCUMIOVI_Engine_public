@@ -9,12 +9,14 @@
 #define FONTS_DIRECTORY "../assets/fonts/"
 
 class ResourceManager {
-	std::map<std::string, SDL_Texture*> cachedSources;
+	std::map<std::string, SDL_Texture*> cachedTextures;
+	std::map<std::string, SDL_Surface*> cachedSurfaces;
 	std::map<std::string, TTF_Font*> cachedFonts;
 public:
 	ResourceManager();
 	//SDL_Surface* loadTexture(Texture texture);
 	SDL_Texture* loadTexture(SDL_Renderer* sdlRenderer, Texture& texture, SDL_FRect* srcRect);
+	SDL_Surface* loadSurface(Texture& texture);
 	TTF_Font* loadFont(std::string fontName, int fontSize);
 	~ResourceManager();
 };

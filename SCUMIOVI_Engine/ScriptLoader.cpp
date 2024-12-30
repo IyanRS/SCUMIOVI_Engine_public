@@ -53,11 +53,26 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 
 GameObject& ScriptLoader::addBackground(Scene& scene, std::string source, Vector2<int> size) {
 	// TODO: handle pointers memory
-	Texture* scummBarBackgroundTexture = new Texture("", "SCUMM_Bar.png", Vector2<int>(), size);
-	GameObject* scummBarBackground = new GameObject("background", Vector2<>(0, 0), Vector2<>(-1, -1), scummBarBackgroundTexture);
-	scummBarBackground->setLayer(-100);
-	scene.addGameObject(*scummBarBackground);
-	return *scummBarBackground;
+	Texture* backgroundTexture = new Texture("", source, Vector2<int>(), size);
+	GameObject* background = new GameObject("background", Vector2<>(0, 0), Vector2<>(-1, -1), backgroundTexture);
+	background->setLayer(-100);
+
+	Game& game = Game::getInstance();
+	Verb* walkVerb = game.getVerb("walk");
+	if (walkVerb != nullptr) {
+		background->setDefaultVerb(walkVerb);
+		background->addVerbInteraction(*walkVerb, Event([](Vector2<> clickPos) {
+			Game& game = Game::getInstance();
+			WalkableArea* walkableArea = game.getScene().getWalkableArea();
+			if (walkableArea != nullptr) {
+				Vector2<> walkTo = walkableArea->getClosestPoint(clickPos);
+				walkableArea->interact(walkTo, game.getVerb("walk"));
+			}
+		}));
+	}
+
+	scene.addGameObject(*background);
+	return *background;
 }
 
 GameObject& ScriptLoader::createUIVerbButton(std::string verbName, std::string displayedVerbName, Vector2<> position, Vector2<> size, Texture* verbBackground) {
@@ -84,8 +99,6 @@ void ScriptLoader::loadAndRunGame() {
 
 	Scene scene;
 
-	GameObject& background = addBackground(scene, "SCUMM_Bar.png", Vector2<int>(640, 144));
-
 	WalkableArea scummBarWalkableArea = WalkableArea(
 		{
 		Vector2<>(100, 113),
@@ -111,10 +124,17 @@ void ScriptLoader::loadAndRunGame() {
 	);
 
 	Verb walkVerb = Verb("walk");
+	Event setWalkVerb = Event([] {
+		Game& game = Game::getInstance();
+		game.getCurrentPlayer().setVerb("walk");
+	});
+	walkVerb.setDefaultEvent(&setWalkVerb);
 	scummBarWalkableArea.setDefaultVerb(&walkVerb);
 	scummBarWalkableArea.addVerbInteraction(walkVerb, moveToEvent);
 	scene.setWalkableArea(&scummBarWalkableArea);
 	
+	GameObject& background = addBackground(scene, "SCUMM_Bar.png", Vector2<int>(640, 144));
+
 	//Event walkEvent = createWalkEvent();
 	//Event pathEvent = Event([this] (Vector2<> clickPos) {
 	//	Game& game = Game::getInstance();
@@ -128,14 +148,14 @@ void ScriptLoader::loadAndRunGame() {
 	//scummBarWalkableArea.addInteraction(walkVerb, pathEvent);
 
 
-	game.setDefaultClickEvent(Event([](Vector2<> clickPos) {
-		Game& game = Game::getInstance();
-		WalkableArea* walkableArea = game.getScene().getWalkableArea();
-		if (walkableArea != nullptr) {
-			Vector2<> walkTo = walkableArea->getClosestPoint(clickPos);
-			walkableArea->interact(walkTo, game.getVerb("walk"));
-		}
-	}));
+	//game.setDefaultClickEvent(Event([](Vector2<> clickPos) {
+	//	Game& game = Game::getInstance();
+	//	WalkableArea* walkableArea = game.getScene().getWalkableArea();
+	//	if (walkableArea != nullptr) {
+	//		Vector2<> walkTo = walkableArea->getClosestPoint(clickPos);
+	//		walkableArea->interact(walkTo, game.getVerb("walk"));
+	//	}
+	//}));
 
 
 	//scummBarWalkableArea.addInteraction(walkVerb, Event([](Vector2<> clickPos) {
@@ -309,12 +329,20 @@ void ScriptLoader::loadAndRunGame() {
 	createUIVerbButton("talk", "Talk to", Vector2<>(36, 186), Vector2<>(60, 16), &verbBackground);
 	createUIVerbButton("pull", "Pull", Vector2<>(98, 186), Vector2<>(32, 16), &verbBackground);
 
+
+
 	door.addVerbInteraction(pushVerb, Event([] {
 		Game& game = Game::getInstance();
 		game.getCurrentPlayer().say("Pushing door", 1.0f);
 	}));
 
 	player.setVerb("walk");
+
+	Texture customCursorTexture = Texture("", "cursor.png");
+	game.setCustomCursor(customCursorTexture, Vector2<>(-1, -1));
+
+	game.bindLeftClickToVerb("walk");
+	game.bindRightClickToVerb(nullptr);
 
 	game.startGame();
 }

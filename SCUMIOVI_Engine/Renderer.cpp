@@ -29,6 +29,8 @@ Renderer::Renderer() {
 	lastRenderTime = std::chrono::system_clock::now();
 }
 
+
+
 Renderer::~Renderer() {
 	SDL_DestroyRenderer(sdlRenderer);
 	SDL_DestroyWindow(sdlWindow);
@@ -118,6 +120,11 @@ void Renderer::renderTexture(Vector2<> position, Vector2<> size, Texture* textur
 		}
 
 		SDL_FRect colorRect = { position.x, position.y, size.x, size.y };
+
+		applyCameraTransform(camera, colorRect);
+#ifndef PIXEL_PERFECT
+		applyScreenTransform(colorRect);
+#endif
 
 		SDL_SetRenderDrawColor(sdlRenderer, color[0], color[1], color[2], color[3]);
 		SDL_RenderFillRect(sdlRenderer, &colorRect);
@@ -257,6 +264,40 @@ void Renderer::renderDebugElements(Scene& scene) {
 	}
 }
 
+void Renderer::setCustomMouse(Texture& mouseTexture, Vector2<> mouseHotspot) {
+	if (customCursor != nullptr) {
+		SDL_DestroyCursor(customCursor);
+	}
+
+	SDL_Surface* cursorSurface = resourceManager.loadSurface(mouseTexture); // Change to your cursor image path
+	if (!cursorSurface) {
+		SDL_Log("SDL_LoadBMP error %s", SDL_GetError());
+	}
+
+	// Vector2<>(-1,-1) is used to represent that the hotspot is in the center
+	if (mouseHotspot.x == -1) {
+		mouseHotspot.x = mouseTexture.getSize().x / 2;
+	}
+	if (mouseHotspot.y == -1) {
+		mouseHotspot.y = mouseTexture.getSize().y / 2;
+	}
+
+	this->mouseTexture = &mouseTexture;
+	this->mouseHotspot = mouseHotspot;
+
+#ifndef PIXEL_PERFECT_CURSOR
+	// Create a custom cursor from the surface
+	SDL_Cursor* customCursor = SDL_CreateColorCursor(cursorSurface, mouseHotspot.x, mouseHotspot.y); // (0, 0) is the hotspot
+	if (!customCursor) {
+		SDL_Log("SDL_CreateColorCursor error %s", SDL_GetError());
+	}
+
+	// Set the custom cursor
+	SDL_SetCursor(customCursor);
+#else
+	SDL_HideCursor();
+#endif
+}
 
 void Renderer::render(Scene& scene, UI& ui) {
 
@@ -303,6 +344,26 @@ void Renderer::render(Scene& scene, UI& ui) {
 #endif
 
 	renderUI(ui);
+
+#ifdef PIXEL_PERFECT_CURSOR
+	float xMouse;
+	float yMouse;
+	SDL_GetMouseState(&xMouse, &yMouse);
+
+	xMouse /= WINDOW_WIDTH / RENDER_WIDTH;
+	yMouse /= WINDOW_HEIGHT / RENDER_HEIGHT;
+
+	xMouse -= mouseHotspot.x;
+	yMouse -= mouseHotspot.y;
+
+	// Round position
+	xMouse = (int)xMouse;
+	yMouse = (int)yMouse;
+
+	Camera c; // Camera at 0,0 (Cursor doe not depend on camera position)
+	renderTexture(Vector2<>(xMouse, yMouse), Vector2<float>(mouseTexture->getSize().x, mouseTexture->getSize().y), mouseTexture, c);
+#endif
+
 
 #ifdef PIXEL_PERFECT
 	SDL_SetRenderTarget(sdlRenderer, NULL);

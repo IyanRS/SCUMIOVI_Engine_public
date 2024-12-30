@@ -7,6 +7,40 @@ ResourceManager::ResourceManager() {
 	TTF_Init();
 }
 
+SDL_Surface* ResourceManager::loadSurface(Texture& texture) {
+	if (texture.getSource() == "") {
+		return nullptr;
+	}
+
+	std::string textureFilePath = TEXTURES_DIRECTORY + texture.getSource();
+
+	SDL_Surface* surfaceImg;
+
+	std::map<std::string, SDL_Surface*>::iterator it = cachedSurfaces.find(texture.getSource());
+	if (it != cachedSurfaces.end()) {
+		surfaceImg = it->second;
+	}
+	else {
+		surfaceImg = IMG_Load(textureFilePath.c_str());
+		if (surfaceImg == nullptr) {
+			SDL_Log("Could not load texture: %s.", SDL_GetError());
+			// TODO: Return some invalid texture placeholder
+		}
+		cachedSurfaces[texture.getSource()] = surfaceImg;
+		int textureSizeX = texture.getSize().x;
+		int textureSizeY = texture.getSize().y;
+		if (textureSizeX == -1) {
+			textureSizeX = surfaceImg->w;
+		}
+		if (textureSizeY == -1) {
+			textureSizeY = surfaceImg->h;
+		}
+		texture.setSize(Vector2<int>(textureSizeX, textureSizeY));
+	}
+
+	return surfaceImg; //TODO: store and free memory on object destroy
+}
+
 //SDL_Surface* ResourceManager::loadTexture(Texture texture) {
 SDL_Texture* ResourceManager::loadTexture(SDL_Renderer* sdlRenderer, Texture& texture, SDL_FRect* srcRect) {
 	if (texture.getSource() == "") {
@@ -17,17 +51,18 @@ SDL_Texture* ResourceManager::loadTexture(SDL_Renderer* sdlRenderer, Texture& te
 
 	SDL_Texture* textureImg;
 
-	std::map<std::string, SDL_Texture*>::iterator it = cachedSources.find(texture.getSource());
-	if (it != cachedSources.end()) {
+	std::map<std::string, SDL_Texture*>::iterator it = cachedTextures.find(texture.getSource());
+	if (it != cachedTextures.end()) {
 		textureImg = it->second;
 	}
 	else {
 		textureImg = IMG_LoadTexture(sdlRenderer, textureFilePath.c_str());
 		if (textureImg == nullptr) {
 			SDL_Log("Could not load texture, a placeholder will be used: %s.", SDL_GetError());
-			// TODO: Return some invalid texture placeholder
+			return nullptr;
+			// TODO: Return some invalid texture placeholder instead?
 		}
-		cachedSources[texture.getSource()] = textureImg;
+		cachedTextures[texture.getSource()] = textureImg;
 		int textureSizeX = texture.getSize().x;
 		int textureSizeY = texture.getSize().y;
 		if (textureSizeX == -1) {
@@ -43,29 +78,15 @@ SDL_Texture* ResourceManager::loadTexture(SDL_Renderer* sdlRenderer, Texture& te
 
 	srcRect->x = texture.getPosition().x;
 	srcRect->y = texture.getPosition().y;
-	//if (texture.getSize().x == -1) { // -1 Means whole image width
-	//	srcRect->w = textureImg->w;
-	//}
-	//else {
-	//	srcRect->w = texture.getSize().x;
-	//}
-	//if (texture.getSize().y == -1) { // -1 Means whole image height
-	//	srcRect->h = textureImg->h;
-	//}
-	//else {
-	//	srcRect->h = texture.getSize().y;
-	//}
 	srcRect->w = texture.getSize().x;
 	srcRect->h = texture.getSize().y;
 
-	//SDL_SetTextureScaleMode(textureImg, SDL_SCALEMODE_NEAREST);
-
-	return textureImg; //TODO: store and free memory on object destroy
+	return textureImg;
 }
 
 ResourceManager::~ResourceManager() {
 	std::map<std::string, SDL_Texture*>::iterator it;
-	for (it = cachedSources.begin(); it != cachedSources.end(); it++)
+	for (it = cachedTextures.begin(); it != cachedTextures.end(); it++)
 	{
 		SDL_DestroyTexture(it->second);
 	}
@@ -74,6 +95,12 @@ ResourceManager::~ResourceManager() {
 	for (it1 = cachedFonts.begin(); it1 != cachedFonts.end(); it1++)
 	{
 		TTF_CloseFont(it1->second);
+	}
+
+	std::map<std::string, SDL_Surface*>::iterator it2;
+	for (it2 = cachedSurfaces.begin(); it2 != cachedSurfaces.end(); it2++)
+	{
+		SDL_DestroySurface(it2->second);
 	}
 }
 

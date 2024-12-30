@@ -2,10 +2,11 @@
 
 #include "Game.hpp"
 
-bool Interactable::onClick(Vector2<> clickPos) {
-	//interact(Game::getInstance().getCurrentPlayer().getSelected)
+bool Interactable::onClick(Vector2<> clickPos, Verb* verb) {
 	Game& game = Game::getInstance();
-	return interact(clickPos, game.getCurrentPlayer().getVerb());
+	if (verb == nullptr)
+		return interact(clickPos, game.getCurrentPlayer().getVerb());
+	return interact(clickPos, verb);
 }
 
 bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
@@ -17,6 +18,10 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 	}
 	std::map<std::string, Event>::iterator it = interactions.find(verb->getName());
 	if (it != interactions.end()) {
+		Event* defaultEvent = verb->getDefaultEvent();
+		if (defaultEvent != nullptr) {
+			defaultEvent->execute();
+		}
 		it->second.execute(clickPos);
 		return true;
 	}
@@ -36,6 +41,11 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 
 void Interactable::setDefaultVerb(Verb* verb) {
 	defaultVerb = verb;
+}
+
+void Interactable::setDefaultVerb(std::string verbName) {
+	Game& game = Game::getInstance();
+	defaultVerb = game.getVerb(verbName);
 }
 
 void Interactable::addVerbInteraction(Verb& verb, Event event) {
