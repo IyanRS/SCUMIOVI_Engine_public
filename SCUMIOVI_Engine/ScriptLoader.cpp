@@ -359,8 +359,6 @@ void ScriptLoader::loadAndRunGame() {
 	Verb talkVerb = Verb("talk", "Talk");
 	Verb pullVerb = Verb("pull", "Pull");
 
-	// TODO: displayName inside Verb class?
-
 	Event updateUI = Event([](EventInfo e) {
 		Verb* currentVerb = e.game.getCurrentPlayer().getVerb();
 		if (currentVerb != nullptr) {
