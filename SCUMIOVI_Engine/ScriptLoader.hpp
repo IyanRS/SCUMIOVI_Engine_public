@@ -15,7 +15,9 @@ class ScriptLoader {
 	Verb anyVerb; // Represents any possible verb to allow interactions that don't depend on selected verb
 
 	GameObject& addBackground(Scene& scene, std::string source, Vector2<int> size = Vector2<int>());
-	GameObject& createUIVerbButton(std::string verbName, std::string displayedVerbName, Vector2<> position, Vector2<> size, Texture* verbBackground);
+	GameObject& createUIVerbButton(Verb& verb,
+		Vector2<> position, Vector2<> size, Texture* verbBackground, Event& onUIUpdate);
+	void createUIVerbButtonMatrix(Vector2<> position, std::vector<std::vector<Verb>> verbs, Texture* verbBackground, Event& onUIUpdate);
 
 public:
 	ScriptLoader();

@@ -9,6 +9,12 @@ bool Interactable::onClick(Vector2<> clickPos, Verb* verb) {
 	return interact(clickPos, verb);
 }
 
+void Interactable::onMouseOver(Vector2<> mousePos) {
+	Game& game = Game::getInstance();
+	EventInfo e = EventInfo(mousePos, game.getCurrentPlayer(), *this);
+	mouseOverEvent.execute(e);
+}
+
 bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 	if (verb == nullptr) {
 		if (defaultVerb == nullptr) {
@@ -22,8 +28,10 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 		if (defaultEvent != nullptr) {
 			defaultEvent->execute();
 		}
-		it->second.execute(clickPos);
 		Game& game = Game::getInstance();
+		EventInfo e = EventInfo(clickPos, game.getCurrentPlayer(), *this);
+		it->second.execute(e);
+		// TODO: default before and after Events? (game.changeToDefaultVerb(); could be inside the event after)
 		game.changeToDefaultVerb();
 		return true;
 	}
@@ -34,7 +42,9 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 		}
 		it = interactions.find("any");
 		if (it != interactions.end()) {
-			it->second.execute(clickPos);
+			Game& game = Game::getInstance();
+			EventInfo e = EventInfo(clickPos, game.getCurrentPlayer(), *this);
+			it->second.execute(e);
 			return true;
 		}
 	}
@@ -62,4 +72,12 @@ void Interactable::removeInteraction(Verb& verb) {
 
 void Interactable::removeInteraction(std::string verbName) {
 	interactions.erase(verbName);
+}
+
+Event& Interactable::getMouseOverEvent() {
+	return mouseOverEvent;
+}
+
+void Interactable::setMouseOverEvent(Event event) {
+	mouseOverEvent = event;
 }

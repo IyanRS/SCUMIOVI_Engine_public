@@ -12,4 +12,5 @@ public:
 	std::vector<GameObject> getUIElements();
 	void addUIElement(GameObject& uiElement);
 	void toggleVisibility();
+	GameObject* getUIElement(std::string name);
 };

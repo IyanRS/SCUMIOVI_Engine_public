@@ -1,42 +1,39 @@
 #include "ScriptLoader.hpp"
 
 ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
-	moveToEvent = Event([](Vector2<> clickPos) {
-		Game& game = Game::getInstance();
-		Player& player = game.getCurrentPlayer();
-		if (!player.canMove()) {
+	moveToEvent = Event([](EventInfo e) {
+		if (!e.player.canMove()) {
 			return;
 		}
 		std::string textureAfterWalk;
-		if (clickPos.x < player.getPosition().x + player.getSize().x / 2) {
-			player.setAnimation("walkLeft");
-			player.setTexture("idleLeft");
+		if (e.clickPos.x < e.player.getPosition().x + e.player.getSize().x / 2) {
+			e.player.setAnimation("walkLeft");
+			e.player.setTexture("idleLeft");
 		}
 		else {
-			player.setAnimation("walkRight");
-			player.setTexture("idleRight");
+			e.player.setAnimation("walkRight");
+			e.player.setTexture("idleRight");
 		}
-		player.moveToAtSpeed(clickPos - (Vector2<>(player.getSize().x / 2, player.getSize().y * 0.85)), 100.0f, Event([] {
+		e.player.moveToAtSpeed(e.clickPos - (Vector2<>(e.player.getSize().x / 2, e.player.getSize().y * 0.85)), 100.0f, Event([] {
 			Game& game = Game::getInstance();
 			Player& player = game.getCurrentPlayer();
 			player.setAnimation("");
 		}));
 	});
 
-	pathEvent = Event([this](Vector2<> clickPos) {
-		Player& player = game.getCurrentPlayer();
-		WalkableArea* walkableArea = game.getScene().getWalkableArea();
-		Vector2<> playerFeetOffset = Vector2<>(player.getSize().x / 2, player.getSize().y * 0.85);
-		Vector2<> playerFeetPosition = player.getPosition() + playerFeetOffset;
-		std::vector<Vector2<>> path = walkableArea->findPath(playerFeetPosition, clickPos);
+	pathEvent = Event([](EventInfo e) {
+		WalkableArea* walkableArea = e.game.getScene().getWalkableArea();
+		Vector2<> playerFeetOffset = Vector2<>(e.player.getSize().x / 2, e.player.getSize().y * 0.85);
+		Vector2<> playerFeetPosition = e.player.getPosition() + playerFeetOffset;
+		std::vector<Vector2<>> path = walkableArea->findPath(playerFeetPosition, e.clickPos);
 		if (path.size() == 0)
 			return;
 		if (path.size() == 1) {
-			player.moveToAtSpeed(path[0] - playerFeetOffset, 100.0f);
+			e.player.moveToAtSpeed(path[0] - playerFeetOffset, 100.0f);
 			return;
 		}
 
-		player.moveToAtSpeed(path, 100.0f);
+		e.player.moveToAtSpeed(path, 100.0f);
 
 		//player.moveToAtSpeed(path[0], 100.0f, Event([path] {
 		//	Game& game = game.getInstance();
@@ -61,11 +58,11 @@ GameObject& ScriptLoader::addBackground(Scene& scene, std::string source, Vector
 	Verb* walkVerb = game.getVerb("walk");
 	if (walkVerb != nullptr) {
 		background->setDefaultVerb(walkVerb);
-		background->addVerbInteraction(*walkVerb, Event([](Vector2<> clickPos) {
+		background->addVerbInteraction(*walkVerb, Event([](EventInfo e) {
 			Game& game = Game::getInstance();
 			WalkableArea* walkableArea = game.getScene().getWalkableArea();
 			if (walkableArea != nullptr) {
-				Vector2<> walkTo = walkableArea->getClosestPoint(clickPos);
+				Vector2<> walkTo = walkableArea->getClosestPoint(e.clickPos);
 				walkableArea->interact(walkTo, game.getVerb("walk"));
 			}
 		}));
@@ -76,20 +73,57 @@ GameObject& ScriptLoader::addBackground(Scene& scene, std::string source, Vector
 }
 
 // TODO: text format as parameter
-GameObject& ScriptLoader::createUIVerbButton(std::string verbName, std::string displayedVerbName, Vector2<> position, Vector2<> size, Texture* verbBackground) {
-	GameObject uiVerbText = GameObject(verbName + "Text", position, size, verbBackground);
+GameObject& ScriptLoader::createUIVerbButton(Verb& verb, Vector2<> position, Vector2<> size, Texture* verbBackground, Event& onUIUpdate) {
+	GameObject* uiVerbText = new GameObject(verb.getName() + "Button", position, size, verbBackground);
 	int color[4] = { 125, 44, 125, 0xff };
-	Text text = Text(displayedVerbName, 12, color, false, TEXT_CENTERED);
-	uiVerbText.setTextOver(text);
-	uiVerbText.setDefaultVerb(&selectVerb);
-	uiVerbText.addVerbInteraction(anyVerb, Event([verbName] {
+	Text text = Text(verb.getDisplayName(), 11, color, false, TEXT_CENTERED);
+	uiVerbText->setTextOver(text);
+	uiVerbText->setDefaultVerb(&selectVerb);
+	std::string verbName = verb.getName();
+	uiVerbText->addVerbInteraction(anyVerb, Event([verbName] {
 		Game& game = Game::getInstance();
 		Player& player = game.getCurrentPlayer();
 		player.setVerb(verbName);
-	}));
+	}) + onUIUpdate);
 	Game& game = Game::getInstance();
-	game.getUI().addUIElement(uiVerbText);
-	return uiVerbText;
+
+	//Event highlightOnMouseHover = Event([](EventInfo e) {
+	//	e.game.getUI().getUIElement("uiCurrentVerbInfo")->setTextOver("This is a test");
+	//	});
+
+	//uiVerbText->setMouseOverEvent(highlightOnMouseHover);
+
+	game.getUI().addUIElement(*uiVerbText);
+
+	return *uiVerbText;
+}
+
+void ScriptLoader::createUIVerbButtonMatrix(Vector2<> position, std::vector<std::vector<Verb>> verbs, Texture* verbBackground, Event& onUIUpdate) {
+	int height = 14;
+	std::vector<int> columnLengths;
+
+	int columns = verbs[0].size();
+	int rows = verbs.size();
+
+	for (int i = 0; i < columns; i++) {
+		int maxLengthColumn = 0;
+		for (int j = 0; j < rows; j++) {
+			if (verbs[j][i].getDisplayName().length() > maxLengthColumn) {
+				maxLengthColumn = verbs[j][i].getDisplayName().length();
+			}
+		}
+		columnLengths.push_back(maxLengthColumn);
+	}
+	for (int i = 0; i < columns; i++) {
+		for (int j = 0; j < rows; j++) {
+			Vector2<> buttonPos = Vector2<>(position.x, position.y + (height + 2) * j);
+			for (int k = 0; k < i; k++) {
+				buttonPos.x += columnLengths[k] * 7;
+				buttonPos.x += 2;
+			}
+			createUIVerbButton(verbs[j][i], buttonPos, Vector2<>(columnLengths[i] * 7, height), verbBackground, onUIUpdate);
+		}
+	}
 }
 
 //Event ScriptLoader::pathEvent() {
@@ -125,12 +159,11 @@ void ScriptLoader::loadAndRunGame() {
 		}
 	);
 
-	Verb walkVerb = Verb("walk");
+	Verb walkVerb = Verb("walk", "Walk to");
 	//Event setWalkVerb = Event([] {
 	//	Game& game = Game::getInstance();
 	//	game.getCurrentPlayer().setVerb("walk");
 	//});
-	//walkVerb.setDefaultEvent(&setWalkVerb);
 	game.setDefaultVerb(&walkVerb);
 	scummBarWalkableArea.setDefaultVerb(&walkVerb);
 	scummBarWalkableArea.addVerbInteraction(walkVerb, moveToEvent);
@@ -265,7 +298,7 @@ void ScriptLoader::loadAndRunGame() {
 	GameObject door = GameObject("door", Vector2<>(32, 72), Vector2<>(-1, -1), &doorTexture);
 	door.setLayer(-1);
 	scene.addGameObject(door);
-	Verb openVerb = Verb("open");
+	Verb openVerb = Verb("open", "Open");
 	door.setDefaultVerb(&openVerb);
 	door.addVerbInteraction(openVerb, Event([] {
 		Game& game = Game::getInstance();
@@ -316,28 +349,39 @@ void ScriptLoader::loadAndRunGame() {
 	int verbBackgroundColor[] = { 20, 0, 20, 0xff };
 	Texture verbBackground = Texture("white", verbBackgroundColor);
 
-	// TODO: make a function to create the whole matrix directly
-	Verb giveVerb = Verb("give");
-	Verb pickupVerb = Verb("pickup");
-	Verb useVerb = Verb("use");
+	Verb giveVerb = Verb("give", "Give");
+	Verb pickupVerb = Verb("pickup", "Pick up");
+	Verb useVerb = Verb("use", "Use");
 	//Verb openVerb = Verb("open"); // Already defined before
-	Verb lookAtVerb = Verb("lookat");
-	Verb pushVerb = Verb("push");
-	Verb closeVerb = Verb("close");
-	Verb talkVerb = Verb("talk");
-	Verb pullVerb = Verb("pull");
+	Verb lookAtVerb = Verb("lookat", "Look at");
+	Verb pushVerb = Verb("push", "Push");
+	Verb closeVerb = Verb("close", "Close");
+	Verb talkVerb = Verb("talk", "Talk");
+	Verb pullVerb = Verb("pull", "Pull");
 
-	createUIVerbButton("give", "Give", Vector2<>(2, 150), Vector2<>(32, 16), &verbBackground);
-	createUIVerbButton("pickup", "Pick up", Vector2<>(36, 150), Vector2<>(60, 16), &verbBackground);
-	createUIVerbButton("use", "Use", Vector2<>(98, 150), Vector2<>(32, 16), &verbBackground);
-	createUIVerbButton("open", "Open", Vector2<>(2, 168), Vector2<>(32, 16), &verbBackground);
-	createUIVerbButton("lookat", "Look at", Vector2<>(36, 168), Vector2<>(60, 16), &verbBackground);
-	createUIVerbButton("push", "Push", Vector2<>(98, 168), Vector2<>(32, 16), &verbBackground);
-	createUIVerbButton("close", "Close", Vector2<>(2, 186), Vector2<>(32, 16), &verbBackground);
-	createUIVerbButton("talk", "Talk to", Vector2<>(36, 186), Vector2<>(60, 16), &verbBackground);
-	createUIVerbButton("pull", "Pull", Vector2<>(98, 186), Vector2<>(32, 16), &verbBackground);
+	// TODO: displayName inside Verb class?
 
+	Event updateUI = Event([](EventInfo e) {
+		Verb* currentVerb = e.game.getCurrentPlayer().getVerb();
+		if (currentVerb != nullptr) {
+			e.game.getUI().getUIElement("uiCurrentVerbInfo")->setTextOver(currentVerb->getDisplayName());
+		}
+	});
 
+	createUIVerbButtonMatrix(Vector2<>(2, 154), { 
+
+		{giveVerb, pickupVerb, useVerb}, 
+		{openVerb, lookAtVerb, pushVerb}, 
+		{closeVerb, talkVerb, pullVerb} }, 
+		
+		&verbBackground, updateUI);
+
+	GameObject uiCurrentVerbInfo = GameObject("uiCurrentVerbInfo", Vector2<>(160, 148), Vector2<>());
+	int color[4] = { 125, 44, 125, 0xff };
+	Text currentInfoText = Text("Test info", 11, color, false, TEXT_CENTERED);
+	uiCurrentVerbInfo.setTextOver(currentInfoText);
+	uiCurrentVerbInfo.setTextFormat(currentInfoText);
+	game.getUI().addUIElement(uiCurrentVerbInfo);
 
 	door.addVerbInteraction(pushVerb, Event([] {
 		Game& game = Game::getInstance();
@@ -345,6 +389,8 @@ void ScriptLoader::loadAndRunGame() {
 	}));
 
 	player.setVerb("walk");
+
+	walkVerb.setDefaultEvent(&updateUI);
 
 	Texture customCursorTexture = Texture("", "cursor.png");
 	game.setCustomCursor(customCursorTexture, Vector2<>(-1, -1));

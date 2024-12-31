@@ -5,7 +5,7 @@
 
 #include "Vector2.hpp"
 
-// TODO: avoid code repetition with camera moveTo
+// TODO: avoid code repetition with camera moveTo (class Movable?)
 #define SECONDS_TO_MILLISECONDS 1000
 #define UPDATE_FREQUENCY_MS 16 // ~60 times/second
 #define EPSILON 0.001f
@@ -124,10 +124,6 @@ void GameObject::setAnimation(std::string animationName) {
 //void GameObject::setAnimation(Animation& animation) {
 //	this->animation = animation;
 //}
-
-Event& GameObject::getMouseOverEvent() {
-	return mouseOverEvent;
-}
 
 //Event& GameObject::getClickEvent() {
 //	return clickEvent;
@@ -267,6 +263,11 @@ void GameObject::setTextOver(Text& textOver) {
 	this->textOver = textOver;
 }
 
+void GameObject::setTextOver(std::string text) {
+	Text newTextOver = Text(text, textFormat);
+	setTextOver(newTextOver);
+}
+
 void GameObject::sayTask(Text& textOver, float seconds, Event callback) {
 	setTextOver(textOver);
 	std::this_thread::sleep_for(std::chrono::milliseconds((int)(seconds*1000)));
@@ -289,10 +290,6 @@ void GameObject::say(Text& textOver, float seconds, Event callback) {
 }
 
 void GameObject::say(std::string text, float seconds, Event callback) {
-	//if (textFormat == nullptr) {
-	//	SDL_Log("Tried to say \"%s\" without a defined text format.", text);
-	//	return;
-	//}
 	Text textToSay = Text(text, textFormat);
 	say(textToSay, seconds, callback);
 }

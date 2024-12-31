@@ -1,27 +1,29 @@
 #pragma once
 
-#include <list>
+#include <vector>
 #include <functional>
 #include <variant>
 
 #include "Vector2.hpp"
+#include "EventInfo.hpp"
 
 const float EVENT_NOT_TRIGGERED_BY_CLICK = -INFINITY;
 
 class Event {
 	using Action = std::variant<
 		std::function<void()>,
-		std::function<void(Vector2<>)>
+		std::function<void(EventInfo)>
 	>;
 
-	//std::list<void*> actions;
-	std::list<Action> actions;
+	std::vector<Action> actions;
 
 public:
 	Event();
 	Event(Action action);
 	void execute();
-	void execute(Vector2<> clickPos);
+	void execute(EventInfo eventInfo);
 	//void addAction(void* action);
 	void addAction(Action action);
+
+	Event operator+(const Event& e2);
 };

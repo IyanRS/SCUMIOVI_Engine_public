@@ -38,6 +38,7 @@ Player* Game::getPlayerByName(std::string name) {
 			return p;
 		}
 	}
+	return nullptr;
 }
 
 Scene& Game::getScene() {
@@ -91,6 +92,7 @@ void Game::startGame() {
 		}
 
 		// Main loop
+		inputManager.mouseOver(ui, *currentScene);
 		renderer.render(*currentScene, ui);
 	}
 	endEvent.execute();

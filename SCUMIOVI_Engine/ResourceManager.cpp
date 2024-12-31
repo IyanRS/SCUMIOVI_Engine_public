@@ -24,7 +24,7 @@ SDL_Surface* ResourceManager::loadSurface(Texture& texture) {
 		surfaceImg = IMG_Load(textureFilePath.c_str());
 		if (surfaceImg == nullptr) {
 			SDL_Log("Could not load texture: %s.", SDL_GetError());
-			// TODO: Return some invalid texture placeholder
+			return nullptr;
 		}
 		cachedSurfaces[texture.getSource()] = surfaceImg;
 		int textureSizeX = texture.getSize().x;
@@ -60,7 +60,6 @@ SDL_Texture* ResourceManager::loadTexture(SDL_Renderer* sdlRenderer, Texture& te
 		if (textureImg == nullptr) {
 			SDL_Log("Could not load texture, a placeholder will be used: %s.", SDL_GetError());
 			return nullptr;
-			// TODO: Return some invalid texture placeholder instead?
 		}
 		cachedTextures[texture.getSource()] = textureImg;
 		int textureSizeX = texture.getSize().x;

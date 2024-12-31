@@ -8,17 +8,24 @@ Verb::Verb() {
 
 Verb::Verb(std::string name) {
 	this->name = name;
+	this->displayName = name;
 	Game::getInstance().addVerb(this);
+}
+
+Verb::Verb(std::string name, std::string displayName) {
+	this->name = name;
+	this->displayName = displayName;
+	Game::getInstance().addVerb(this);
+}
+
+std::string& Verb::getDisplayName() {
+	return displayName;
 }
 
 std::string& Verb::getName() {
 	return name;
 }
 
-/// <summary>
-/// Sets the default event that will always be executed before the object interaction when using the verb
-/// </summary>
-/// <param name="event"></param>
 void Verb::setDefaultEvent(Event* event) {
 	defaultEvent = event;
 }

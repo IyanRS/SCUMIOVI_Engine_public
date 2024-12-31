@@ -11,3 +11,12 @@ void UI::addUIElement(GameObject& uiElement) {
 void UI::toggleVisibility() {
 	visible = !visible;
 }
+
+GameObject* UI::getUIElement(std::string name) {
+	for (GameObject& element : uiElements) {
+		if (element.getName() == name) {
+			return &element;
+		}
+	}
+	return nullptr;
+}

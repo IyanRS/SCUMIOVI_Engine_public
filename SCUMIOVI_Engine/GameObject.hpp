@@ -26,7 +26,6 @@ class GameObject : public Interactable {
 	int layer = 0;
 	Vector2<> size;
 	bool interactable = true;
-	Event mouseOverEvent;
 	//Event clickEvent;
 	Scene* currentScene;
 	std::map<GameObject*, Event> overlapEvents;
@@ -64,7 +63,6 @@ public:
 	void setAnimation(std::string animatioName);
 	//Animation* getAnimationByName(std::string name);
 	//void setAnimation(Animation& animation);
-	Event& getMouseOverEvent();
 	//Event& getClickEvent();
 	void addOverlapEvent(GameObject* object, Event event);
 	std::map<GameObject*, Event>& getOverlapEvents();
@@ -83,6 +81,7 @@ public:
 	void setLayer(int layer);
 	int getLayer();
 	Text& getTextOver();
+	void setTextOver(std::string textOver);
 	void setTextOver(Text& textOver);
 	void say(Text& textOver, float seconds = 0, Event callback = Event());
 	void say(std::string text, float seconds = 0, Event callback = Event());

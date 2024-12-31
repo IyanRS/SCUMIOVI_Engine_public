@@ -5,14 +5,6 @@
 #define CAMERA_UPDATE_FREQUENCY_MS 16 // ~60 times/second
 #define EPSILON 0.00001
 
-//Camera::Camera() {
-//	position = Vector2<>();
-//	size = Vector2<>();
-//	////TODO: actual constructor with parameters, this ones are for testing
-//	//this->position = position;
-//	//this->size = size;
-//}
-
 void Camera::followObject() {
 	if (objectToFollow == nullptr) {
 		return;
