@@ -39,7 +39,16 @@ void InputManager::checkMouseOverObject(float xMouse, float yMouse, GameObject* 
 
 	if (xMouse >= object->getPosition().x && xMouse < object->getPosition().x + object->getSize().x &&
 		yMouse >= object->getPosition().y && yMouse < object->getPosition().y + object->getSize().y) {
-		return object->onMouseOver(Vector2<>(xMouse, yMouse));
+		if (!currentlyMouseOver.contains(object)) {
+			currentlyMouseOver.insert(object);
+			object->onMouseOver(Vector2<>(xMouse, yMouse));
+		}
+	}
+	else {
+		if (currentlyMouseOver.contains(object)) {
+			currentlyMouseOver.erase(object);
+			object->onMouseNotOver(Vector2<>(xMouse, yMouse));
+		}
 	}
 }
 
@@ -56,6 +65,16 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 	std::vector uiElements = ui.getUIElements();
 	for (int i = uiElements.size() - 1; i >= 0; i--) {
 		checkMouseOverObject(xMouse, yMouse, &uiElements[i]);
+	}
+
+	Camera& camera = scene.getCamera();
+	xMouse += camera.getPosition().x;
+	yMouse += camera.getPosition().y;
+
+	std::vector gameObjects = scene.getGameObjects();
+	for (int i = gameObjects.size() - 1; i >= 0; i--) {
+
+		checkMouseOverObject(xMouse, yMouse, gameObjects[i]);
 	}
 }
 

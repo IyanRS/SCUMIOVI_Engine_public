@@ -11,10 +11,13 @@ class Interactable {
 	std::map<std::string, Event> interactions;
 	Verb* defaultVerb;
 	Event mouseOverEvent;
+	Event mouseNotOverEvent;
 public:
 	bool onClick(Vector2<> clickPos, Verb* verb);
 	void onMouseOver(Vector2<> mousePos);
+	void onMouseNotOver(Vector2<> mousePos);
 	bool interact(Vector2<> clickPos, Verb* verb);
+	Verb* getDefaultVerb();
 	void setDefaultVerb(Verb* verb);
 	void setDefaultVerb(std::string verbName);
 	void addVerbInteraction(Verb& verb, Event event);
@@ -22,4 +25,6 @@ public:
 	void removeInteraction(std::string verbName);
 	Event& getMouseOverEvent();
 	void setMouseOverEvent(Event event);
+	Event& getMouseNotOverEvent();
+	void setMouseNotOverEvent(Event event);
 };

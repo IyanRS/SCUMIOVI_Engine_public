@@ -1,5 +1,7 @@
 #include "Texture.hpp"
 
+#include "ResourceManager.hpp"
+
 std::string& Texture::getSource() {
 	return source;
 }
@@ -9,7 +11,16 @@ Vector2<int> Texture::getPosition() {
 }
 
 Vector2<int> Texture::getSize() {
-	return size;
+	float sizeX = size.x;
+	float sizeY = size.y;
+	if (sizeX == -1 || sizeY == -1) {
+		ResourceManager& resourceManager = ResourceManager::getInstance();
+		Vector2<int> imageSize = resourceManager.getImageSize(getSource());
+		size.x = imageSize.x;
+		size.y = imageSize.y;
+		return imageSize;
+	}
+	return Vector2<int>(sizeX, sizeY);
 }
 
 void Texture::setSize(Vector2<int> newSize) {

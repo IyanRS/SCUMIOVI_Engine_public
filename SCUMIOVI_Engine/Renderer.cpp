@@ -5,7 +5,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <thread>
 
-Renderer::Renderer() {
+Renderer::Renderer() : resourceManager(ResourceManager::getInstance()) {
 	int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 	if (result < 0) {
 		SDL_Log("SDL_Init error %s", SDL_GetError());
@@ -89,6 +89,33 @@ void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, std:
 // TODO: refactor to avoid code repetition
 void Renderer::renderText(Vector2<> position, Text& text) {
 	TTF_Font* font = resourceManager.loadFont("arial.ttf", text.getSize());
+
+	// TODO: outline and shadow color
+
+	if (text.hasShadow()) {
+		TTF_SetFontOutline(font, 0);
+		TTF_Text* ttfTextOutline = TTF_CreateText(textEngine, font, text.toString().c_str(), text.toString().size());
+		int wOutline, hOutline;
+		Vector2<> positionRoundedOutline = Vector2<>((int)position.x, (int)position.y);
+		TTF_GetTextSize(ttfTextOutline, &wOutline, &hOutline);
+		positionRoundedOutline.x -= wOutline / 2;
+		if (text.getTextOverMode() == TEXT_ON_TOP)
+			positionRoundedOutline.y -= hOutline;
+		else if (text.getTextOverMode() == TEXT_CENTERED)
+			positionRoundedOutline.y -= hOutline / 2;
+		positionRoundedOutline.x += 1;
+		positionRoundedOutline.y += 1;
+#ifndef PIXEL_PERFECT
+		Vector2<> textSize = Vector2<>(wOutline, hOutline);
+		applyScreenTransform(textSize);
+		wOutline = textSize.x;
+		hOutline = textSize.y;
+#endif
+		int color[] = { 0x40, 0x0, 0x40 };
+		renderTTFText(positionRoundedOutline, Vector2<>(wOutline, hOutline), font, text.toString(), color);
+		TTF_SetFontOutline(font, 0);
+		TTF_DestroyText(ttfTextOutline);
+	}
 
 	if (text.hasOutline()) {
 		TTF_SetFontOutline(font, OUTLINE_SIZE);

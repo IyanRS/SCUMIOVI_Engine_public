@@ -130,7 +130,8 @@ void GameObject::setAnimation(std::string animationName) {
 //}
 
 void GameObject::moveToScene(Scene& scene) {
-	currentScene->removeGameObject(*this);
+	if (currentScene != nullptr)
+		currentScene->removeGameObject(*this);
 	scene.addGameObject(*this);
 }
 

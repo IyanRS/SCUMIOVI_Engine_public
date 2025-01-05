@@ -4,8 +4,10 @@
 
 bool Interactable::onClick(Vector2<> clickPos, Verb* verb) {
 	Game& game = Game::getInstance();
-	if (verb == nullptr)
+	if (verb->getName() == "selected")
 		return interact(clickPos, game.getCurrentPlayer().getVerb());
+	if (verb->getName() == "default")
+		return interact(clickPos, defaultVerb);
 	return interact(clickPos, verb);
 }
 
@@ -13,6 +15,12 @@ void Interactable::onMouseOver(Vector2<> mousePos) {
 	Game& game = Game::getInstance();
 	EventInfo e = EventInfo(mousePos, game.getCurrentPlayer(), *this);
 	mouseOverEvent.execute(e);
+}
+
+void Interactable::onMouseNotOver(Vector2<> mousePos) {
+	Game& game = Game::getInstance();
+	EventInfo e = EventInfo(mousePos, game.getCurrentPlayer(), *this);
+	mouseNotOverEvent.execute(e);
 }
 
 bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
@@ -57,6 +65,10 @@ void Interactable::setDefaultVerb(Verb* verb) {
 	defaultVerb = verb;
 }
 
+Verb* Interactable::getDefaultVerb() {
+	return defaultVerb;
+}
+
 void Interactable::setDefaultVerb(std::string verbName) {
 	Game& game = Game::getInstance();
 	defaultVerb = game.getVerb(verbName);
@@ -80,4 +92,12 @@ Event& Interactable::getMouseOverEvent() {
 
 void Interactable::setMouseOverEvent(Event event) {
 	mouseOverEvent = event;
+}
+
+Event& Interactable::getMouseNotOverEvent() {
+	return mouseNotOverEvent;
+}
+
+void Interactable::setMouseNotOverEvent(Event event) {
+	mouseNotOverEvent = event;
 }

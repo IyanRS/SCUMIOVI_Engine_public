@@ -1,6 +1,6 @@
 #include "UI.hpp"
 
-std::vector<GameObject> UI::getUIElements() {
+std::vector<GameObject>& UI::getUIElements() {
 	return uiElements;
 }
 

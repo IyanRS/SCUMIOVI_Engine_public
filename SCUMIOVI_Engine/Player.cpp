@@ -26,3 +26,7 @@ void Player::setVerb(Verb* verb) {
 Verb* Player::getVerb() {
 	return selectedVerb;
 }
+
+Inventory& Player::getInventory() {
+	return inventory;
+}

@@ -1,11 +1,15 @@
 #pragma once
 
-#include <list>
+#include <vector>
 
 #include "GameObject.hpp"
 #include "Verb.hpp"
 
 class Inventory {
-	std::list<GameObject> items;
-	GameObject selectedItem;
+	std::vector<GameObject> items;
+public:
+	void addItem(GameObject& item);
+	void removeItem(GameObject& item);
+	GameObject& getItemAt(int index);
+	std::vector<GameObject>& getItems();
 };

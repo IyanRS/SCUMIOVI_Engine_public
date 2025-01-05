@@ -8,13 +8,14 @@ Text::Text() {
 	textOverMode = TEXT_ON_TOP;
 }
 
-Text::Text(std::string textString, int size, int color[4], bool outline, TextOverMode textOverMode) {
+Text::Text(std::string textString, int size, int color[4], bool outline, TextOverMode textOverMode, bool shadow) {
 	this->textString = textString;
 	this->size = size;
 	for (int i = 0; i < 4; i++)
 		this->color[i] = color[i];
 	this->outline = outline;
 	this->textOverMode = textOverMode;
+	this->shadow = shadow;
 }
 
 Text::Text(std::string textString, Text& text) {
@@ -24,6 +25,7 @@ Text::Text(std::string textString, Text& text) {
 		this->color[i] = text.color[i];
 	this->outline = text.outline;
 	this->textOverMode = text.textOverMode;
+	this->shadow = text.shadow;
 }
 
 std::string Text::toString() {
@@ -45,4 +47,8 @@ bool Text::hasOutline() {
 
 TextOverMode Text::getTextOverMode() {
 	return textOverMode;
+}
+
+bool Text::hasShadow() {
+	return shadow;
 }

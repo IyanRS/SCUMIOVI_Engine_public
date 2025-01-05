@@ -15,15 +15,15 @@ Scene::Scene() {
 
 void Scene::addGameObject(GameObject& gameObject) {
 	gameObjects.push_back(&gameObject);
-	//gameObject.setScene(this);
+	gameObject.setScene(this);
 	std::sort(gameObjects.begin(), gameObjects.end(), [this](GameObject* o1, GameObject* o2) {
 		return o1->getLayer() < o2->getLayer();
 	});
 }
 
 void Scene::removeGameObject(GameObject& gameObject) {
-	//gameObjects.remove(gameObject);
-	//gameObject.setScene(nullptr);
+	gameObjects.erase(std::find(gameObjects.begin(), gameObjects.end(), &gameObject));
+	gameObject.setScene(nullptr);
 }
 
 Camera& Scene::getCamera() {

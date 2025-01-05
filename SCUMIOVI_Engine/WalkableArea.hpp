@@ -13,6 +13,7 @@ class WalkableArea : public Interactable {
 	Vector2<> getClosestPointToSegment(Vector2<>, Vector2<>, Vector2<>);
 	bool lineIntersectsLine(Vector2<> p1, Vector2<> q1, Vector2<> p2, Vector2<> q2);
 	bool lineIntersectsPolygon(Vector2<> lineStart, Vector2<> lineEnd);
+	bool isDirectPathValid(const Vector2<>& start, const Vector2<>& target, const std::vector<Vector2<>>& polygon);
 public:
 	void showDebug();
 	WalkableArea(std::vector<Vector2<>>);

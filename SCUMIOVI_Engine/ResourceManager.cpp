@@ -3,6 +3,15 @@
 
 #include <SDL3/SDL.h>
 
+
+ResourceManager* ResourceManager::resourceManager_ = nullptr;
+
+ResourceManager& ResourceManager::getInstance() {
+	if (resourceManager_ == nullptr)
+		resourceManager_ = new ResourceManager();
+	return *resourceManager_;
+}
+
 ResourceManager::ResourceManager() {
 	TTF_Init();
 }
@@ -121,4 +130,31 @@ TTF_Font* ResourceManager::loadFont(std::string fontFile, int size) {
 	}
 	
 	return font;
+}
+
+Vector2<int> ResourceManager::getImageSize(std::string filename) {
+	std::string filePath = TEXTURES_DIRECTORY + filename;
+	// Open the image file with SDL_RWops
+	SDL_IOStream* rw = SDL_IOFromFile(filePath.c_str(), "rb");
+	if (rw == nullptr) {
+		SDL_Log("Error opening file: %s", SDL_GetError());
+		return Vector2<int>();
+	}
+
+	// Use IMG_LoadTyped_RW to load just the header information
+	SDL_Surface* surface = IMG_LoadTyped_IO(rw, 1, nullptr);
+	if (surface == nullptr) {
+		SDL_Log("Error loading image: %s", SDL_GetError());
+		SDL_CloseIO(rw);
+		return Vector2<int>();
+	}
+
+	// Retrieve width and height from the surface
+	int width = surface->w;
+	int height = surface->h;
+
+	// Clean up
+	SDL_DestroySurface(surface);
+
+	return Vector2<int>(width, height);
 }

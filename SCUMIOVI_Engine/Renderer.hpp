@@ -14,7 +14,7 @@
 class Renderer {
 	SDL_Window* sdlWindow;
 	SDL_Renderer* sdlRenderer;
-	ResourceManager resourceManager;
+	ResourceManager& resourceManager;
 	void applyCameraTransform(Camera& camera, SDL_FRect& rect);
 	void applyScreenTransform(SDL_FRect& rect);
 	void applyCameraTransform(Camera& camera, Vector2<>& point);

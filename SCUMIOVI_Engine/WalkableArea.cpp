@@ -287,22 +287,109 @@ WalkableArea::WalkableArea(std::initializer_list<Vector2<>> verteces) {
 //    return path;  // Return empty path if no path is found
 //}
 
+//#define PATH_EPSILON 2.5f
+//
+//// Implement Dijkstra’s Algorithm to find the shortest path in the visibility graph
+//std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> target) {
+//
+//    if (start.distanceTo(target) < PATH_EPSILON) {
+//        return std::vector<Vector2<>>();
+//    }
+//
+//    //if (!isPointInside(start)) {
+//    //    return std::vector<Vector2<>>();
+//    //}
+//
+//    //if (!isPointInside(target)) {
+//    //    return std::vector<Vector2<>>();
+//    //}
+//
+//    // Visibility graph initialization
+//    std::vector<Vector2<>> graphVertices = walkablePolygon;
+//    graphVertices.push_back(start);
+//    graphVertices.push_back(target);
+//
+//    // Create an adjacency list to store graph connections
+//    std::vector<std::vector<int>> adjacencyList(graphVertices.size());
+//
+//    // Construct the visibility graph (edges between visible vertices)
+//    for (size_t i = 0; i < graphVertices.size(); ++i) {
+//        for (size_t j = i + 1; j < graphVertices.size(); ++j) {
+//            if (!lineIntersectsPolygon(graphVertices[i], graphVertices[j])) {
+//                adjacencyList[i].push_back(j);
+//                adjacencyList[j].push_back(i);  // Undirected graph
+//            }
+//        }
+//    }
+//
+//    // Dijkstra's Algorithm to find the shortest path
+//    int n = graphVertices.size();
+//    std::vector<float> dist(n, std::numeric_limits<float>::infinity());
+//    std::vector<int> prev(n, -1);
+//    std::vector<bool> visited(n, false);
+//
+//    // Min-heap priority queue to store vertices with their distances
+//    auto compare = [&dist](int left, int right) { return dist[left] > dist[right]; };
+//    std::priority_queue<int, std::vector<int>, decltype(compare)> pq(compare);
+//
+//    // Start at the start vertex
+//    dist[graphVertices.size() - 2] = 0;
+//    pq.push(graphVertices.size() - 2);  // The index of the start point
+//
+//    while (!pq.empty()) {
+//        int u = pq.top();
+//        pq.pop();
+//
+//        if (visited[u]) continue;
+//        visited[u] = true;
+//
+//        // Explore neighbors
+//        for (int v : adjacencyList[u]) {
+//            float alt = dist[u] + graphVertices[u].distanceTo(graphVertices[v]);
+//            if (alt < dist[v]) {
+//                dist[v] = alt;
+//                prev[v] = u;
+//                pq.push(v);
+//            }
+//        }
+//    }
+//
+//    // Reconstruct the path from the target to the start
+//    std::vector<Vector2<>> path;
+//    int u = graphVertices.size() - 1;  // Target index
+//    while (u != -1) {
+//        path.push_back(graphVertices[u]);
+//        u = prev[u];
+//    }
+//
+//    // Reverse the path to go from start to target
+//    std::reverse(path.begin(), path.end());
+//
+//    for (Vector2<> point : path) {
+//        SDL_Log("Point %f, %f", point.x, point.y);
+//    }
+//
+//    return path;
+//}
+
 #define PATH_EPSILON 2.5f
+
+// Check if the direct line between start and target is inside the polygon
+bool WalkableArea::isDirectPathValid(const Vector2<>& start, const Vector2<>& target, const std::vector<Vector2<>>& polygon) {
+    // Check if the direct line from start to target intersects the polygon's edges
+    return !lineIntersectsPolygon(start, target);
+}
 
 // Implement Dijkstra’s Algorithm to find the shortest path in the visibility graph
 std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> target) {
-
     if (start.distanceTo(target) < PATH_EPSILON) {
-        return std::vector<Vector2<>>();
+        return { target }; // If the distance is small enough, just return the target
     }
 
-    //if (!isPointInside(start)) {
-    //    return std::vector<Vector2<>>();
-    //}
-
-    //if (!isPointInside(target)) {
-    //    return std::vector<Vector2<>>();
-    //}
+    // Ensure both start and target are inside the polygon
+    if (!isPointInside(start) || !isPointInside(target)) {
+        return {}; // Return empty path if start or target are not inside the polygon
+    }
 
     // Visibility graph initialization
     std::vector<Vector2<>> graphVertices = walkablePolygon;
@@ -315,10 +402,19 @@ std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> target)
     // Construct the visibility graph (edges between visible vertices)
     for (size_t i = 0; i < graphVertices.size(); ++i) {
         for (size_t j = i + 1; j < graphVertices.size(); ++j) {
+            // Check if the direct line from graphVertices[i] to graphVertices[j] intersects the polygon
             if (!lineIntersectsPolygon(graphVertices[i], graphVertices[j])) {
                 adjacencyList[i].push_back(j);
                 adjacencyList[j].push_back(i);  // Undirected graph
             }
+        }
+    }
+
+    // Debugging: Check the adjacency list and ensure it's being populated correctly
+    for (size_t i = 0; i < graphVertices.size(); ++i) {
+        SDL_Log("Vertex %d: (%f, %f)", i, graphVertices[i].x, graphVertices[i].y);
+        for (int j : adjacencyList[i]) {
+            SDL_Log("  Edge to: (%f, %f)", graphVertices[j].x, graphVertices[j].y);
         }
     }
 
@@ -332,7 +428,7 @@ std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> target)
     auto compare = [&dist](int left, int right) { return dist[left] > dist[right]; };
     std::priority_queue<int, std::vector<int>, decltype(compare)> pq(compare);
 
-    // Start at the start vertex
+    // Start at the start vertex (the second-to-last index in graphVertices)
     dist[graphVertices.size() - 2] = 0;
     pq.push(graphVertices.size() - 2);  // The index of the start point
 
@@ -354,6 +450,11 @@ std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> target)
         }
     }
 
+    // Debugging: Ensure that Dijkstra's algorithm runs correctly
+    for (size_t i = 0; i < dist.size(); ++i) {
+        SDL_Log("Dist to vertex %d: %f", i, dist[i]);
+    }
+
     // Reconstruct the path from the target to the start
     std::vector<Vector2<>> path;
     int u = graphVertices.size() - 1;  // Target index
@@ -365,11 +466,15 @@ std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> target)
     // Reverse the path to go from start to target
     std::reverse(path.begin(), path.end());
 
-    for (Vector2<> point : path) {
-        SDL_Log("Point %f, %f", point.x, point.y);
+    // Debugging: Ensure the reconstructed path is correct
+    for (const Vector2<>& point : path) {
+        SDL_Log("Path point: (%f, %f)", point.x, point.y);
     }
 
-    path.erase(path.begin());
+    // Remove the start point if it is the first point in the path and the path is valid
+    if (path.front() == start) {
+        path.erase(path.begin());
+    }
 
     return path;
 }
