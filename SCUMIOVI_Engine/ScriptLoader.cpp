@@ -328,8 +328,9 @@ void ScriptLoader::loadAndRunGame() {
 	scene.addGameObject(scummBarBackTrigger);
 	player.addOverlapEvent(&scummBarBackTrigger, Event([] (EventInfo e) {
 		Game& game = Game::getInstance();
-		e.player.say("triggerBoxTest");
 		game.getCurrentPlayer().disableMovement();
+		SDL_Log("Triggerbox event");
+		e.player.say("triggerBoxTest");
 		if (game.getCurrentPlayer().getDirectionVector().x > 0) {
 			game.getCurrentPlayer().moveToAtSpeed(Vector2<>(340, 80), 100.0f, Event([] {
 				Game& game = Game::getInstance();

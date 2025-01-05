@@ -161,3 +161,7 @@ void Game::changeToDefaultVerb() {
 		currentPlayer->setVerb(defaultVerb);
 	}
 }
+
+void Game::clearClicksPool() {
+	SDL_FlushEvent(SDL_EVENT_MOUSE_BUTTON_DOWN);
+}

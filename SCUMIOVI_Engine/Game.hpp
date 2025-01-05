@@ -61,4 +61,5 @@ public:
 	void setDefaultVerb(Verb* verb);
 	void setDefaultVerb(std::string verbName);
 	void changeToDefaultVerb();
+	void clearClicksPool();
 };
