@@ -1,5 +1,27 @@
 #include "ScriptLoader.hpp"
 
+Event createMoveToEvent(Vector2<> pos, Event callback) {
+	return Event([pos, callback](EventInfo e) {
+		if (!e.player.canMove()) {
+			return;
+		}
+		std::string textureAfterWalk;
+		if (pos.x < e.player.getPosition().x + e.player.getSize().x / 2) {
+			e.player.setAnimation("walkLeft");
+			e.player.setTexture("idleLeft");
+		}
+		else {
+			e.player.setAnimation("walkRight");
+			e.player.setTexture("idleRight");
+		}
+		e.player.moveToAtSpeed(pos - (Vector2<>(e.player.getSize().x / 2, e.player.getSize().y * 0.85)), 100.0f, Event([] {
+			Game& game = Game::getInstance();
+			Player& player = game.getCurrentPlayer();
+			player.setAnimation("");
+			}) + callback);
+		});
+}
+
 ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 	moveToEvent = Event([](EventInfo e) {
 		if (!e.player.canMove()) {
@@ -26,22 +48,29 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 		Vector2<> playerFeetOffset = Vector2<>(e.player.getSize().x / 2, e.player.getSize().y * 0.85);
 		Vector2<> playerFeetPosition = e.player.getPosition() + playerFeetOffset;
 		std::vector<Vector2<>> path = walkableArea->findPath(playerFeetPosition, e.clickPos);
-		if (path.size() == 0)
-			return;
-		if (path.size() == 1) {
-			e.player.moveToAtSpeed(path[0] - playerFeetOffset, 100.0f);
+
+		SDL_Log("Path:\n");
+		for (Vector2<>& pathPoint : path) {
+			SDL_Log("\t%s\n", pathPoint.toString().c_str());
+		}
+
+		if (path.size() == 0) {
 			return;
 		}
 
-		e.player.moveToAtSpeed(path, 100.0f);
+		//if (path.size() == 1) {
+		//	//createMoveToEvent(path[0], Event()).execute();
+		//	return;
+		//}
 
-		//player.moveToAtSpeed(path[0], 100.0f, Event([path] {
-		//	Game& game = game.getInstance();
-		//	Player& player = game.getCurrentPlayer();
-		//	player.moveToAtSpeed(path[1], 100.0f);
-		//}));
-
-
+		Event nextEvent = Event();
+		for (int i = path.size() - 1; i >= 0; i--) {
+			//nextEvent = createMoveToEvent(path[path.size() - 1], nextEvent);
+			// TODO: move to function
+			Vector2<> pos = path[i];
+			nextEvent = createMoveToEvent(pos, nextEvent);
+		}
+		nextEvent.execute();
 	});
 
 	selectVerb = Verb("selectVerb");
@@ -49,30 +78,6 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 	anyVerb = Verb("any");
 	selectedVerb = Verb("selected");
 	defaultVerb = Verb("default");
-}
-
-Event createMoveToEvent(static Vector2<> pos, static Event callback) {
-	static Vector2<> posCopy = pos;
-	static Event callbackCopy = callback;
-	return Event([&callback](EventInfo e) {
-		if (!e.player.canMove()) {
-			return;
-		}
-		std::string textureAfterWalk;
-		if (posCopy.x < e.player.getPosition().x + e.player.getSize().x / 2) {
-			e.player.setAnimation("walkLeft");
-			e.player.setTexture("idleLeft");
-		}
-		else {
-			e.player.setAnimation("walkRight");
-			e.player.setTexture("idleRight");
-		}
-		e.player.moveToAtSpeed(posCopy - (Vector2<>(e.player.getSize().x / 2, e.player.getSize().y * 0.85)), 100.0f, Event([] {
-			Game& game = Game::getInstance();
-			Player& player = game.getCurrentPlayer();
-			player.setAnimation("");
-		}) + callbackCopy);
-	});
 }
 
 void ScriptLoader::highlightUIVerb(std::string verbName) {
@@ -255,8 +260,8 @@ void ScriptLoader::loadAndRunGame() {
 	//});
 	game.setDefaultVerb(&walkVerb);
 	scummBarWalkableArea.setDefaultVerb(&walkVerb);
-	scummBarWalkableArea.addVerbInteraction(walkVerb, moveToEvent);
 	//scummBarWalkableArea.addVerbInteraction(walkVerb, moveToEvent);
+	scummBarWalkableArea.addVerbInteraction(walkVerb, pathEvent);
 	scene.setWalkableArea(&scummBarWalkableArea);
 	
 	GameObject& background = addBackground(scene, "SCUMM_Bar.png", Vector2<int>(640, 144));
@@ -270,8 +275,6 @@ void ScriptLoader::loadAndRunGame() {
 
 	//	//createWalkEvent();
 	//});
-
-	//scummBarWalkableArea.addInteraction(walkVerb, pathEvent);
 
 
 	//game.setDefaultClickEvent(Event([](Vector2<> clickPos) {

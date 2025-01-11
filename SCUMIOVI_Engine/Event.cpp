@@ -85,3 +85,12 @@ Event Event::operator+(const Event& e2) {
 
 	return addedEvents;
 };
+
+Event& Event::operator=(const Event& other) {
+	if (this != &other) {
+		for (Action a : other.actions) {
+			actions.push_back(a);
+		}
+	}
+	return *this;
+}

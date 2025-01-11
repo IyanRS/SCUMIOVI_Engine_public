@@ -31,4 +31,5 @@ public:
 	void addAction(Action action);
 
 	Event operator+(const Event& e2);
+	Event& operator=(const Event& other);
 };

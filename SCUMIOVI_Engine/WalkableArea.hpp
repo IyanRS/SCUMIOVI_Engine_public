@@ -13,7 +13,12 @@ class WalkableArea : public Interactable {
 	Vector2<> getClosestPointToSegment(Vector2<>, Vector2<>, Vector2<>);
 	bool lineIntersectsLine(Vector2<> p1, Vector2<> q1, Vector2<> p2, Vector2<> q2);
 	bool lineIntersectsPolygon(Vector2<> lineStart, Vector2<> lineEnd);
+
 	bool isDirectPathValid(const Vector2<>& start, const Vector2<>& target, const std::vector<Vector2<>>& polygon);
+	std::vector<Vector2<>> getVisibilityGraph(Vector2<> start, Vector2<> end);
+	std::vector<Vector2<>> reconstructPath(std::unordered_map<Vector2<>, Vector2Hash>& cameFrom, Vector2<> start, Vector2<> end);
+	bool isVisible(Vector2<> a, Vector2<> b);
+	int getNIntersections(Vector2<> a, Vector2<> b);
 public:
 	void showDebug();
 	WalkableArea(std::vector<Vector2<>>);

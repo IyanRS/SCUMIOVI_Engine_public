@@ -125,356 +125,120 @@ WalkableArea::WalkableArea(std::initializer_list<Vector2<>> verteces) {
     }
 }
 
-#define A_STAR_STEP 5.0f
-#define MAXIMUM_TARGET_DISTANCE A_STAR_STEP+1
-
 #include <SDL3/SDL.h>
 
-//// A* for pathfinding
-//
-//struct Node {
-//    Vector2<> point;  // Position of the node
-//    float g;           // Cost from the start node to this node
-//    float h;           // Heuristic estimate from this node to the target
-//    float f;           // Total cost (f = g + h)
-//    Node* parent;      // Parent node for path reconstruction
-//
-//    Node(Vector2<> pt, float gCost, float hCost, Node* p)
-//        : point(pt), g(gCost), h(hCost), f(gCost + hCost), parent(p) {
-//    }
-//
-//    bool operator>(const Node& other) const {
-//        return f > other.f;  // Priority queue should give priority to the lowest f cost
-//    }
-//};
-//
-//// Standard Euclidean distance heuristic
-//float calculateHeuristic(Vector2<> current, Vector2<> target) {
-//    return current.distanceTo(target);  // Euclidean distance
-//}
+struct ComparePair {
+    bool operator()(const std::pair<float, Vector2<>>& a, const std::pair<float, Vector2<>>& b) const {
+        return a.first > b.first; // We want the priority queue to give priority to the smallest distance
+    }
+};
 
-//// Pathfinding function for A*
-//std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> target) {
-//    std::vector<Vector2<>> path;
-//
-//    if (!isPointInside(start)) {
-//        return path;
-//    }
-//
-//    if (!isPointInside(target)) {
-//        target = getClosestPoint(target);
-//    }
-//
-//    std::priority_queue<Node*, std::vector<Node*>, std::greater<Node*>> openList;
-//    std::unordered_set<Vector2<>, Vector2Hash> visited;  // Use unordered_set for faster comparison
-//
-//    Node* startNode = new Node(start, 0.0f, calculateHeuristic(start, target), nullptr);
-//    openList.push(startNode);
-//    visited.insert(start);  // Track visited points directly
-//
-//    std::vector<Vector2<> > directions = {
-//        Vector2<>(A_STAR_STEP, 0),   // Right
-//        Vector2<>(-A_STAR_STEP, 0),  // Left
-//        Vector2<>(0, A_STAR_STEP),   // Up
-//        Vector2<>(0, -A_STAR_STEP),  // Down
-//        Vector2<>(A_STAR_STEP, A_STAR_STEP),  // Diagonal up-right
-//        Vector2<>(A_STAR_STEP, -A_STAR_STEP), // Diagonal down-right
-//        Vector2<>(-A_STAR_STEP, A_STAR_STEP), // Diagonal up-left
-//        Vector2<>(-A_STAR_STEP, -A_STAR_STEP) // Diagonal down-left
-//    };
-//
-//    while (!openList.empty()) {
-//        Node* currentNode = openList.top();
-//        openList.pop();
-//
-//        // Check if we've reached the target
-//        if (currentNode->point.distanceTo(target) < MAXIMUM_TARGET_DISTANCE) {
-//            while (currentNode != nullptr) {
-//                path.push_back(currentNode->point);
-//                currentNode = currentNode->parent;
-//            }
-//            std::reverse(path.begin(), path.end());  // Reverse the path to start -> target
-//            return path;
-//        }
-//
-//        // Try expanding in all directions
-//        for (const Vector2<>& dir : directions) {
-//            Vector2<> nextPoint = currentNode->point + dir;
-//
-//            if (isPointInside(nextPoint) && visited.find(nextPoint) == visited.end()) {
-//                visited.insert(nextPoint);
-//
-//                float gCost = currentNode->g + currentNode->point.distanceTo(nextPoint);
-//                float hCost = calculateHeuristic(nextPoint, target);  // Euclidean distance heuristic
-//                Node* nextNode = new Node(nextPoint, gCost, hCost, currentNode);
-//
-//                openList.push(nextNode);
-//            }
-//        }
-//    }
-//
-//    SDL_Log("Path could not be found.\n");
-//    return path;  // Return empty path if no path is found
-//}
+int WalkableArea::getNIntersections(Vector2<> a, Vector2<> b) {
+    int nIntersections = 0;
+    unsigned int n = walkablePolygon.size();
+    for (unsigned int i = 0; i < n; i++) {
+        Vector2<> p1 = walkablePolygon[i];
+        Vector2<> p2 = walkablePolygon[(i + 1) % n];
 
-
-////Visibility graph algorithm
-//// Pathfinding function for A*
-//std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> target) {
-//    std::vector<Vector2<>> path;
-//
-//    if (!isPointInside(start)) {
-//        return path;
-//    }
-//
-//    if (!isPointInside(target)) {
-//        target = getClosestPoint(target);
-//    }
-//
-//    if (start == target) {
-//        return path;
-//    }
-//
-//    std::priority_queue<Node*, std::vector<Node*>, std::greater<Node*>> openList;
-//    std::unordered_set<Vector2<>, Vector2Hash> visited;  // Use unordered_set for faster comparison
-//
-//    Node* startNode = new Node(start, 0.0f, calculateHeuristic(start, target), nullptr);
-//    openList.push(startNode);
-//    visited.insert(start);  // Track visited points directly
-//
-//    std::vector<Vector2<> > directions = {
-//        Vector2<>(A_STAR_STEP, 0),   // Right
-//        Vector2<>(-A_STAR_STEP, 0),  // Left
-//        Vector2<>(0, A_STAR_STEP),   // Up
-//        Vector2<>(0, -A_STAR_STEP),  // Down
-//        Vector2<>(A_STAR_STEP, A_STAR_STEP),  // Diagonal up-right
-//        Vector2<>(A_STAR_STEP, -A_STAR_STEP), // Diagonal down-right
-//        Vector2<>(-A_STAR_STEP, A_STAR_STEP), // Diagonal up-left
-//        Vector2<>(-A_STAR_STEP, -A_STAR_STEP) // Diagonal down-left
-//    };
-//
-//    while (!openList.empty()) {
-//        Node* currentNode = openList.top();
-//        openList.pop();
-//
-//        // Check if we've reached the target
-//        if (currentNode->point.distanceTo(target) < MAXIMUM_TARGET_DISTANCE) {
-//            while (currentNode != nullptr) {
-//                path.push_back(currentNode->point);
-//                currentNode = currentNode->parent;
-//            }
-//            std::reverse(path.begin(), path.end());  // Reverse the path to start -> target
-//            return path;
-//        }
-//
-//        // Try expanding in all directions
-//        for (const Vector2<>& dir : directions) {
-//            Vector2<> nextPoint = currentNode->point + dir;
-//
-//            if (isPointInside(nextPoint) && visited.find(nextPoint) == visited.end()) {
-//                visited.insert(nextPoint);
-//
-//                float gCost = currentNode->g + currentNode->point.distanceTo(nextPoint);
-//                float hCost = calculateHeuristic(nextPoint, target);  // Euclidean distance heuristic
-//                Node* nextNode = new Node(nextPoint, gCost, hCost, currentNode);
-//
-//                openList.push(nextNode);
-//            }
-//        }
-//    }
-//
-//    SDL_Log("Path could not be found.\n");
-//    return path;  // Return empty path if no path is found
-//}
-
-//#define PATH_EPSILON 2.5f
-//
-//// Implement Dijkstra’s Algorithm to find the shortest path in the visibility graph
-//std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> target) {
-//
-//    if (start.distanceTo(target) < PATH_EPSILON) {
-//        return std::vector<Vector2<>>();
-//    }
-//
-//    //if (!isPointInside(start)) {
-//    //    return std::vector<Vector2<>>();
-//    //}
-//
-//    //if (!isPointInside(target)) {
-//    //    return std::vector<Vector2<>>();
-//    //}
-//
-//    // Visibility graph initialization
-//    std::vector<Vector2<>> graphVertices = walkablePolygon;
-//    graphVertices.push_back(start);
-//    graphVertices.push_back(target);
-//
-//    // Create an adjacency list to store graph connections
-//    std::vector<std::vector<int>> adjacencyList(graphVertices.size());
-//
-//    // Construct the visibility graph (edges between visible vertices)
-//    for (size_t i = 0; i < graphVertices.size(); ++i) {
-//        for (size_t j = i + 1; j < graphVertices.size(); ++j) {
-//            if (!lineIntersectsPolygon(graphVertices[i], graphVertices[j])) {
-//                adjacencyList[i].push_back(j);
-//                adjacencyList[j].push_back(i);  // Undirected graph
-//            }
-//        }
-//    }
-//
-//    // Dijkstra's Algorithm to find the shortest path
-//    int n = graphVertices.size();
-//    std::vector<float> dist(n, std::numeric_limits<float>::infinity());
-//    std::vector<int> prev(n, -1);
-//    std::vector<bool> visited(n, false);
-//
-//    // Min-heap priority queue to store vertices with their distances
-//    auto compare = [&dist](int left, int right) { return dist[left] > dist[right]; };
-//    std::priority_queue<int, std::vector<int>, decltype(compare)> pq(compare);
-//
-//    // Start at the start vertex
-//    dist[graphVertices.size() - 2] = 0;
-//    pq.push(graphVertices.size() - 2);  // The index of the start point
-//
-//    while (!pq.empty()) {
-//        int u = pq.top();
-//        pq.pop();
-//
-//        if (visited[u]) continue;
-//        visited[u] = true;
-//
-//        // Explore neighbors
-//        for (int v : adjacencyList[u]) {
-//            float alt = dist[u] + graphVertices[u].distanceTo(graphVertices[v]);
-//            if (alt < dist[v]) {
-//                dist[v] = alt;
-//                prev[v] = u;
-//                pq.push(v);
-//            }
-//        }
-//    }
-//
-//    // Reconstruct the path from the target to the start
-//    std::vector<Vector2<>> path;
-//    int u = graphVertices.size() - 1;  // Target index
-//    while (u != -1) {
-//        path.push_back(graphVertices[u]);
-//        u = prev[u];
-//    }
-//
-//    // Reverse the path to go from start to target
-//    std::reverse(path.begin(), path.end());
-//
-//    for (Vector2<> point : path) {
-//        SDL_Log("Point %f, %f", point.x, point.y);
-//    }
-//
-//    return path;
-//}
-
-#define PATH_EPSILON 2.5f
-
-// Check if the direct line between start and target is inside the polygon
-bool WalkableArea::isDirectPathValid(const Vector2<>& start, const Vector2<>& target, const std::vector<Vector2<>>& polygon) {
-    // Check if the direct line from start to target intersects the polygon's edges
-    return !lineIntersectsPolygon(start, target);
+        if (lineIntersectsLine(a, b, p1, p2)) {
+            nIntersections++;
+        }
+    }
+    return nIntersections;
 }
 
-// Implement Dijkstra’s Algorithm to find the shortest path in the visibility graph
-std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> target) {
-    if (start.distanceTo(target) < PATH_EPSILON) {
-        return { target }; // If the distance is small enough, just return the target
-    }
+bool WalkableArea::isVisible(Vector2<> a, Vector2<> b) {
+    // Check if a line from point 'a' to point 'b' intersects the polygon
+    return !lineIntersectsPolygon(a, b);
+}
 
-    // Ensure both start and target are inside the polygon
-    if (!isPointInside(start) || !isPointInside(target)) {
-        return {}; // Return empty path if start or target are not inside the polygon
-    }
+std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> end) {
 
-    // Visibility graph initialization
-    std::vector<Vector2<>> graphVertices = walkablePolygon;
-    graphVertices.push_back(start);
-    graphVertices.push_back(target);
+    if (isVisible(start, end))
+        return {end};
 
-    // Create an adjacency list to store graph connections
-    std::vector<std::vector<int>> adjacencyList(graphVertices.size());
+    std::vector<Vector2<>> path;
 
-    // Construct the visibility graph (edges between visible vertices)
-    for (size_t i = 0; i < graphVertices.size(); ++i) {
-        for (size_t j = i + 1; j < graphVertices.size(); ++j) {
-            // Check if the direct line from graphVertices[i] to graphVertices[j] intersects the polygon
-            if (!lineIntersectsPolygon(graphVertices[i], graphVertices[j])) {
-                adjacencyList[i].push_back(j);
-                adjacencyList[j].push_back(i);  // Undirected graph
+    std::vector<Vector2<>> vertices = walkablePolygon;
+
+    std::unordered_map<Vector2<>, std::vector<Vector2<>>, Vector2Hash> visibilityGraph;
+
+    Game& game = Game::getInstance();
+
+    for (size_t i = 0; i < vertices.size(); ++i) {
+        for (size_t j = i + 1; j < vertices.size(); ++j) {
+            Vector2<> a = vertices[i];
+            Vector2<> b = vertices[j];
+
+            //SDL_Log("N intersections: %d\n", getNIntersections(a, b));
+            // Check if the points are visible from each other
+            if (getNIntersections(a, b) <= 3) {
+                //game.getScene().addDebugLine(a, b);
+                visibilityGraph[a].push_back(b);
+                visibilityGraph[b].push_back(a);
             }
         }
     }
 
-    // Debugging: Check the adjacency list and ensure it's being populated correctly
-    for (size_t i = 0; i < graphVertices.size(); ++i) {
-        SDL_Log("Vertex %d: (%f, %f)", i, graphVertices[i].x, graphVertices[i].y);
-        for (int j : adjacencyList[i]) {
-            SDL_Log("  Edge to: (%f, %f)", graphVertices[j].x, graphVertices[j].y);
+    // Step 3: Add the start and end points to the graph and check visibility to the vertices
+    for (size_t i = 0; i < vertices.size(); ++i) {
+        Vector2<> vertex = vertices[i];
+        if (getNIntersections(start, vertex) <= 2) {
+            //game.getScene().addDebugLine(start, vertex);
+            visibilityGraph[start].push_back(vertex);
+            visibilityGraph[vertex].push_back(start);
+        }
+        if (getNIntersections(end, vertex) <= 2) {
+            //game.getScene().addDebugLine(end, vertex);
+            visibilityGraph[end].push_back(vertex);
+            visibilityGraph[vertex].push_back(end);
         }
     }
 
-    // Dijkstra's Algorithm to find the shortest path
-    int n = graphVertices.size();
-    std::vector<float> dist(n, std::numeric_limits<float>::infinity());
-    std::vector<int> prev(n, -1);
-    std::vector<bool> visited(n, false);
+    // Step 4: Find the shortest path using Dijkstra's algorithm or BFS.
+    // Here we'll use Dijkstra for simplicity.
 
-    // Min-heap priority queue to store vertices with their distances
-    auto compare = [&dist](int left, int right) { return dist[left] > dist[right]; };
-    std::priority_queue<int, std::vector<int>, decltype(compare)> pq(compare);
+    std::unordered_map<Vector2<>, float, Vector2Hash> distances;
+    std::unordered_map<Vector2<>, Vector2<>, Vector2Hash> previous;
+    std::priority_queue<std::pair<float, Vector2<>>, std::vector<std::pair<float, Vector2<>>>, ComparePair> pq;
 
-    // Start at the start vertex (the second-to-last index in graphVertices)
-    dist[graphVertices.size() - 2] = 0;
-    pq.push(graphVertices.size() - 2);  // The index of the start point
+    // Initialize distances
+    for (const auto& vertex : vertices) {
+        distances[vertex] = std::numeric_limits<float>::infinity();
+    }
+
+    distances[end] = std::numeric_limits<float>::infinity();
+
+    distances[start] = 0;
+    pq.push({ 0, start });
 
     while (!pq.empty()) {
-        int u = pq.top();
+        Vector2<> current = pq.top().second;
         pq.pop();
 
-        if (visited[u]) continue;
-        visited[u] = true;
+        // If we've reached the target point, reconstruct the path
+        if (current == end) {
+            Vector2<> temp = end;
+            while (temp != start) {
+                path.push_back(temp);
+                //game.getScene().addDebugLine(temp, previous[temp]);
+                temp = previous[temp];
+            }
+            //path.push_back(start);
+            std::reverse(path.begin(), path.end());
+            return path;
+        }
 
-        // Explore neighbors
-        for (int v : adjacencyList[u]) {
-            float alt = dist[u] + graphVertices[u].distanceTo(graphVertices[v]);
-            if (alt < dist[v]) {
-                dist[v] = alt;
-                prev[v] = u;
-                pq.push(v);
+        for (const Vector2<>& neighbor : visibilityGraph[current]) {
+            float newDist = distances[current] + current.distanceTo(neighbor);
+            if (newDist < distances[neighbor]) {
+                distances[neighbor] = newDist;
+                previous[neighbor] = current;
+                pq.push({ newDist, neighbor });
             }
         }
     }
 
-    // Debugging: Ensure that Dijkstra's algorithm runs correctly
-    for (size_t i = 0; i < dist.size(); ++i) {
-        SDL_Log("Dist to vertex %d: %f", i, dist[i]);
-    }
-
-    // Reconstruct the path from the target to the start
-    std::vector<Vector2<>> path;
-    int u = graphVertices.size() - 1;  // Target index
-    while (u != -1) {
-        path.push_back(graphVertices[u]);
-        u = prev[u];
-    }
-
-    // Reverse the path to go from start to target
-    std::reverse(path.begin(), path.end());
-
-    // Debugging: Ensure the reconstructed path is correct
-    for (const Vector2<>& point : path) {
-        SDL_Log("Path point: (%f, %f)", point.x, point.y);
-    }
-
-    // Remove the start point if it is the first point in the path and the path is valid
-    if (path.front() == start) {
-        path.erase(path.begin());
-    }
-
+    // If no path was found, return an empty path
     return path;
 }

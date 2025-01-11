@@ -25,6 +25,7 @@ public:
 	Vector2<T> operator*(float value) const { return Vector2(x*value, y*value); }
 	Vector2<float> operator/(const float value) const { return Vector2(x / value, y / value); }
 	bool operator==(const Vector2<T>& v2) const { return x == v2.x && y == v2.y; }
+	bool operator!=(const Vector2<T>& v2) const { return x != v2.x || y != v2.y; }
 	float dot(Vector2<T> other) { return x * other.x + y * other.y; };
 
 	std::string toString() { 
