@@ -201,8 +201,8 @@ void GameObject::moveToAtSpeed(std::vector<Vector2<>> positions, float speed, st
 		});
 	}
 
-	float time = position.distanceTo(positions[0]) / speed;
-	moveTo(positions[0], time, callbacks[0]);
+	//float time = position.distanceTo(positions[0]) / speed;
+	moveToAtSpeed(positions[0], speed, callbacks[0]);
 }
 
 void GameObject::moveToAtSpeed(Vector2<> pos, float speed, Event callback) {

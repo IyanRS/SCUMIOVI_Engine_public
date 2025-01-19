@@ -153,7 +153,6 @@ bool WalkableArea::isVisible(Vector2<> a, Vector2<> b) {
 }
 
 std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> end) {
-
     if (isVisible(start, end))
         return {end};
 

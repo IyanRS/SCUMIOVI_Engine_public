@@ -19,4 +19,5 @@ public:
 	void setVerb(Verb* verb);
 	Verb* getVerb();
 	Inventory& getInventory();
+	//void moveTo(Vector2<> pos, float seconds, Event callback);
 };

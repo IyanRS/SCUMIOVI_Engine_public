@@ -58,19 +58,26 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 			return;
 		}
 
+		std::vector<Vector2<>> pathAtFeetHeight;
+		for (Vector2<> pos : path) {
+			pathAtFeetHeight.push_back(pos - playerFeetOffset);
+		}
+
+		e.player.moveToAtSpeed(pathAtFeetHeight, 100.0f, {Event()});
+
 		//if (path.size() == 1) {
 		//	//createMoveToEvent(path[0], Event()).execute();
 		//	return;
 		//}
 
-		Event nextEvent = Event();
-		for (int i = path.size() - 1; i >= 0; i--) {
-			//nextEvent = createMoveToEvent(path[path.size() - 1], nextEvent);
-			// TODO: move to function
-			Vector2<> pos = path[i];
-			nextEvent = createMoveToEvent(pos, nextEvent);
-		}
-		nextEvent.execute();
+		//Event nextEvent = Event();
+		//for (int i = path.size() - 1; i >= 0; i--) {
+		//	//nextEvent = createMoveToEvent(path[path.size() - 1], nextEvent);
+		//	// TODO: move to function
+		//	Vector2<> pos = path[i];
+		//	nextEvent = createMoveToEvent(pos, nextEvent);
+		//}
+		//nextEvent.execute();
 	});
 
 	selectVerb = Verb("selectVerb");
@@ -78,7 +85,90 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 	anyVerb = Verb("any");
 	selectedVerb = Verb("selected");
 	defaultVerb = Verb("default");
+
+	highlightDefaultVerbEvent = Event([this](EventInfo e) {
+		std::string verbName = e.interactable.getDefaultVerb()->getName();
+		highlightUIVerb(verbName);
+	});
+	dontHighlightDefaultVerbEvent = Event([](EventInfo e) {
+		std::string verbName = e.interactable.getDefaultVerb()->getName();
+		auto button = e.game.getUI().getUIElement(verbName + "Button");
+		button->setTextOver(button->getTextOver().toString());
+	});
+
+	updateItems = Event([](EventInfo e) {
+
+
+		std::vector< GameObject >::iterator it = e.game.getUI().getUIElements().begin();
+
+		while (it != e.game.getUI().getUIElements().end()) {
+			if (it->getName().find("_item") != std::string::npos) {
+				it = e.game.getUI().getUIElements().erase(it);
+			}
+			else ++it;
+		}
+		//for (GameObject& uiElement : e.game.getUI().getUIElements()) {
+		//	if (uiElement.getName().find("item") != std::string::npos) {
+		//		
+		//	}
+		//}
+
+		// TODO: avoid hardcoded values
+		int currentIndex = 0;
+		int columns = 4;
+		int width = 40;
+		int height = 22;
+
+		for (GameObject& item : e.player.getInventory().getItems()) {
+			int row = currentIndex / 4;
+			int column = currentIndex % 4;
+
+			if (row < 2) {
+				item.setPosition(Vector2<>(150 + (column * width), 154 + (row * height)));
+				e.game.getUI().addUIElement(item);
+			}
+			else {
+				// Arrows logic
+			}
+			currentIndex++;
+		}
+		});
+
+	updateUI = Event([](EventInfo e) {
+		Verb* currentVerb = e.game.getCurrentPlayer().getVerb();
+		if (currentVerb != nullptr) {
+			e.game.getUI().getUIElement("uiCurrentVerbInfo")->setTextOver(currentVerb->getDisplayName());
+		}
+	});
 }
+
+GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::string sceneTextureSource, std::string inventoryTextureSource, Vector2<> pos) {
+	// TODO: handle pointers memory
+	Texture* sceneTexture = new Texture("", sceneTextureSource, Vector2<int>());
+	GameObject* itemInScene= new GameObject(name, pos, Vector2<>(-1, -1), sceneTexture);
+
+	itemInScene->setLayer(-1);
+
+	Game& game = Game::getInstance();
+	itemInScene->addVerbInteraction(*game.getVerb("pickup"), Event([this, name, inventoryTextureSource](EventInfo e) {
+		GameObject& itemInScene = *(GameObject*)&e.interactable;
+		itemInScene.destroy();
+		Texture* itemInInventoryTexture = new Texture(name + "_item", inventoryTextureSource);
+		GameObject* itemInInventory = new GameObject(name + "_item", Vector2<>(), Vector2<>(-1, -1), itemInInventoryTexture);
+		e.player.getInventory().addItem(*itemInInventory);
+		}) + dontHighlightDefaultVerbEvent + updateItems);
+	itemInScene->setDefaultVerb(game.getVerb("pickup"));
+
+	itemInScene->setMouseOverEvent(highlightDefaultVerbEvent);
+	itemInScene->setMouseNotOverEvent(dontHighlightDefaultVerbEvent);
+
+	scene.addGameObject(*itemInScene);
+	return *itemInScene;
+}
+
+//GameObject& ScriptLoader::addDoor() {
+//
+//}
 
 void ScriptLoader::highlightUIVerb(std::string verbName) {
 	for (GameObject& uiElement : game.getUI().getUIElements()) {
@@ -254,47 +344,15 @@ void ScriptLoader::loadAndRunGame() {
 	);
 
 	Verb walkVerb = Verb("walk", "Walk to");
-	//Event setWalkVerb = Event([] {
-	//	Game& game = Game::getInstance();
-	//	game.getCurrentPlayer().setVerb("walk");
-	//});
+
 	game.setDefaultVerb(&walkVerb);
 	scummBarWalkableArea.setDefaultVerb(&walkVerb);
-	//scummBarWalkableArea.addVerbInteraction(walkVerb, moveToEvent);
-	scummBarWalkableArea.addVerbInteraction(walkVerb, pathEvent);
+	scummBarWalkableArea.addVerbInteraction(walkVerb, moveToEvent);
+	//scummBarWalkableArea.addVerbInteraction(walkVerb, pathEvent);
 	scene.setWalkableArea(&scummBarWalkableArea);
 	
 	GameObject& background = addBackground(scene, "SCUMM_Bar.png", Vector2<int>(640, 144));
 
-	//Event walkEvent = createWalkEvent();
-	//Event pathEvent = Event([this] (Vector2<> clickPos) {
-	//	Game& game = Game::getInstance();
-	//	Player& player = game.getCurrentPlayer();
-	//	WalkableArea* walkableArea = game.getScene().getWalkableArea();
-	//	std::vector<Vector2<>> path = walkableArea->findPath(player.getPosition(), clickPos - (Vector2<>(player.getSize().x / 2, player.getSize().y * 0.85)));
-
-	//	//createWalkEvent();
-	//});
-
-
-	//game.setDefaultClickEvent(Event([](Vector2<> clickPos) {
-	//	Game& game = Game::getInstance();
-	//	WalkableArea* walkableArea = game.getScene().getWalkableArea();
-	//	if (walkableArea != nullptr) {
-	//		Vector2<> walkTo = walkableArea->getClosestPoint(clickPos);
-	//		walkableArea->interact(walkTo, game.getVerb("walk"));
-	//	}
-	//}));
-
-
-	//scummBarWalkableArea.addInteraction(walkVerb, Event([](Vector2<> clickPos) {
-	//	Game& game = Game::getInstance();
-	//	WalkableArea* walkableArea = game.getScene().getWalkableArea();
-	//	walkableArea->interact(walkableArea->getClosestPoint(clickPos), game.getVerb("walk"));
-	//}));
-
-
-	//scene.getCamera().moveTo(Vector2<>(320, 0), 0, Event());
 	game.changeScene(scene);
 
 
@@ -354,41 +412,6 @@ void ScriptLoader::loadAndRunGame() {
 		}
 		}));
 
-	//Event startEvent = Event([] {
-	//	Game& game = Game::getInstance();
-	//	game.getScene().getCamera().moveTo(Vector2<>(0, 0), 6, Event(
-	//		[] { SDL_Log("Callback event test"); }
-	//	));
-	//	SDL_Log("Start game event test");
-	//});
-
-	// path test
-	/*Event startEvent = Event([] {
-		Game& game = Game::getInstance();
-		Player& player = game.getCurrentPlayer();
-		player.moveToAtSpeed(Vector2<>(0, 0), 100.0f, Event([] {
-			Game& game = Game::getInstance();
-			Player& player = game.getCurrentPlayer();
-			player.moveToAtSpeed(Vector2<>(80, 20), 100.0f, Event([] {
-				Game& game = Game::getInstance();
-				Player& player = game.getCurrentPlayer();
-				player.moveToAtSpeed(Vector2<>(200, 70), 100.0f, Event([] {
-					Game& game = Game::getInstance();
-					Player& player = game.getCurrentPlayer();
-					player.moveToAtSpeed(Vector2<>(100, 0), 100.0f, Event([] {
-						Game& game = Game::getInstance();
-						Player& player = game.getCurrentPlayer();
-						player.moveToAtSpeed(Vector2<>(50, 200), 100.0f, Event([] {
-							Game& game = Game::getInstance();
-							Player& player = game.getCurrentPlayer();
-							player.moveToAtSpeed(Vector2<>(80, 80), 100.0f);
-						}));
-					}));
-				}));
-			}));
-		}));
-	});*/
-
 	Texture doorTexture = Texture("door", "room28_obj_13b_00.png");
 	GameObject door = GameObject("door", Vector2<>(32, 72), Vector2<>(-1, -1), &doorTexture);
 	door.setLayer(-1);
@@ -431,45 +454,7 @@ void ScriptLoader::loadAndRunGame() {
 	Verb talkVerb = Verb("talk", "Talk");
 	Verb pullVerb = Verb("pull", "Pull");
 
-	Event updateItems = Event([](EventInfo e) {
-
-
-		std::vector< GameObject >::iterator it = e.game.getUI().getUIElements().begin();
-
-		while (it != e.game.getUI().getUIElements().end()) {
-			if (it->getName().find("_item") != std::string::npos) {
-				it = e.game.getUI().getUIElements().erase(it);
-			}
-			else ++it;
-		}
-		//for (GameObject& uiElement : e.game.getUI().getUIElements()) {
-		//	if (uiElement.getName().find("item") != std::string::npos) {
-		//		
-		//	}
-		//}
-
-		// TODO: avoid hardcoded values
-		int currentIndex = 0;
-		int columns = 4;
-		int width = 40;
-		int height = 22;
-
-		for (GameObject& item : e.player.getInventory().getItems()) {
-			int row = currentIndex / 4;
-			int column = currentIndex % 4;
-
-			item.setPosition(Vector2<>(150 + (column * width), 154 + (row * height)));
-			e.game.getUI().addUIElement(item);
-			currentIndex++;
-		}
-	});
-
-	Event updateUI = Event([](EventInfo e) {
-		Verb* currentVerb = e.game.getCurrentPlayer().getVerb();
-		if (currentVerb != nullptr) {
-			e.game.getUI().getUIElement("uiCurrentVerbInfo")->setTextOver(currentVerb->getDisplayName());
-		}
-	});
+	
 
 	createUIVerbButtonMatrix(Vector2<>(2, 154), { 
 
@@ -493,22 +478,11 @@ void ScriptLoader::loadAndRunGame() {
 		game.getCurrentPlayer().say("Pushing door", 1.0f);
 	}));
 
-	Event highlightDefaultVerbEvent = Event([this](EventInfo e) {
-		std::string verbName = e.interactable.getDefaultVerb()->getName();
-		highlightUIVerb(verbName);
-		});
-	Event dontHighlightDefaultVerbEvent = Event([](EventInfo e) {
-		std::string verbName = e.interactable.getDefaultVerb()->getName();
-		auto button = e.game.getUI().getUIElement(verbName + "Button");
-		button->setTextOver(button->getTextOver().toString());
-	});
-
 	door.setMouseOverEvent(highlightDefaultVerbEvent);
 	door.setMouseNotOverEvent(dontHighlightDefaultVerbEvent);
 
-
 	door.setDefaultVerb(&closeVerb);
-	door.addVerbInteraction(closeVerb, Event([&background, this](EventInfo e) {
+	door.addVerbInteraction(closeVerb, Event([this](EventInfo e) {
 		Game& game = Game::getInstance();
 		Player& player = game.getCurrentPlayer();
 		GameObject* door = (GameObject*)&e.interactable;
@@ -551,23 +525,9 @@ void ScriptLoader::loadAndRunGame() {
 	table2.setLayer(1);
 	scene.addGameObject(table2);
 
-	Texture mugTexture = Texture("mug", "mug.png");
-	GameObject mug = GameObject("mug", Vector2<>(124, 97), Vector2<>(-1, -1), &mugTexture);
-	mug.setLayer(-1);
 
-	mug.addVerbInteraction(pickupVerb, Event([](EventInfo e) {
-		GameObject& mug = *(GameObject*)&e.interactable;
-		mug.destroy();
-		Texture* mugItemTexture = new Texture("mug_item", "mug_item.png");
-		GameObject* mugItem = new GameObject("mug_item", Vector2<>(), Vector2<>(-1, -1), mugItemTexture);
-		e.player.getInventory().addItem(*mugItem);
-		}) + dontHighlightDefaultVerbEvent + updateItems);
-	mug.setDefaultVerb(&pickupVerb);
-
-	mug.setMouseOverEvent(highlightDefaultVerbEvent);
-	mug.setMouseNotOverEvent(dontHighlightDefaultVerbEvent);
-
-	scene.addGameObject(mug);
+	addItemObject("mug", scene, "mug.png", "mug_item.png", Vector2<>(124, 97));
+	addItemObject("mug2", scene, "mug.png", "mug_item.png", Vector2<>(106, 95));
 
 	game.startGame();
 }
