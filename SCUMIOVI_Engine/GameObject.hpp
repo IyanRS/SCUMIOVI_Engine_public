@@ -32,12 +32,28 @@ class GameObject : public Interactable {
 	Text textOver;
 	Text textFormat;
 	Vector2<> currentMovingTarget = Vector2<>(-INFINITY, -INFINITY);
+	Vector2<> lastMovementDirection = Vector2<>(0, 0);
 	void moveToTask(Vector2<> position, float seconds = 0, Event callback = Event());
 	void sayTask(Text& textOver, float seconds, Event callback = Event());
 	bool moving = false;
 	bool visibility = true;
 	int state;
 	int dialogDefaultTextColor[4];
+
+	void setIdleAnimation(Vector2<> lastMovementDirection);
+	void setMovementAnimation(Vector2<> movementDirection);
+	bool horizontalAnimationsDefined();
+	bool verticalAnimationsDefined();
+	bool horizontalIdleDefined();
+	bool verticalIdleDefined();
+	//Animation* moveUpAnimation = nullptr;
+	//Animation* moveDownAnimation = nullptr;
+	//Animation* moveLeftAnimation = nullptr;
+	//Animation* moveRightAnimation = nullptr;
+	//Animation* idleUpAnimation = nullptr;
+	//Animation* idleDownAnimation = nullptr;
+	//Animation* idleLeftAnimation = nullptr;
+	//Animation* idleRightAnimation = nullptr;
 	
 public:
 	GameObject(std::string name,
@@ -61,7 +77,7 @@ public:
 	Animation* getAnimation();
 	void addAnimation(Animation* animation);
 	void setAnimation(std::string animatioName);
-	//Animation* getAnimationByName(std::string name);
+	Animation* getAnimationByName(std::string name);
 	//void setAnimation(Animation& animation);
 	//Event& getClickEvent();
 	void addOverlapEvent(GameObject* object, Event event);
@@ -88,4 +104,6 @@ public:
 	void setState(int state);
 	int getState();
 	void setTextFormat(Text& text);
+	//void setMovementAnimations(Animation* moveUp, Animation* moveDown, Animation* moveLeft, Animation* moveRight);
+	//void setIdleAnimations(Animation* idleUp, Animation* idleDown, Animation* idleLeft, Animation* idleRight);
 };

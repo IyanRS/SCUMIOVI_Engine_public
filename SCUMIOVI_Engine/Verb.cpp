@@ -2,6 +2,11 @@
 
 #include "Game.hpp"
 
+Verb Verb::walkVerb = Verb("walk", "Walk to");
+Verb Verb::pushVerb = Verb("push", "Push");
+Verb Verb::closeVerb = Verb("close", "Close");
+Verb Verb::openVerb = Verb("open", "Open");
+
 Verb::Verb() {
 	Game::getInstance().addVerb(this);
 }

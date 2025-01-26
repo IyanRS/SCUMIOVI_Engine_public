@@ -105,6 +105,18 @@ void GameObject::addAnimation(Animation* animation) {
 	animations.push_back(animation);
 }
 
+Animation* GameObject::getAnimationByName(std::string name) {
+	if (name == "")
+		return nullptr;
+	for (Animation* anim : animations) {
+		if (anim->getName() == name) {
+			return anim;
+		}
+	}
+	return nullptr;
+}
+
+
 void GameObject::setAnimation(std::string animationName) {
 	if (animationName == "")
 		animation = nullptr;
@@ -148,9 +160,77 @@ void GameObject::setScene(Scene* scene) {
 //
 //}
 
+bool GameObject::horizontalAnimationsDefined() {
+	//return moveRightAnimation != nullptr && moveLeftAnimation != nullptr;
+	return getAnimationByName("moveRight") && getAnimationByName("moveLeft");
+}
+
+bool GameObject::verticalAnimationsDefined() {
+	//return moveUpAnimation != nullptr && moveDownAnimation != nullptr;
+	return getAnimationByName("moveUp") && getAnimationByName("moveDown");
+}
+
+bool GameObject::horizontalIdleDefined() {
+	//return idleRightAnimation != nullptr && idleLeftAnimation != nullptr;
+	return getAnimationByName("idleRight") && getAnimationByName("idleLeft");
+}
+
+bool GameObject::verticalIdleDefined() {
+	//return idleUpAnimation != nullptr && idleDownAnimation != nullptr;
+	return getAnimationByName("idleUp") && getAnimationByName("idleDown");
+}
+
+void GameObject::setIdleAnimation(Vector2<> lastMovementDirection) {
+	if ((abs(lastMovementDirection.x) > abs(lastMovementDirection.y) // Moving horizontally
+		|| !verticalIdleDefined()) && horizontalIdleDefined()) {
+		if (lastMovementDirection.x > 0) { // Moving right
+			animation = getAnimationByName("idleRight");
+		}
+		else { // Moving left
+			animation = getAnimationByName("idleLeft");
+		}
+	}
+	else if (verticalIdleDefined()) { // Moving vertically
+		if (lastMovementDirection.y > 0) { // Moving up
+			animation = getAnimationByName("idleUp");
+		}
+		else { // Moving down
+			animation = getAnimationByName("idleDown");
+		}
+	}
+}
+
+void GameObject::setMovementAnimation(Vector2<> movementDirection) {
+	if (movementDirection.x == 0 && movementDirection.y == 0) { // Not moving
+		setIdleAnimation(lastMovementDirection);
+		return;
+	}
+
+	lastMovementDirection = movementDirection;
+	if ((abs(movementDirection.x) > abs(movementDirection.y) // Moving horizontally
+		|| !verticalAnimationsDefined()) && horizontalAnimationsDefined()) {
+		if (movementDirection.x > 0) { // Moving right
+			animation = getAnimationByName("moveRight");
+		}
+		else { // Moving left
+			animation = getAnimationByName("moveLeft");
+		}
+	}
+	else if (verticalAnimationsDefined()) { // Moving vertically
+		if (movementDirection.y > 0) { // Moving up
+			animation = getAnimationByName("moveUp");;
+		}
+		else { // Moving down
+			animation = getAnimationByName("moveDown");;
+		}
+	}
+}
+
 void GameObject::moveToTask(Vector2<> targetPosition, float seconds, Event callback) {
 	float nSteps = seconds * SECONDS_TO_MILLISECONDS / UPDATE_FREQUENCY_MS;
 	Vector2<> moveStep = (targetPosition - position) / nSteps;
+	Vector2<> direction = (targetPosition - position).normalized();
+	setMovementAnimation(getDirectionVector());
 	for (int i = 0; i < nSteps; i++) {
 		if (targetPosition.x != currentMovingTarget.x || targetPosition.y != currentMovingTarget.y) {
 			//callback.execute();
@@ -161,6 +241,7 @@ void GameObject::moveToTask(Vector2<> targetPosition, float seconds, Event callb
 	}
 	currentMovingTarget = Vector2<>(-INFINITY, -INFINITY);
 	moving = false;
+	setMovementAnimation(Vector2<>(0,0));
 	callback.execute();
 }
 
@@ -306,3 +387,17 @@ int GameObject::getState() {
 void GameObject::setTextFormat(Text& text) {
 	this->textFormat = text;
 }
+
+//void GameObject::setMovementAnimations(Animation* moveUp, Animation* moveDown, Animation* moveLeft, Animation* moveRight) {
+//	moveUpAnimation = moveUp;
+//	moveDownAnimation = moveDown;
+//	moveLeftAnimation = moveLeft;
+//	moveRightAnimation = moveRight;
+//}
+//
+//void GameObject::setIdleAnimations(Animation* idleUp, Animation* idleDown, Animation* idleLeft, Animation* idleRight) {
+//	idleUpAnimation = idleUp;
+//	idleDownAnimation = idleDown;
+//	idleLeftAnimation = idleLeft;
+//	idleRightAnimation = idleRight;
+//}

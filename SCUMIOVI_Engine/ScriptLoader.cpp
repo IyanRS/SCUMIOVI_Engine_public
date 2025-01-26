@@ -1,4 +1,5 @@
 #include "ScriptLoader.hpp"
+#include "Door.hpp"
 
 Event createMoveToEvent(Vector2<> pos, Event callback) {
 	return Event([pos, callback](EventInfo e) {
@@ -6,18 +7,18 @@ Event createMoveToEvent(Vector2<> pos, Event callback) {
 			return;
 		}
 		std::string textureAfterWalk;
-		if (pos.x < e.player.getPosition().x + e.player.getSize().x / 2) {
-			e.player.setAnimation("walkLeft");
-			e.player.setTexture("idleLeft");
-		}
-		else {
-			e.player.setAnimation("walkRight");
-			e.player.setTexture("idleRight");
-		}
+		//if (pos.x < e.player.getPosition().x + e.player.getSize().x / 2) {
+		//	e.player.setAnimation("moveLeft");
+		//	e.player.setTexture("idleLeft");
+		//}
+		//else {
+		//	e.player.setAnimation("moveRight");
+		//	e.player.setTexture("idleRight");
+		//}
 		e.player.moveToAtSpeed(pos - (Vector2<>(e.player.getSize().x / 2, e.player.getSize().y * 0.85)), 100.0f, Event([] {
 			Game& game = Game::getInstance();
 			Player& player = game.getCurrentPlayer();
-			player.setAnimation("");
+			//player.setAnimation("");
 			}) + callback);
 		});
 }
@@ -28,18 +29,18 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 			return;
 		}
 		std::string textureAfterWalk;
-		if (e.clickPos.x < e.player.getPosition().x + e.player.getSize().x / 2) {
-			e.player.setAnimation("walkLeft");
-			e.player.setTexture("idleLeft");
-		}
-		else {
-			e.player.setAnimation("walkRight");
-			e.player.setTexture("idleRight");
-		}
+		//if (e.clickPos.x < e.player.getPosition().x + e.player.getSize().x / 2) {
+		//	e.player.setAnimation("walkLeft");
+		//	e.player.setTexture("idleLeft");
+		//}
+		//else {
+		//	e.player.setAnimation("walkRight");
+		//	e.player.setTexture("idleRight");
+		//}
 		e.player.moveToAtSpeed(e.clickPos - (Vector2<>(e.player.getSize().x / 2, e.player.getSize().y * 0.85)), 100.0f, Event([] {
 			Game& game = Game::getInstance();
 			Player& player = game.getCurrentPlayer();
-			player.setAnimation("");
+			//player.setAnimation("");
 		}));
 	});
 
@@ -343,11 +344,9 @@ void ScriptLoader::loadAndRunGame() {
 		}
 	);
 
-	Verb walkVerb = Verb("walk", "Walk to");
-
-	game.setDefaultVerb(&walkVerb);
-	scummBarWalkableArea.setDefaultVerb(&walkVerb);
-	scummBarWalkableArea.addVerbInteraction(walkVerb, moveToEvent);
+	game.setDefaultVerb(&Verb::walkVerb);
+	scummBarWalkableArea.setDefaultVerb(&Verb::walkVerb);
+	scummBarWalkableArea.addVerbInteraction(Verb::walkVerb, moveToEvent);
 	//scummBarWalkableArea.addVerbInteraction(walkVerb, pathEvent);
 	scene.setWalkableArea(&scummBarWalkableArea);
 	
@@ -357,24 +356,31 @@ void ScriptLoader::loadAndRunGame() {
 
 
 
-	Animation walkingRightAnimation = Animation("walkRight", "Guybrush_walk_side.png", Vector2<int>(0, 0), Vector2<int>(32, 47), 6);
-	Animation walkingLeftAnimation = walkingRightAnimation.getMirrored("walkLeft");
+	Animation walkingRightAnimation = Animation("moveRight", "Guybrush_walk_side.png", Vector2<int>(0, 0), Vector2<int>(32, 47), 6);
+	Animation walkingLeftAnimation = walkingRightAnimation.getMirrored("moveLeft");
 
-	Texture idleDown = Texture("idleDown", "Guybrush.png", Vector2<int>(5, 7), Vector2<int>(32, 47));
-	Texture idleRight = Texture("idleRight", "Guybrush_walk_side.png", Vector2<int>(0, 0), Vector2<int>(32, 47));
-	Texture idleLeft = idleRight.getMirrored("idleLeft");
+	//Texture idleDown = Texture("idleDown", "Guybrush.png", Vector2<int>(5, 7), Vector2<int>(32, 47));
+	Texture idleRightTexture = Texture("idleRight", "Guybrush_walk_side.png", Vector2<int>(0, 0), Vector2<int>(32, 47));
+	//Texture idleLeft = idleRight.getMirrored("idleLeft");
+	Animation idleRight = Animation("idleRight", "Guybrush_walk_side.png", Vector2<int>(0, 0), Vector2<int>(32, 47), 1);
+	Animation idleLeft = idleRight.getMirrored("idleLeft");
 
 	Player player = Player("Guybrush", Vector2<>(80, 80));
 	player.setLayer(0);
 
-	player.addTexture(&idleDown);
-	player.addTexture(&idleRight);
-	player.addTexture(&idleLeft);
+	//player.addTexture(&idleDown);
+	player.addTexture(&idleRightTexture);
+	//player.addTexture(&idleLeft);
 	player.setTexture("idleRight");
+
+	//player.setMovementAnimations(nullptr, nullptr, &walkingLeftAnimation, &walkingRightAnimation);
+	//player.setIdleAnimations(nullptr, nullptr, &idleRight, &idleLeft);
 
 	player.addAnimation(&walkingRightAnimation);
 	player.addAnimation(&walkingLeftAnimation);
-	player.setTexture("walkLeft");
+	player.addAnimation(&idleRight);
+	player.addAnimation(&idleLeft);
+
 
 	player.moveToScene(scene);
 
@@ -395,8 +401,8 @@ void ScriptLoader::loadAndRunGame() {
 		if (game.getCurrentPlayer().getDirectionVector().x > 0) {
 			game.getCurrentPlayer().moveToAtSpeed(Vector2<>(340, 80), 100.0f, Event([] {
 				Game& game = Game::getInstance();
-				game.getCurrentPlayer().setAnimation("");
-				game.getCurrentPlayer().setTexture("idleRight");
+				//game.getCurrentPlayer().setAnimation("");
+				//game.getCurrentPlayer().setTexture("idleRight");
 				game.getCurrentPlayer().enableMovement();
 				}));
 			game.getScene().getCamera().moveTo(Vector2<>(320, 0), 2);
@@ -404,16 +410,21 @@ void ScriptLoader::loadAndRunGame() {
 		else {
 			game.getCurrentPlayer().moveToAtSpeed(Vector2<>(280, 80), 100.0f, Event([] {
 				Game& game = Game::getInstance();
-				game.getCurrentPlayer().setAnimation("");
-				game.getCurrentPlayer().setTexture("idleLeft");
+				//game.getCurrentPlayer().setAnimation("");
+				//game.getCurrentPlayer().setTexture("idleLeft");
 				game.getCurrentPlayer().enableMovement();
 				}));
 			game.getScene().getCamera().moveTo(Vector2<>(0, 0), 2);
 		}
 		}));
 
-	Texture doorTexture = Texture("door", "room28_obj_13b_00.png");
-	GameObject door = GameObject("door", Vector2<>(32, 72), Vector2<>(-1, -1), &doorTexture);
+	Texture doorClosedTexture = Texture("doorClosed", "room28_obj_13b_00.png");
+	Texture doorOpenTexture = Texture("doorOpen");
+
+	Door door = Door("door", Vector2<>(32, 72), doorClosedTexture, doorOpenTexture, scene);
+
+	
+	//GameObject door = GameObject("door", Vector2<>(32, 72), Vector2<>(-1, -1), &doorTexture);
 	door.setLayer(-1);
 	scene.addGameObject(door);
 	Verb openVerb = Verb("open", "Open");
@@ -473,46 +484,46 @@ void ScriptLoader::loadAndRunGame() {
 	uiCurrentVerbInfo.setTextFormat(currentInfoText);
 	game.getUI().addUIElement(uiCurrentVerbInfo);
 
-	door.addVerbInteraction(pushVerb, Event([] {
-		Game& game = Game::getInstance();
-		game.getCurrentPlayer().say("Pushing door", 1.0f);
-	}));
+	//door.addVerbInteraction(pushVerb, Event([] {
+	//	Game& game = Game::getInstance();
+	//	game.getCurrentPlayer().say("Pushing door", 1.0f);
+	//}));
 
-	door.setMouseOverEvent(highlightDefaultVerbEvent);
-	door.setMouseNotOverEvent(dontHighlightDefaultVerbEvent);
+	//door.setMouseOverEvent(highlightDefaultVerbEvent);
+	//door.setMouseNotOverEvent(dontHighlightDefaultVerbEvent);
 
-	door.setDefaultVerb(&closeVerb);
-	door.addVerbInteraction(closeVerb, Event([this](EventInfo e) {
-		Game& game = Game::getInstance();
-		Player& player = game.getCurrentPlayer();
-		GameObject* door = (GameObject*)&e.interactable;
-		if (!door->isVisible()) {
-			return;
-		}
-		door->toggleVisibility();
-		door->removeInteraction("walk");
-		e.player.say("Cerrada");
-		door->setDefaultVerb("open");
-		highlightUIVerb("open");
-		door->addVerbInteraction(*game.getVerb("open"), Event([this](EventInfo e) {
-			GameObject* door = (GameObject*)&e.interactable;
-			if (door->isVisible()) {
-				return;
-			}
-			auto pos = e.game.getScene().getWalkableArea()->getClosestPoint(door->getPosition() + door->getSize() / 2);
-			door->addVerbInteraction(*e.game.getVerb("walk"), createMoveToEvent(pos, Event([](EventInfo e) {e.player.say("Saliendo..."); })));
-			door->toggleVisibility();
-			door->setDefaultVerb("close");
-			highlightUIVerb("close");
-			e.player.say("Abierta");
-		}));
-	}));
-	auto pos = game.getScene().getWalkableArea()->getClosestPoint(door.getPosition() + door.getSize() / 2);
-	door.addVerbInteraction(*game.getVerb("walk"), createMoveToEvent(pos, Event([](EventInfo e) {e.player.say("Saliendo..."); })));
+	//door.setDefaultVerb(&closeVerb);
+	//door.addVerbInteraction(closeVerb, Event([this](EventInfo e) {
+	//	Game& game = Game::getInstance();
+	//	Player& player = game.getCurrentPlayer();
+	//	GameObject* door = (GameObject*)&e.interactable;
+	//	if (!door->isVisible()) {
+	//		return;
+	//	}
+	//	door->toggleVisibility();
+	//	door->removeInteraction("walk");
+	//	e.player.say("Cerrada");
+	//	door->setDefaultVerb("open");
+	//	highlightUIVerb("open");
+	//	door->addVerbInteraction(*game.getVerb("open"), Event([this](EventInfo e) {
+	//		GameObject* door = (GameObject*)&e.interactable;
+	//		if (door->isVisible()) {
+	//			return;
+	//		}
+	//		auto pos = e.game.getScene().getWalkableArea()->getClosestPoint(door->getPosition() + door->getSize() / 2);
+	//		door->addVerbInteraction(*e.game.getVerb("walk"), createMoveToEvent(pos, Event([](EventInfo e) {e.player.say("Saliendo..."); })));
+	//		door->toggleVisibility();
+	//		door->setDefaultVerb("close");
+	//		highlightUIVerb("close");
+	//		e.player.say("Abierta");
+	//	}));
+	//}));
+	//auto pos = game.getScene().getWalkableArea()->getClosestPoint(door.getPosition() + door.getSize() / 2);
+	//door.addVerbInteraction(*game.getVerb("walk"), createMoveToEvent(pos, Event([](EventInfo e) {e.player.say("Saliendo..."); })));
 
 	player.setVerb("walk");
 
-	walkVerb.setDefaultEvent(&updateUI);
+	Verb::walkVerb.setDefaultEvent(&updateUI);
 
 	Texture customCursorTexture = Texture("", "cursor.png");
 	game.setCustomCursor(customCursorTexture, Vector2<>(-1, -1));

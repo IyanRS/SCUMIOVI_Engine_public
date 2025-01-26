@@ -19,4 +19,9 @@ public:
 	/// <param name="event"></param>
 	void setDefaultEvent(Event* event);
 	Event* getDefaultEvent();
+
+	static Verb walkVerb;
+	static Verb pushVerb;
+	static Verb closeVerb;
+	static Verb openVerb;
 };
