@@ -20,8 +20,13 @@ public:
 	void setDefaultEvent(Event* event);
 	Event* getDefaultEvent();
 
+	static Verb defaultVerb;
+	static Verb anyVerb;
+
 	static Verb walkVerb;
 	static Verb pushVerb;
 	static Verb closeVerb;
 	static Verb openVerb;
+
+	bool operator==(const Verb& v2) const { return name == v2.name; };
 };

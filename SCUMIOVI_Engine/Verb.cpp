@@ -2,6 +2,11 @@
 
 #include "Game.hpp"
 
+// Special verbs that represent the default verb of the object that 
+// we can interact with or any possible verb
+Verb Verb::defaultVerb = Verb("default", "Default");
+Verb Verb::anyVerb = Verb("any", "Any");
+
 Verb Verb::walkVerb = Verb("walk", "Walk to");
 Verb Verb::pushVerb = Verb("push", "Push");
 Verb Verb::closeVerb = Verb("close", "Close");

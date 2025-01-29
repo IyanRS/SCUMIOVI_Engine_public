@@ -6,10 +6,10 @@
 #include "Verb.hpp"
 
 class Inventory {
-	std::vector<GameObject> items;
+	std::vector<GameObject*> items;
 public:
-	void addItem(GameObject& item);
+	void addItem(GameObject* item);
 	void removeItem(GameObject& item);
 	GameObject& getItemAt(int index);
-	std::vector<GameObject>& getItems();
+	std::vector<GameObject*>& getItems();
 };

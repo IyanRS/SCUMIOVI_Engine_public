@@ -12,6 +12,7 @@
 #include "UI.hpp"
 
 class Renderer {
+	Camera zeroCamera; // Dummy camera at 0, 0
 	SDL_Window* sdlWindow;
 	SDL_Renderer* sdlRenderer;
 	ResourceManager& resourceManager;
@@ -24,7 +25,8 @@ class Renderer {
 	void renderGameObject(GameObject& gameObject, Camera& camera);
 	void checkOverlaps(GameObject& gameObject1, GameObject& gameObject2);
 	void renderText(Vector2<>, Text&);
-	void renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, std::string textString, int color[3]);
+	std::string generateTextureKey(TTF_Font* font, const std::string& textString, const int color[3]); // Used for hashing fonts
+	void renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, const std::string& textString, const int color[3]);
 	void renderUI(UI& ui);
 	void renderUIElement(GameObject& uiElement);
 	void renderDebugElements(Scene& scene);

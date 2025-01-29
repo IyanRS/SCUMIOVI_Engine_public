@@ -60,29 +60,65 @@ void Renderer::applyScreenTransform(Vector2<>& point) {
 }
 
 void Renderer::renderUIElement(GameObject& uiElement) {
-	Camera staticCamera = Camera(); // UI does not depend on camera
-	renderGameObject(uiElement, staticCamera);
+	// UI does not depend on camera position, so I use the dummy zeroCamera here
+	renderGameObject(uiElement, zeroCamera);
 }
 
 void Renderer::renderUI(UI& ui) {
-	for (GameObject uiElement : ui.getUIElements()) {
-		renderUIElement(uiElement);
+	auto elements = ui.getUIElements();
+	for (GameObject* uiElement : elements) {
+		renderUIElement(*uiElement);
 	}
 }
 
-void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, std::string textString, int color[3]) {
-	SDL_Color sdlColor = { color[0], color[1], color[2] };
-	
-	SDL_Surface* surface = TTF_RenderText_Solid(font, textString.c_str(), 0, sdlColor);
 
-	SDL_Texture* texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
-	SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
-	SDL_FRect dstRect{ pos.x, pos.y, size.x, size.y };
-	SDL_RenderTexture(sdlRenderer, texture, NULL, &dstRect);
-
-	SDL_DestroySurface(surface);
-	SDL_DestroyTexture(texture);
+std::string Renderer::generateTextureKey(TTF_Font* font, const std::string& textString, const int color[3]) {
+	return std::to_string(reinterpret_cast<uintptr_t>(font)) + ":" + textString + ":" +
+		std::to_string(color[0]) + "," + std::to_string(color[1]) + "," + std::to_string(color[2]);
 }
+
+void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, const std::string& textString, const int color[3]) {
+	static std::unordered_map<std::string, SDL_Texture*> textureCache;
+
+	SDL_Color sdlColor = { static_cast<Uint8>(color[0]), static_cast<Uint8>(color[1]), static_cast<Uint8>(color[2]) };
+
+	std::string key = generateTextureKey(font, textString, color);
+	SDL_Texture* texture = nullptr;
+
+	auto it = textureCache.find(key);
+	if (it != textureCache.end()) {
+		texture = it->second;
+	}
+	else {
+		SDL_Surface* surface = TTF_RenderText_Solid(font, textString.c_str(), 0, sdlColor);
+		if (surface) {
+			texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
+			SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+			SDL_DestroySurface(surface);
+			textureCache[key] = texture;
+		}
+	}
+
+	if (texture) {
+		SDL_FRect dstRect{ pos.x, pos.y, size.x, size.y };
+		SDL_RenderTexture(sdlRenderer, texture, NULL, &dstRect);
+	}
+}
+
+// TODO: optimize this function (seems to cause overhead)
+//void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, std::string textString, int color[3]) {
+//	SDL_Color sdlColor = { color[0], color[1], color[2] };
+//	
+//	SDL_Surface* surface = TTF_RenderText_Solid(font, textString.c_str(), 0, sdlColor);
+//
+//	SDL_Texture* texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
+//	SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+//	SDL_FRect dstRect{ pos.x, pos.y, size.x, size.y };
+//	SDL_RenderTexture(sdlRenderer, texture, NULL, &dstRect);
+//
+//	SDL_DestroySurface(surface);
+//	SDL_DestroyTexture(texture);
+//}
 
 #define OUTLINE_SIZE 1
 
@@ -171,7 +207,7 @@ void Renderer::renderTexture(Vector2<> position, Vector2<> size, Texture* textur
 		int color[4];
 		textureToRender->getColor(color);
 		if (color[0] == -1 || color[1] == -1 || color[2] == -1 || color[3] == -1) {
-			SDL_Log("Invalid texture without source file");
+			//SDL_Log("Invalid texture without source file");
 			return;
 		}
 
@@ -246,7 +282,7 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 	if (textureToRender != nullptr) {
 		renderTexture(gameObject.getPosition(), gameObject.getSize(), textureToRender, camera);
 	}
-
+	
 	Text& textOverObject = gameObject.getTextOver();
 
 	if (textOverObject.toString() != "") {
@@ -365,7 +401,9 @@ void Renderer::render(Scene& scene, UI& ui) {
 	auto lastRenderTimeDiff = now - lastRenderTime;
 	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(lastRenderTimeDiff).count();
 
-	auto msUntilNextFrame = (1000 / FPS) - ms;
+	long long msUntilNextFrame = (1000 / FPS) - ms;
+
+	//SDL_Log(std::to_string(msUntilNextFrame).c_str());
 
 	if (msUntilNextFrame > 0) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(msUntilNextFrame));

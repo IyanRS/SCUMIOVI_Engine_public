@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 
 #include "Common.hpp"
+#include <thread>
 
 Vector2<> InputManager::getClickPosition(Camera& camera) {
 	float xMouse;
@@ -53,6 +54,16 @@ void InputManager::checkMouseOverObject(float xMouse, float yMouse, GameObject* 
 }
 
 void InputManager::mouseOver(UI& ui, Scene& scene) {
+	auto now = std::chrono::system_clock::now();
+	auto lastCheckTimeDiff = now - lastCheckTime;
+	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(lastCheckTimeDiff).count();
+
+	long long msUntilNextFrame = (1000 / FPS) - ms;
+
+	if (msUntilNextFrame > 0) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(msUntilNextFrame));
+	}
+
 	float xMouse;
 	float yMouse;
 
@@ -62,20 +73,22 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 	xMouse /= WINDOW_WIDTH / RENDER_WIDTH;
 	yMouse /= WINDOW_HEIGHT / RENDER_HEIGHT;
 
-	std::vector uiElements = ui.getUIElements();
+	std::vector<GameObject*> uiElements = ui.getUIElements();
 	for (int i = uiElements.size() - 1; i >= 0; i--) {
-		checkMouseOverObject(xMouse, yMouse, &uiElements[i]);
+		checkMouseOverObject(xMouse, yMouse, uiElements[i]);
 	}
 
 	Camera& camera = scene.getCamera();
 	xMouse += camera.getPosition().x;
 	yMouse += camera.getPosition().y;
 
-	std::vector gameObjects = scene.getGameObjects();
+	std::vector<GameObject*> gameObjects = scene.getGameObjects();
 	for (int i = gameObjects.size() - 1; i >= 0; i--) {
 
 		checkMouseOverObject(xMouse, yMouse, gameObjects[i]);
 	}
+
+	lastCheckTime = now;
 }
 
 bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
@@ -90,7 +103,7 @@ bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
 
 	std::vector uiElements = ui.getUIElements();
 	for (int i = uiElements.size()-1; i >= 0; i--) {
-		if (checkObjectClicked(xMouse, yMouse, &uiElements[i], verb)) {
+		if (checkObjectClicked(xMouse, yMouse, uiElements[i], verb)) {
 			return true;
 		}
 	}

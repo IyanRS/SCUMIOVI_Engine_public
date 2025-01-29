@@ -15,18 +15,18 @@ class ScriptLoader {
 	Verb defaultVerb;  // Represents default verb when interacting with an object
 	Verb anyVerb;	   // Represents any possible verb to allow interactions that don't depend on selected verb
 
-	GameObject& addBackground(Scene& scene, std::string source, Vector2<int> size = Vector2<int>());
+	//GameObject& addBackground(Scene& scene, std::string source, Vector2<int> size = Vector2<int>());
 	GameObject& createUIVerbButton(Verb& verb,
 		Vector2<> position, Vector2<> size, Texture* verbBackground, Event& onUIUpdate);
 	GameObject& createUIItemSlot(Vector2<> position, Vector2<> size, Texture* background, Event& onUIUpdate);
-	void createUIVerbButtonMatrix(Vector2<> position, std::vector<std::vector<Verb>> verbs, Texture* verbBackground, Event& onUIUpdate);
+	void createUIVerbButtonMatrix(Vector2<> position, std::vector<std::vector<Verb>> verbs, Texture* verbBackground);
 	void createUIItemSlotsMatrix(Vector2<> position, int columns, int rows, Texture* background, Event& onUIUpdate);
-	void highlightUIVerb(std::string verbName);
+	//void highlightUIVerb(std::string verbName);
 	Event highlightDefaultVerbEvent;
 	Event dontHighlightDefaultVerbEvent;
 	GameObject& addItemObject(std::string name, Scene& scene, std::string sceneTextureSource, std::string inventoryTextureSource, Vector2<> pos);
 	Event updateItems;
-	Event updateUI;
+	//Event updateUI;
 
 public:
 	ScriptLoader();

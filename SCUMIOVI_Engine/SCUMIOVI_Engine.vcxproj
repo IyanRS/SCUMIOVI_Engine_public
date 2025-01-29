@@ -166,6 +166,7 @@
     <ClCompile Include="Text.hpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="UI.cpp" />
+    <ClCompile Include="UIVerbButton.cpp" />
     <ClCompile Include="Verb.cpp" />
     <ClCompile Include="WalkableArea.cpp" />
   </ItemGroup>
@@ -189,6 +190,7 @@
     <ClInclude Include="ScriptLoader.hpp" />
     <ClInclude Include="Texture.hpp" />
     <ClInclude Include="UI.hpp" />
+    <ClInclude Include="UIVerbButton.hpp" />
     <ClInclude Include="Vector2.hpp" />
     <ClInclude Include="Verb.hpp" />
     <ClInclude Include="WalkableArea.hpp" />

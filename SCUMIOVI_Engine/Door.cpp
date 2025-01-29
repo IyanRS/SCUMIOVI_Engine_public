@@ -10,18 +10,29 @@ Door::Door(std::string name,
 
 	//setMouseOverEvent(highlightDefaultVerbEvent);
 	//setMouseNotOverEvent(dontHighlightDefaultVerbEvent);
+	addTexture(&closedTexture);
+	addTexture(&openTexture);
 
-	setDefaultVerb(&Verb::closeVerb);
-	addVerbInteraction(Verb::closeVerb, Event([this](EventInfo e) {
+	setTexture(closedTexture.getName());
+	setState(CLOSED);
+
+	setDefaultVerb(&Verb::openVerb);
+	addVerbInteraction(Verb::closeVerb, Event([this, &closedTexture](EventInfo e) {
 		if (getState() == CLOSED) {
 			return;
 		}
-		toggleVisibility();
-		removeInteraction("walk");
-		e.player.say("Cerrada");
-		setDefaultVerb("open");
-		setState(CLOSED);
-		//highlightUIVerb("open");
+		auto pos = e.game.getScene().getWalkableArea()->getClosestPoint(getPosition() + getSize() / 2);
+		pos.x -= e.player.getSize().x * 0.5;
+		pos.y -= e.player.getSize().y * 0.8;
+		e.player.moveToAtSpeed(pos, 100, Event([this, &closedTexture](EventInfo e) {
+			setTexture(closedTexture.getName());
+			e.player.say("Cerrada");
+			setDefaultVerb(&Verb::openVerb);
+			setState(CLOSED);
+			//TODO:
+			//highlightUIVerb("open");
+		}));
+	}));
 
 	addVerbInteraction(Verb::walkVerb, Event([this](EventInfo e) {
 		auto pos = e.game.getScene().getWalkableArea()->getClosestPoint(getPosition() + getSize() / 2);
@@ -33,20 +44,20 @@ Door::Door(std::string name,
 			}
 		}));
 	}));
-	addVerbInteraction(Verb::openVerb, Event([this](EventInfo e) {
+	addVerbInteraction(Verb::openVerb, Event([this, &openTexture](EventInfo e) {
 		if (getState() == OPEN) {
 			return;
 		}
-		//auto pos = e.game.getScene().getWalkableArea()->getClosestPoint(door->getPosition() + door->getSize() / 2);
-		toggleVisibility();
-		setDefaultVerb("close");
-		setState(OPEN);
-		//highlightUIVerb("close");
-		e.player.say("Abierta");
+		auto pos = e.game.getScene().getWalkableArea()->getClosestPoint(getPosition() + getSize() / 2);
+		pos.x -= e.player.getSize().x * 0.5;
+		pos.y -= e.player.getSize().y * 0.8;
+		e.player.moveToAtSpeed(pos, 100, Event([this, &openTexture](EventInfo e) {
+			setTexture(openTexture.getName());
+			setDefaultVerb(&Verb::closeVerb);
+			setState(OPEN);
+			//highlightUIVerb("close");
+			e.player.say("Abierta");
 		}));
+		
 	}));
-
-	//auto pos = game.getScene().getWalkableArea()->getClosestPoint(door.getPosition() + door.getSize() / 2);
-	//door.addVerbInteraction(*game.getVerb("walk"), createMoveToEvent(pos, Event([](EventInfo e) {e.player.say("Saliendo..."); })));
-
 }

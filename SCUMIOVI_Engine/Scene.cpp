@@ -4,6 +4,8 @@
 #include "Camera.hpp"
 #include <algorithm>
 
+#include "Verb.hpp"
+
 Scene::Scene() {
 	debugPoints = std::list<Vector2<>>();
 	debugLines = std::list<std::array<Vector2<>, 2>>();
@@ -19,6 +21,25 @@ void Scene::addGameObject(GameObject& gameObject) {
 	std::sort(gameObjects.begin(), gameObjects.end(), [this](GameObject* o1, GameObject* o2) {
 		return o1->getLayer() < o2->getLayer();
 	});
+}
+
+GameObject& Scene::addBackground(Scene& scene, std::string source, Vector2<int> size) {
+	// TODO: handle pointers memory
+	Texture* backgroundTexture = new Texture("", source, Vector2<int>(), size);
+	GameObject* background = new GameObject("background", Vector2<>(0, 0), Vector2<>(-1, -1), backgroundTexture);
+	background->setLayer(-100);
+
+	background->setDefaultVerb(&Verb::walkVerb);
+	background->addVerbInteraction(Verb::walkVerb, Event([this](EventInfo e) {
+		WalkableArea* walkableArea = getWalkableArea();
+		if (walkableArea != nullptr) {
+			Vector2<> walkTo = walkableArea->getClosestPoint(e.clickPos);
+			walkableArea->interact(walkTo, &Verb::walkVerb);
+		}
+	}));
+
+	scene.addGameObject(*background);
+	return *background;
 }
 
 void Scene::removeGameObject(GameObject& gameObject) {

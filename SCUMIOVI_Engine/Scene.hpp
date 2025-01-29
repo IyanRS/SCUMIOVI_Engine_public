@@ -30,6 +30,7 @@ public:
 	//void moveCameraTo(Vector2<> position, float seconds, Event callback);
 	void addGameObject(GameObject& gameObject);
 	void removeGameObject(GameObject& gameObject);
+	GameObject& addBackground(Scene& scene, std::string source, Vector2<int> size);
 	std::vector<GameObject*> getGameObjects();
 	// TODO: maybe a list of walkableAreas is better, it would allow scenarios
 	// with multiple separated areas.
