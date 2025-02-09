@@ -72,17 +72,19 @@ void Renderer::renderUI(UI& ui) {
 }
 
 
-std::string Renderer::generateTextureKey(TTF_Font* font, const std::string& textString, const int color[3]) {
+std::string Renderer::generateTextureKey(TTF_Font* font, const std::string& textString, const int color[3], bool hasOutline) {
 	return std::to_string(reinterpret_cast<uintptr_t>(font)) + ":" + textString + ":" +
-		std::to_string(color[0]) + "," + std::to_string(color[1]) + "," + std::to_string(color[2]);
+		std::to_string(color[0]) + "," + std::to_string(color[1]) + "," + std::to_string(color[2]) + ":" + std::to_string(hasOutline);
 }
 
-void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, const std::string& textString, const int color[3]) {
+#define OUTLINE_SIZE 1
+
+void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, const std::string& textString, const int color[3], bool hasOutline) {
 	static std::unordered_map<std::string, SDL_Texture*> textureCache;
 
 	SDL_Color sdlColor = { static_cast<Uint8>(color[0]), static_cast<Uint8>(color[1]), static_cast<Uint8>(color[2]) };
 
-	std::string key = generateTextureKey(font, textString, color);
+	std::string key = generateTextureKey(font, textString, color, hasOutline);
 	SDL_Texture* texture = nullptr;
 
 	auto it = textureCache.find(key);
@@ -90,7 +92,11 @@ void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, cons
 		texture = it->second;
 	}
 	else {
+		if (hasOutline)
+			TTF_SetFontOutline(font, OUTLINE_SIZE);
 		SDL_Surface* surface = TTF_RenderText_Solid_Wrapped(font, textString.c_str(), 0, sdlColor, 0);
+		if (hasOutline)
+			TTF_SetFontOutline(font, 0);
 		if (surface) {
 			texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
 			SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
@@ -120,10 +126,8 @@ void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, cons
 //	SDL_DestroyTexture(texture);
 //}
 
-#define OUTLINE_SIZE 1
-
 // TODO: refactor to avoid code repetition
-void Renderer::renderText(Vector2<> position, Text& text) {
+void Renderer::renderText(Vector2<> position, Text& text, bool hasOutline) {
 	TTF_Font* font = resourceManager.loadFont("arial.ttf", text.getSize());
 
 	// TODO: outline and shadow custom color
@@ -135,17 +139,19 @@ void Renderer::renderText(Vector2<> position, Text& text) {
 	}
 
 	if (text.hasOutline()) {
-		TTF_SetFontOutline(font, OUTLINE_SIZE);
 		int blackColor[] = { 0, 0, 0 };
 		Text outlineText = Text(text.toString(), text.getSize(), blackColor, false, text.getTextOverMode(), false);
-		renderText(position+Vector2<>(0,1), outlineText);
-		TTF_SetFontOutline(font, 0);
+		renderText(position+Vector2<>(0,1), outlineText, true);
 	}
 
 	Vector2<> positionRounded = Vector2<>((int)position.x, (int)position.y);
 	TTF_Text* ttfText = TTF_CreateText(textEngine, font, text.toString().c_str(), text.toString().size());
 	int w, h;
 	TTF_GetTextSize(ttfText, &w, &h);
+	if (hasOutline) {
+		w += OUTLINE_SIZE*2;
+		h += OUTLINE_SIZE*2;
+	}
 #ifndef PIXEL_PERFECT
 	Vector2<> textSize = Vector2<>(w, h);
 	applyScreenTransform(textSize);
@@ -160,7 +166,9 @@ void Renderer::renderText(Vector2<> position, Text& text) {
 		positionRounded.y -= h / 2;
 	int color[4];
 	text.getColor(color);
-	renderTTFText(positionRounded, Vector2<>(w,h), font, text.toString(), color);
+
+	renderTTFText(positionRounded, Vector2<>(w,h), font, text.toString(), color, hasOutline);
+
 
 	TTF_DestroyText(ttfText);
 }

@@ -24,9 +24,9 @@ class Renderer {
 	std::vector<std::array<GameObject*, 2>> currentlyOverlapping;
 	void renderGameObject(GameObject& gameObject, Camera& camera);
 	void checkOverlaps(GameObject& gameObject1, GameObject& gameObject2);
-	void renderText(Vector2<>, Text&);
-	std::string generateTextureKey(TTF_Font* font, const std::string& textString, const int color[3]); // Used for hashing fonts
-	void renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, const std::string& textString, const int color[3]);
+	void renderText(Vector2<>, Text&, bool hasOutline=false);
+	std::string generateTextureKey(TTF_Font* font, const std::string& textString, const int color[3], bool hasOutline); // Used for hashing fonts
+	void renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, const std::string& textString, const int color[3], bool hasOutline=false);
 	void renderUI(UI& ui);
 	void renderUIElement(GameObject& uiElement);
 	void renderDebugElements(Scene& scene);
