@@ -147,6 +147,9 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Delay.cpp" />
     <ClCompile Include="Delay.hpp" />
+    <ClCompile Include="Dialogue.cpp" />
+    <ClCompile Include="DialogueNode.cpp" />
+    <ClCompile Include="DialogueOption.cpp" />
     <ClCompile Include="Door.cpp" />
     <ClCompile Include="Event.cpp" />
     <ClCompile Include="EventInfo.cpp" />
@@ -166,6 +169,9 @@
     <ClCompile Include="Text.hpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="UI.cpp" />
+    <ClCompile Include="UIDialogueOption.cpp" />
+    <ClCompile Include="UIItemSlot.cpp" />
+    <ClCompile Include="UILayout.cpp" />
     <ClCompile Include="UIVerbButton.cpp" />
     <ClCompile Include="Verb.cpp" />
     <ClCompile Include="WalkableArea.cpp" />
@@ -174,6 +180,9 @@
     <ClInclude Include="Animation.hpp" />
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="Common.hpp" />
+    <ClInclude Include="Dialogue.hpp" />
+    <ClInclude Include="DialogueNode.hpp" />
+    <ClInclude Include="DialogueOption.hpp" />
     <ClInclude Include="Door.hpp" />
     <ClInclude Include="Event.hpp" />
     <ClInclude Include="EventInfo.hpp" />
@@ -190,6 +199,9 @@
     <ClInclude Include="ScriptLoader.hpp" />
     <ClInclude Include="Texture.hpp" />
     <ClInclude Include="UI.hpp" />
+    <ClInclude Include="UIDialogueOption.hpp" />
+    <ClInclude Include="UIItemSlot.hpp" />
+    <ClInclude Include="UILayout.hpp" />
     <ClInclude Include="UIVerbButton.hpp" />
     <ClInclude Include="Vector2.hpp" />
     <ClInclude Include="Verb.hpp" />

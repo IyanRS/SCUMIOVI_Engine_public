@@ -4,7 +4,8 @@
 
 enum TextOverMode {
 	TEXT_ON_TOP,
-	TEXT_CENTERED
+	TEXT_CENTERED,
+	TEXT_TO_LEFT
 };
 
 class Text {

@@ -90,7 +90,7 @@ void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, cons
 		texture = it->second;
 	}
 	else {
-		SDL_Surface* surface = TTF_RenderText_Solid(font, textString.c_str(), 0, sdlColor);
+		SDL_Surface* surface = TTF_RenderText_Solid_Wrapped(font, textString.c_str(), 0, sdlColor, 0);
 		if (surface) {
 			texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
 			SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
@@ -126,55 +126,20 @@ void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, cons
 void Renderer::renderText(Vector2<> position, Text& text) {
 	TTF_Font* font = resourceManager.loadFont("arial.ttf", text.getSize());
 
-	// TODO: outline and shadow color
+	// TODO: outline and shadow custom color
 
 	if (text.hasShadow()) {
-		TTF_SetFontOutline(font, 0);
-		TTF_Text* ttfTextOutline = TTF_CreateText(textEngine, font, text.toString().c_str(), text.toString().size());
-		int wOutline, hOutline;
-		Vector2<> positionRoundedOutline = Vector2<>((int)position.x, (int)position.y);
-		TTF_GetTextSize(ttfTextOutline, &wOutline, &hOutline);
-		positionRoundedOutline.x -= wOutline / 2;
-		if (text.getTextOverMode() == TEXT_ON_TOP)
-			positionRoundedOutline.y -= hOutline;
-		else if (text.getTextOverMode() == TEXT_CENTERED)
-			positionRoundedOutline.y -= hOutline / 2;
-		positionRoundedOutline.x += 1;
-		positionRoundedOutline.y += 1;
-#ifndef PIXEL_PERFECT
-		Vector2<> textSize = Vector2<>(wOutline, hOutline);
-		applyScreenTransform(textSize);
-		wOutline = textSize.x;
-		hOutline = textSize.y;
-#endif
 		int color[] = { 0x40, 0x0, 0x40 };
-		renderTTFText(positionRoundedOutline, Vector2<>(wOutline, hOutline), font, text.toString(), color);
-		TTF_SetFontOutline(font, 0);
-		TTF_DestroyText(ttfTextOutline);
+		Text shadowText = Text(text.toString(), text.getSize(), color, false, text.getTextOverMode(), false);
+		renderText(position + Vector2<>(1, 1), shadowText);
 	}
 
 	if (text.hasOutline()) {
 		TTF_SetFontOutline(font, OUTLINE_SIZE);
-		TTF_Text* ttfTextOutline = TTF_CreateText(textEngine, font, text.toString().c_str(), text.toString().size());
-		int wOutline, hOutline;
-		Vector2<> positionRoundedOutline = Vector2<>((int)position.x, (int)position.y);
-		TTF_GetTextSize(ttfTextOutline, &wOutline, &hOutline);
-		positionRoundedOutline.x -= wOutline / 2;
-		if (text.getTextOverMode() == TEXT_ON_TOP)
-			positionRoundedOutline.y -= hOutline;
-		else if (text.getTextOverMode() == TEXT_CENTERED)
-			positionRoundedOutline.y -= hOutline / 2;
-		positionRoundedOutline.y += OUTLINE_SIZE;
-#ifndef PIXEL_PERFECT
-		Vector2<> textSize = Vector2<>(wOutline, hOutline);
-		applyScreenTransform(textSize);
-		wOutline = textSize.x;
-		hOutline = textSize.y;
-#endif
-		int blackColor[] = {0, 0, 0};
-		renderTTFText(positionRoundedOutline, Vector2<>(wOutline, hOutline), font, text.toString(), blackColor);
+		int blackColor[] = { 0, 0, 0 };
+		Text outlineText = Text(text.toString(), text.getSize(), blackColor, false, text.getTextOverMode(), false);
+		renderText(position+Vector2<>(0,1), outlineText);
 		TTF_SetFontOutline(font, 0);
-		TTF_DestroyText(ttfTextOutline);
 	}
 
 	Vector2<> positionRounded = Vector2<>((int)position.x, (int)position.y);
@@ -187,10 +152,11 @@ void Renderer::renderText(Vector2<> position, Text& text) {
 	w = textSize.x;
 	h = textSize.y;
 #endif
-	positionRounded.x -= w / 2;
+	if (text.getTextOverMode() != TEXT_TO_LEFT)
+		positionRounded.x -= w / 2;
 	if (text.getTextOverMode() == TEXT_ON_TOP)
 		positionRounded.y -= h;
-	else if (text.getTextOverMode() == TEXT_CENTERED)
+	else if (text.getTextOverMode() == TEXT_CENTERED || text.getTextOverMode() == TEXT_TO_LEFT)
 		positionRounded.y -= h / 2;
 	int color[4];
 	text.getColor(color);
@@ -292,6 +258,9 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 		}
 		else if (textOverObject.getTextOverMode() == TEXT_CENTERED) {
 			textPosition = gameObject.getPosition() + Vector2<>(gameObject.getSize().x / 2, gameObject.getSize().y / 2);
+		}
+		else if (textOverObject.getTextOverMode() == TEXT_TO_LEFT) {
+			textPosition = gameObject.getPosition() + Vector2<>(0, gameObject.getSize().y / 2);
 		}
 		
 		//Vector2<> textPosition = gameObject.getPosition() + Vector2<>(gameObject.getSize().x / 2, 0);

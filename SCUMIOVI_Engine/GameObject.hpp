@@ -16,6 +16,8 @@ class Scene;
 #include <string>
 #include "Text.hpp"
 
+#include "Dialogue.hpp"
+
 class GameObject : public Interactable {
 	std::string name;
 	Vector2<> position;
@@ -54,6 +56,8 @@ class GameObject : public Interactable {
 	//Animation* idleDownAnimation = nullptr;
 	//Animation* idleLeftAnimation = nullptr;
 	//Animation* idleRightAnimation = nullptr;
+
+	//Dialogue* dialogue;
 	
 public:
 	GameObject(std::string name,
@@ -104,6 +108,7 @@ public:
 	void setState(int state);
 	int getState();
 	void setTextFormat(Text& text);
+	//void setDialogue(Dialogue* dialogue);
 	//void setMovementAnimations(Animation* moveUp, Animation* moveDown, Animation* moveLeft, Animation* moveRight);
 	//void setIdleAnimations(Animation* idleUp, Animation* idleDown, Animation* idleLeft, Animation* idleRight);
 };

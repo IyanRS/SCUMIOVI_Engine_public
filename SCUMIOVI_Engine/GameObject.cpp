@@ -388,6 +388,10 @@ void GameObject::setTextFormat(Text& text) {
 	this->textFormat = text;
 }
 
+//void GameObject::setDialogue(Dialogue* dialogue) {
+//	this->dialogue = dialogue;
+//}
+
 //void GameObject::setMovementAnimations(Animation* moveUp, Animation* moveDown, Animation* moveLeft, Animation* moveRight) {
 //	moveUpAnimation = moveUp;
 //	moveDownAnimation = moveDown;
