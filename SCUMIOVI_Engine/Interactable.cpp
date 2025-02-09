@@ -14,13 +14,13 @@ bool Interactable::onClick(Vector2<> clickPos, Verb* verb) {
 void Interactable::onMouseOver(Vector2<> mousePos) {
 	Game& game = Game::getInstance();
 	EventInfo e = EventInfo(mousePos, game.getCurrentPlayer(), *this);
-	mouseOverEvent.execute(e);
+	getMouseOverEvent().execute(e);
 }
 
 void Interactable::onMouseNotOver(Vector2<> mousePos) {
 	Game& game = Game::getInstance();
 	EventInfo e = EventInfo(mousePos, game.getCurrentPlayer(), *this);
-	mouseNotOverEvent.execute(e);
+	getMouseNotOverEvent().execute(e);
 }
 
 bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
@@ -63,6 +63,7 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 
 void Interactable::setDefaultVerb(Verb* verb) {
 	defaultVerb = verb;
+	//shouldHighlightDefaultVerb = highlight;
 }
 
 Verb* Interactable::getDefaultVerb() {
@@ -72,6 +73,7 @@ Verb* Interactable::getDefaultVerb() {
 void Interactable::setDefaultVerb(std::string verbName) {
 	Game& game = Game::getInstance();
 	defaultVerb = game.getVerb(verbName);
+	//shouldHighlightDefaultVerb = highlight;
 }
 
 void Interactable::addVerbInteraction(Verb& verb, Event event) {
@@ -87,6 +89,12 @@ void Interactable::removeInteraction(std::string verbName) {
 }
 
 Event& Interactable::getMouseOverEvent() {
+	if (defaultVerb && defaultVerb->getName() != Verb::anyVerb.getName()) {
+		Event highlightDefaultVerbEvent = Event([this](EventInfo e) {e.game.getUI().highlightVerb(*getDefaultVerb()); });
+
+		mouseOverEventPlusHighlight = mouseOverEvent + highlightDefaultVerbEvent;
+		return mouseOverEventPlusHighlight;
+	}
 	return mouseOverEvent;
 }
 
@@ -95,6 +103,17 @@ void Interactable::setMouseOverEvent(Event event) {
 }
 
 Event& Interactable::getMouseNotOverEvent() {
+	if (defaultVerb && defaultVerb->getName() != Verb::anyVerb.getName()) {
+		Event dontHighlightDefaultVerbEvent = Event([this](EventInfo e) {
+			std::string verbName = defaultVerb->getName();
+			auto button = e.game.getUI().getUIElement(verbName + "Button");
+			if (button)
+				button->setTextOver(button->getTextOver().toString());
+		});
+
+		mouseNotOverEventPlusNoHighlight = mouseOverEvent + dontHighlightDefaultVerbEvent;
+		return mouseNotOverEventPlusNoHighlight;
+	}
 	return mouseNotOverEvent;
 }
 

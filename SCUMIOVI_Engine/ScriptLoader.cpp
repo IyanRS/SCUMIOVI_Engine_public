@@ -88,8 +88,8 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 	selectedVerb = Verb("selected");
 	defaultVerb = Verb("default");
 
-	highlightDefaultVerbEvent = Event([this](EventInfo e) {
-		game.getUI().highlightVerb(*e.interactable.getDefaultVerb());
+	highlightDefaultVerbEvent = Event([](EventInfo e) {
+		e.game.getUI().highlightVerb(*e.interactable.getDefaultVerb());
 	});
 	dontHighlightDefaultVerbEvent = Event([](EventInfo e) {
 		std::string verbName = e.interactable.getDefaultVerb()->getName();
@@ -162,9 +162,6 @@ GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::str
 		e.player.getInventory().addItem(itemInInventory);
 		}) + dontHighlightDefaultVerbEvent + updateItems);
 	itemInScene->setDefaultVerb(game.getVerb("pickup"));
-
-	itemInScene->setMouseOverEvent(highlightDefaultVerbEvent);
-	itemInScene->setMouseNotOverEvent(dontHighlightDefaultVerbEvent);
 
 	scene.addGameObject(*itemInScene);
 	return *itemInScene;
@@ -356,9 +353,9 @@ void ScriptLoader::loadAndRunGame() {
 
 	game.getUI().getLayout("inventory").createVerbsMatrix(Vector2<>(2, 154), {
 
-		{giveVerb, pickupVerb, useVerb}, 
-		{openVerb, lookAtVerb, pushVerb}, 
-		{closeVerb, talkVerb, pullVerb} }, 
+		{&giveVerb, &pickupVerb, &useVerb}, 
+		{&openVerb, &lookAtVerb, &pushVerb}, 
+		{&closeVerb, &talkVerb, &pullVerb} }, 
 		
 		&verbBackground);
 
@@ -400,14 +397,17 @@ void ScriptLoader::loadAndRunGame() {
 
 	stan.addAnimation(&stanAnimation);
 	stan.setAnimation("stanAnimation");
+	
+	int stanTextColor[] = {0x3e, 0x97, 0xe6, 0xff};
+	Text stanTextFormat = Text("", 12, stanTextColor, true);
+	stan.setTextFormat(stanTextFormat);
 
-	DialogueOption testOption1 = DialogueOption("Lorem ipsum dolor sit amet, consectetur adipiscing elit.", Event([] (EventInfo e){
-		e.player.disableMovement();
-		e.player.say("Lorem ipsum dolor sit amet,\nconsectetur adipiscing elit.", 2, Event([](EventInfo e) {
-			e.player.say("Cras in imperdiet lorem. Duis aliquam\nvestibulum tellus ac suscipit.", 2, Event([](EventInfo e) {
-				e.player.say("Quisque a odio pulvinar, pellentesque\nligula ac, euismod enim.", 2, Event([](EventInfo e) {
-					e.player.say("Pellentesque quis turpis interdum,\nconsequat nunc a, posuere lacus.", 2, Event([](EventInfo e) {
-						e.player.say("Nulla quis viverra felis,\nac vestibulum massa.", 2, Event([](EventInfo e) {
+	DialogueOption testOption1 = DialogueOption("Lorem ipsum dolor sit amet, consectetur adipiscing elit.", Event([&stan] (EventInfo e){
+		e.player.say("Lorem ipsum dolor sit amet,\nconsectetur adipiscing elit.", 2, Event([&stan](EventInfo e) {
+			e.player.say("Cras in imperdiet lorem. Duis aliquam\nvestibulum tellus ac suscipit.", 2, Event([&stan](EventInfo e) {
+				e.player.say("Quisque a odio pulvinar, pellentesque\nligula ac, euismod enim.", 2, Event([&stan](EventInfo e) {
+					stan.say("Pellentesque quis turpis interdum,\nconsequat nunc a, posuere lacus.", 2, Event([&stan](EventInfo e) {
+						e.player.say("Nulla quis viverra felis,\nac vestibulum massa.", 2, Event([&stan](EventInfo e) {
 							e.game.getUI().setLayout("inventory");
 							e.player.enableMovement();
 						}));
@@ -416,9 +416,10 @@ void ScriptLoader::loadAndRunGame() {
 			}));
 		}));
 	}));
-	DialogueOption testOption2 = DialogueOption("Test option 2", Event([](EventInfo e) {
-		e.player.say("Test option 2", 0, Event([](EventInfo e) {
+	DialogueOption testOption2 = DialogueOption("Marcho que tengo que marchar", Event([](EventInfo e) {
+		e.player.say("Marcho que tengo que marchar", 0, Event([](EventInfo e) {
 			e.game.getUI().setLayout("inventory");
+			e.player.enableMovement();
 		}));
 	}));
 	DialogueNode testNode = DialogueNode();
@@ -434,6 +435,7 @@ void ScriptLoader::loadAndRunGame() {
 	game.getUI().getLayout("dialogue").addUIElement(uiBackground);
 
 	stan.addVerbInteraction(talkVerb, Event([&testNode](EventInfo e) {
+		e.player.disableMovement();
 		e.game.getUI().getLayout("dialogue").createDialogueOptions(testNode);
 		e.game.getUI().setLayout("dialogue");
 	}));

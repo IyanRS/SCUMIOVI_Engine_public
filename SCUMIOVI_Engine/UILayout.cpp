@@ -93,7 +93,7 @@ void UILayout::highlightVerb(Verb& verb) {
 //	return *uiVerbText;
 //}
 
-std::vector<UIVerbButton*> UILayout::createVerbsMatrix(Vector2<> position, std::vector<std::vector<Verb>> verbs, Texture* verbBackground) {
+std::vector<UIVerbButton*> UILayout::createVerbsMatrix(Vector2<> position, std::vector<std::vector<Verb*>> verbs, Texture* verbBackground) {
 	int height = 14;
 	std::vector<int> columnLengths;
 
@@ -105,8 +105,8 @@ std::vector<UIVerbButton*> UILayout::createVerbsMatrix(Vector2<> position, std::
 	for (int i = 0; i < columns; i++) {
 		int maxLengthColumn = 0;
 		for (int j = 0; j < rows; j++) {
-			if (verbs[j][i].getDisplayName().length() > maxLengthColumn) {
-				maxLengthColumn = verbs[j][i].getDisplayName().length();
+			if (verbs[j][i]->getDisplayName().length() > maxLengthColumn) {
+				maxLengthColumn = verbs[j][i]->getDisplayName().length();
 			}
 		}
 		columnLengths.push_back(maxLengthColumn);
@@ -118,7 +118,7 @@ std::vector<UIVerbButton*> UILayout::createVerbsMatrix(Vector2<> position, std::
 				buttonPos.x += columnLengths[k] * 7;
 				buttonPos.x += 2;
 			}
-			UIVerbButton* button = new UIVerbButton(verbs[j][i], buttonPos, Vector2<>(columnLengths[i] * 7, height), verbBackground);
+			UIVerbButton* button = new UIVerbButton(*verbs[j][i], buttonPos, Vector2<>(columnLengths[i] * 7, height), verbBackground);
 			addUIElement(*button);
 			uiVerbButtons.push_back(button);
 			buttons.push_back(button);

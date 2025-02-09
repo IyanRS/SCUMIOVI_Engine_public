@@ -7,11 +7,17 @@
 
 #include "Vector2.hpp"
 
+
 class Interactable {
 	std::map<std::string, Event> interactions;
 	Verb* defaultVerb;
 	Event mouseOverEvent;
 	Event mouseNotOverEvent;
+
+	Event mouseOverEventPlusHighlight;
+	Event mouseNotOverEventPlusNoHighlight;
+
+	bool shouldHighlightDefaultVerb;
 public:
 	bool onClick(Vector2<> clickPos, Verb* verb);
 	void onMouseOver(Vector2<> mousePos);
