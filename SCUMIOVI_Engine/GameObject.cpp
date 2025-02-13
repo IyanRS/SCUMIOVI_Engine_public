@@ -391,17 +391,3 @@ void GameObject::setTextFormat(Text& text) {
 //void GameObject::setDialogue(Dialogue* dialogue) {
 //	this->dialogue = dialogue;
 //}
-
-//void GameObject::setMovementAnimations(Animation* moveUp, Animation* moveDown, Animation* moveLeft, Animation* moveRight) {
-//	moveUpAnimation = moveUp;
-//	moveDownAnimation = moveDown;
-//	moveLeftAnimation = moveLeft;
-//	moveRightAnimation = moveRight;
-//}
-//
-//void GameObject::setIdleAnimations(Animation* idleUp, Animation* idleDown, Animation* idleLeft, Animation* idleRight) {
-//	idleUpAnimation = idleUp;
-//	idleDownAnimation = idleDown;
-//	idleLeftAnimation = idleLeft;
-//	idleRightAnimation = idleRight;
-//}

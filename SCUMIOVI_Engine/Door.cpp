@@ -29,8 +29,6 @@ Door::Door(std::string name,
 			e.player.say("Cerrada");
 			setDefaultVerb(&Verb::openVerb);
 			setState(CLOSED);
-			//TODO:
-			//highlightUIVerb("open");
 		}));
 	}));
 
@@ -55,7 +53,6 @@ Door::Door(std::string name,
 			setTexture(openTexture.getName());
 			setDefaultVerb(&Verb::closeVerb);
 			setState(OPEN);
-			//highlightUIVerb("close");
 			e.player.say("Abierta");
 		}));
 		

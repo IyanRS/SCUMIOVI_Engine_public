@@ -32,3 +32,11 @@ Verb* Player::getVerb() {
 Inventory& Player::getInventory() {
 	return inventory;
 }
+
+GameObject* Player::getSelectedObject() {
+	return selectedObject;
+}
+
+void Player::setSelectedObject(GameObject* gameObject) {
+	this->selectedObject = gameObject;
+}

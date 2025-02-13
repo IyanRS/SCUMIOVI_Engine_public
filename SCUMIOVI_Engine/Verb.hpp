@@ -27,6 +27,7 @@ public:
 	static Verb pushVerb;
 	static Verb closeVerb;
 	static Verb openVerb;
+	static Verb talkVerb;
 
 	bool operator==(const Verb& v2) const { return name == v2.name; };
 };

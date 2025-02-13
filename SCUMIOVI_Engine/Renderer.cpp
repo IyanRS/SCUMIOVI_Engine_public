@@ -111,22 +111,6 @@ void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, cons
 	}
 }
 
-// TODO: optimize this function (seems to cause overhead)
-//void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, std::string textString, int color[3]) {
-//	SDL_Color sdlColor = { color[0], color[1], color[2] };
-//	
-//	SDL_Surface* surface = TTF_RenderText_Solid(font, textString.c_str(), 0, sdlColor);
-//
-//	SDL_Texture* texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
-//	SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
-//	SDL_FRect dstRect{ pos.x, pos.y, size.x, size.y };
-//	SDL_RenderTexture(sdlRenderer, texture, NULL, &dstRect);
-//
-//	SDL_DestroySurface(surface);
-//	SDL_DestroyTexture(texture);
-//}
-
-// TODO: refactor to avoid code repetition
 void Renderer::renderText(Vector2<> position, Text& text, bool hasOutline) {
 	TTF_Font* font = resourceManager.loadFont("arial.ttf", text.getSize());
 
@@ -224,15 +208,6 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 	if (!gameObject.isVisible()) {
 		return;
 	}
-
-
-	//SDL_FRect rect;
-	//rect.x = object.getPosition().x;
-	//rect.y = object.getPosition().y;
-	//rect.w = object.getSize().x;
-	//rect.h = object.getSize().y;
-	//SDL_SetRenderDrawColor(sdlRenderer, 0, 0xff, 0, 0xff);
-	//SDL_RenderFillRect(sdlRenderer, &rect);
 
 	Texture* textureToRender;
 	if (gameObject.getAnimation() != nullptr) {

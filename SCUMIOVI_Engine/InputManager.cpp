@@ -11,8 +11,8 @@ Vector2<> InputManager::getClickPosition(Camera& camera) {
 
 	SDL_GetMouseState(&xMouse, &yMouse);
 
-	xMouse /= WINDOW_WIDTH / RENDER_WIDTH;
-	yMouse /= WINDOW_HEIGHT / RENDER_HEIGHT;
+	xMouse /= WINDOW_WIDTH / camera.getSize().x;
+	yMouse /= WINDOW_HEIGHT / camera.getSize().y;
 
 	xMouse += camera.getPosition().x;
 	yMouse += camera.getPosition().y;
@@ -70,8 +70,8 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 	SDL_GetMouseState(&xMouse, &yMouse);
 
 	// Transform click screen position to game position
-	xMouse /= WINDOW_WIDTH / RENDER_WIDTH;
-	yMouse /= WINDOW_HEIGHT / RENDER_HEIGHT;
+	xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
+	yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
 	std::vector<GameObject*> uiElements = ui.getUIElements();
 	for (int i = uiElements.size() - 1; i >= 0; i--) {
@@ -98,8 +98,8 @@ bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
 	SDL_GetMouseState(&xMouse, &yMouse);
 
 	// Transform click screen position to game position
-	xMouse /= WINDOW_WIDTH / RENDER_WIDTH;
-	yMouse /= WINDOW_HEIGHT / RENDER_HEIGHT;
+	xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
+	yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
 	std::vector uiElements = ui.getUIElements();
 	for (int i = uiElements.size()-1; i >= 0; i--) {
@@ -119,9 +119,4 @@ bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
 		}
 	}
 	return false;
-	//if (scene.getWalkableArea() != nullptr) {
-	//	if (scene.getWalkableArea()->isPointInside(Vector2<>(xMouse, yMouse))) {
-	//		scene.getWalkableArea()->onClick(Vector2<>(xMouse, yMouse));
-	//	}
-	//}
 }
