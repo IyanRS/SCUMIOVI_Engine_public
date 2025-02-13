@@ -416,10 +416,12 @@ void ScriptLoader::loadAndRunGame() {
 			}));
 		}));
 	}));
-	DialogueOption testOption2 = DialogueOption("Marcho que tengo que marchar", Event([](EventInfo e) {
-		e.player.say("Marcho que tengo que marchar", 0, Event([](EventInfo e) {
-			e.game.getUI().setLayout("inventory");
-			e.player.enableMovement();
+	DialogueOption testOption2 = DialogueOption("Marcho que tengo que marchar", Event([&stan](EventInfo e) {
+		e.player.say("Marcho que tengo que marchar", 1.5, Event([&stan](EventInfo e) {
+			stan.say("Te me cuidas", 1.5, Event([](EventInfo e) {
+				e.game.getUI().setLayout("inventory");
+				e.player.enableMovement();
+			}));
 		}));
 	}));
 	DialogueNode testNode = DialogueNode();

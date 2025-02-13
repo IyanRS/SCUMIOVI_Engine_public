@@ -18,6 +18,9 @@ Door::Door(std::string name,
 
 	setDefaultVerb(&Verb::openVerb);
 	addVerbInteraction(Verb::closeVerb, Event([this, &closedTexture](EventInfo e) {
+		if (!e.player.canMove()) {
+			return;
+		}
 		if (getState() == CLOSED) {
 			return;
 		}
@@ -35,6 +38,9 @@ Door::Door(std::string name,
 	}));
 
 	addVerbInteraction(Verb::walkVerb, Event([this](EventInfo e) {
+		if (!e.player.canMove()) {
+			return;
+		}
 		auto pos = e.game.getScene().getWalkableArea()->getClosestPoint(getPosition() + getSize() / 2);
 		pos.x -= e.player.getSize().x * 0.5;
 		pos.y -= e.player.getSize().y * 0.8;
@@ -45,6 +51,9 @@ Door::Door(std::string name,
 		}));
 	}));
 	addVerbInteraction(Verb::openVerb, Event([this, &openTexture](EventInfo e) {
+		if (!e.player.canMove()) {
+			return;
+		}
 		if (getState() == OPEN) {
 			return;
 		}
