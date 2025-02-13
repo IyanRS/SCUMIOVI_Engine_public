@@ -19,5 +19,7 @@ public:
 	void setVerb(Verb* verb);
 	Verb* getVerb();
 	Inventory& getInventory();
+	GameObject* getSelectedObject();
+	void setSelectedObject(GameObject* gameObject);
 	//void moveTo(Vector2<> pos, float seconds, Event callback);
 };

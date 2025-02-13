@@ -14,6 +14,7 @@ class Camera {
 	Vector2<> currentMovingTarget = Vector2<>(-INFINITY, -INFINITY);
 	void moveToTask(Vector2<> position, float seconds = 0, Event callback = Event());
 public:
+	Camera();
 	Vector2<> getPosition();
 	Vector2<> getSize();
 	void setSize(Vector2<> size);

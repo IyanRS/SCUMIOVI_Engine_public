@@ -1,9 +1,15 @@
 #include "Camera.hpp"
 #include <thread>
 
+#include "Common.hpp"
+
 #define SECONDS_TO_MILLISECONDS 1000
 #define CAMERA_UPDATE_FREQUENCY_MS 16 // ~60 times/second
 #define EPSILON 0.00001
+
+Camera::Camera() {
+	size = Vector2<>(RENDER_WIDTH, RENDER_HEIGHT);
+}
 
 void Camera::followObject() {
 	if (objectToFollow == nullptr) {
@@ -32,7 +38,6 @@ void Camera::setSize(Vector2<> position) {
 	this->size = size;
 }
 
-#include <SDL3/SDL.h> // Temporary, for log
 void Camera::moveToTask(Vector2<> targetPosition, float seconds, Event callback) {
 	float nSteps = seconds * SECONDS_TO_MILLISECONDS / CAMERA_UPDATE_FREQUENCY_MS;
 	Vector2<> moveStep = (targetPosition - this->position) / nSteps;
@@ -48,7 +53,6 @@ void Camera::moveToTask(Vector2<> targetPosition, float seconds, Event callback)
 }
 
 void Camera::moveTo(Vector2<> pos, float seconds, Event callback) {
-	//SDL_Log("Camera moveTo called %f, %f.", pos.x, pos.y);
 	if (pos.x == currentMovingTarget.x && pos.y == currentMovingTarget.y)
 		return;
 	if (seconds <= EPSILON) {

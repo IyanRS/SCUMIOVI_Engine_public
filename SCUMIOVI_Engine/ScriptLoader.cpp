@@ -331,9 +331,9 @@ void ScriptLoader::loadAndRunGame() {
 	/* Monkey island UI:
 	Verbs:						Inventory:
 	
-	Give	Pick up	Use		|	# # #
+	Give	Pick up	Use		^	# # #
 	Open	Look at	Push	
-	Close	Talk to	Pull	|	# # #
+	Close	Talk to	Pull	v	# # #
 	*/
 
 	int verbBackgroundColor[] = { 20, 0, 20, 0xff };

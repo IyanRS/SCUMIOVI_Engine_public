@@ -83,10 +83,6 @@ void Game::startGame() {
 					//}
 					break;
 				}
-				//float xMouse;
-				//float yMouse;
-				//SDL_GetMouseState(&xMouse, &yMouse);
-				//SDL_Log("Click detected at x=%f, y=%f", xMouse, yMouse);
 				break;
 			}
 		}
