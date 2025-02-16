@@ -4,9 +4,9 @@
 
 bool Interactable::onClick(Vector2<> clickPos, Verb* verb) {
 	Game& game = Game::getInstance();
-	if (verb->getName() == "selected")
+	if (verb->getName() == Verb::selectedVerb.getName())
 		return interact(clickPos, game.getCurrentPlayer().getVerb());
-	if (verb->getName() == "default")
+	if (verb->getName() == Verb::defaultVerb.getName())
 		return interact(clickPos, defaultVerb);
 	return interact(clickPos, verb);
 }
@@ -48,7 +48,7 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 		if (defaultVerb == nullptr) {
 			return false;
 		}
-		it = interactions.find("any");
+		it = interactions.find(Verb::anyVerb.getName());
 		if (it != interactions.end()) {
 			Game& game = Game::getInstance();
 			EventInfo e = EventInfo(clickPos, game.getCurrentPlayer(), *this);
@@ -90,7 +90,12 @@ void Interactable::removeInteraction(std::string verbName) {
 
 Event& Interactable::getMouseOverEvent() {
 	if (defaultVerb && defaultVerb->getName() != Verb::anyVerb.getName()) {
-		Event highlightDefaultVerbEvent = Event([this](EventInfo e) {e.game.getUI().highlightVerb(*getDefaultVerb()); });
+		Event highlightDefaultVerbEvent = Event([this](EventInfo e) {
+			e.game.getUI().setHighlightedVerb(getDefaultVerb());
+			if (e.interactable.hasVerbInteraction(*e.player.getVerb()))
+				e.player.setTargetObject((GameObject*)&e.interactable);
+			e.game.getUI().updateUI();
+		});
 
 		mouseOverEventPlusHighlight = mouseOverEvent + highlightDefaultVerbEvent;
 		return mouseOverEventPlusHighlight;
@@ -105,10 +110,9 @@ void Interactable::setMouseOverEvent(Event event) {
 Event& Interactable::getMouseNotOverEvent() {
 	if (defaultVerb && defaultVerb->getName() != Verb::anyVerb.getName()) {
 		Event dontHighlightDefaultVerbEvent = Event([this](EventInfo e) {
-			std::string verbName = defaultVerb->getName();
-			auto button = e.game.getUI().getUIElement(verbName + "Button");
-			if (button)
-				button->setTextOver(button->getTextOver().toString());
+			e.game.getUI().setHighlightedVerb(nullptr);
+			e.player.setTargetObject(nullptr);
+			e.game.getUI().updateUI();
 		});
 
 		mouseNotOverEventPlusNoHighlight = mouseOverEvent + dontHighlightDefaultVerbEvent;
@@ -119,4 +123,8 @@ Event& Interactable::getMouseNotOverEvent() {
 
 void Interactable::setMouseNotOverEvent(Event event) {
 	mouseNotOverEvent = event;
+}
+
+bool Interactable::hasVerbInteraction(Verb& verb) {
+	return interactions.find(verb.getName()) != interactions.end();
 }

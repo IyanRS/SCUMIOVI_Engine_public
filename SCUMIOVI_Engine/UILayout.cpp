@@ -13,8 +13,11 @@ void UILayout::updateUI() {
 	if (currentVerb != nullptr) {
 		// TODO: uiCurrentVerbInfo reference in UI class
 		if (getUIElement("uiCurrentVerbInfo"))
-			getUIElement("uiCurrentVerbInfo")->setTextOver(currentVerb->getDisplayName());
+			getUIElement("uiCurrentVerbInfo")->setTextOver(currentVerb->getInfo({ game.getCurrentPlayer().getTargetObject() }));
 	}
+	removeHightlightVerb();
+	if (highlightedVerb != nullptr)
+		highlightVerb(*highlightedVerb);
 }
 
 void UILayout::clearDialogueOptions() {
@@ -27,6 +30,7 @@ void UILayout::clearDialogueOptions() {
 		}
 	}
 }
+
 
 void UILayout::createDialogueOptions(DialogueNode& dialogueNode) {
 	clearDialogueOptions();
@@ -154,6 +158,10 @@ void UILayout::addUIElement(GameObject& uiElement) {
 
 void UILayout::toggleVisibility() {
 	visible = !visible;
+}
+
+void UILayout::setHighlightedVerb(Verb* verb) {
+	highlightedVerb = verb;
 }
 
 GameObject* UILayout::getUIElement(std::string name) {

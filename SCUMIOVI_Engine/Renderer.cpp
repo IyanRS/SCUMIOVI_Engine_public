@@ -42,21 +42,21 @@ void Renderer::applyCameraTransform(Camera& camera, SDL_FRect& rect) {
 	rect.y -= camera.getPosition().y;
 }
 
-void Renderer::applyScreenTransform(SDL_FRect& rect) {
-	rect.x *= WINDOW_WIDTH / RENDER_WIDTH;
-	rect.y *= WINDOW_HEIGHT / RENDER_HEIGHT;
-	rect.w *= WINDOW_WIDTH / RENDER_WIDTH;
-	rect.h *= WINDOW_HEIGHT / RENDER_HEIGHT;
-}
-
 void Renderer::applyCameraTransform(Camera& camera, Vector2<>& point) {
 	point.x -= camera.getPosition().x;
 	point.y -= camera.getPosition().y;
 }
 
-void Renderer::applyScreenTransform(Vector2<>& point) {
-	point.x *= WINDOW_WIDTH / RENDER_WIDTH;
-	point.y *= WINDOW_HEIGHT / RENDER_HEIGHT;
+void Renderer::applyScreenTransform(Vector2<>& point, Vector2<> renderFrameSize) {
+	point.x *= WINDOW_WIDTH / renderFrameSize.x;
+	point.y *= WINDOW_HEIGHT / renderFrameSize.y;
+}
+
+void Renderer::applyScreenTransform(SDL_FRect& rect, Vector2<> renderFrameSize) {
+	rect.x *= WINDOW_WIDTH / renderFrameSize.x;
+	rect.y *= WINDOW_HEIGHT / renderFrameSize.y;
+	rect.w *= WINDOW_WIDTH / renderFrameSize.x;
+	rect.h *= WINDOW_HEIGHT / renderFrameSize.y;
 }
 
 void Renderer::renderUIElement(GameObject& uiElement) {
@@ -111,7 +111,7 @@ void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, cons
 	}
 }
 
-void Renderer::renderText(Vector2<> position, Text& text, bool hasOutline) {
+void Renderer::renderText(Vector2<> position, Text& text, Camera& camera, bool hasOutline) {
 	TTF_Font* font = resourceManager.loadFont("arial.ttf", text.getSize());
 
 	// TODO: outline and shadow custom color
@@ -119,13 +119,13 @@ void Renderer::renderText(Vector2<> position, Text& text, bool hasOutline) {
 	if (text.hasShadow()) {
 		int color[] = { 0x40, 0x0, 0x40 };
 		Text shadowText = Text(text.toString(), text.getSize(), color, false, text.getTextOverMode(), false);
-		renderText(position + Vector2<>(1, 1), shadowText);
+		renderText(position + Vector2<>(1, 1), shadowText, camera);
 	}
 
 	if (text.hasOutline()) {
 		int blackColor[] = { 0, 0, 0 };
 		Text outlineText = Text(text.toString(), text.getSize(), blackColor, false, text.getTextOverMode(), false);
-		renderText(position+Vector2<>(0,1), outlineText, true);
+		renderText(position+Vector2<>(0,1), outlineText, camera, true);
 	}
 
 	Vector2<> positionRounded = Vector2<>((int)position.x, (int)position.y);
@@ -138,7 +138,7 @@ void Renderer::renderText(Vector2<> position, Text& text, bool hasOutline) {
 	}
 #ifndef PIXEL_PERFECT
 	Vector2<> textSize = Vector2<>(w, h);
-	applyScreenTransform(textSize);
+	applyScreenTransform(textSize, camera.getSize());
 	w = textSize.x;
 	h = textSize.y;
 #endif
@@ -173,7 +173,7 @@ void Renderer::renderTexture(Vector2<> position, Vector2<> size, Texture* textur
 
 		applyCameraTransform(camera, colorRect);
 #ifndef PIXEL_PERFECT
-		applyScreenTransform(colorRect);
+		applyScreenTransform(colorRect, camera.getSize());
 #endif
 
 		SDL_SetRenderDrawColor(sdlRenderer, color[0], color[1], color[2], color[3]);
@@ -187,7 +187,7 @@ void Renderer::renderTexture(Vector2<> position, Vector2<> size, Texture* textur
 	dstRect.h = size.y;
 	applyCameraTransform(camera, dstRect);
 #ifndef PIXEL_PERFECT
-	applyScreenTransform(dstRect);
+	applyScreenTransform(dstRect, camera.getSize());
 #endif
 	bool renderTextureSuccess = false;
 	if (textureToRender->isMirrored()) {
@@ -249,10 +249,10 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 		//Vector2<> textPosition = gameObject.getPosition() + Vector2<>(gameObject.getSize().x / 2, 0);
 		applyCameraTransform(camera, textPosition);
 #ifndef PIXEL_PERFECT
-		applyScreenTransform(textPosition);
+		applyScreenTransform(textPosition, camera.getSize());
 #endif
 
-		renderText(textPosition, gameObject.getTextOver());
+		renderText(textPosition, gameObject.getTextOver(), camera);
 	}
 }
 
@@ -295,7 +295,7 @@ void Renderer::renderDebugElements(Scene& scene) {
 	for (Vector2<> point : scene.getDebugPoints()) {
 		applyCameraTransform(scene.getCamera(), point);
 #ifndef PIXEL_PERFECT
-		applyScreenTransform(point);
+		applyScreenTransform(point, scene.getCamera().getSize());
 #endif
 		SDL_RenderPoint(sdlRenderer, point.x, point.y);
 	}
@@ -304,8 +304,8 @@ void Renderer::renderDebugElements(Scene& scene) {
 		applyCameraTransform(scene.getCamera(), line[0]);
 		applyCameraTransform(scene.getCamera(), line[1]);
 #ifndef PIXEL_PERFECT
-		applyScreenTransform(line[0]);
-		applyScreenTransform(line[1]);
+		applyScreenTransform(line[0], scene.getCamera().getSize());
+		applyScreenTransform(line[1], scene.getCamera().getSize());
 #endif
 		SDL_RenderLine(sdlRenderer, line[0].x, line[0].y, line[1].x, line[1].y);
 	}
@@ -363,7 +363,7 @@ void Renderer::render(Scene& scene, UI& ui) {
 
 #ifdef PIXEL_PERFECT
 	SDL_Texture* lowResScreen = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_RGBA8888,
-		SDL_TEXTUREACCESS_TARGET, RENDER_WIDTH, RENDER_HEIGHT);
+		SDL_TEXTUREACCESS_TARGET, scene.getCamera().getSize().x, scene.getCamera().getSize().y);
 	SDL_SetTextureScaleMode(lowResScreen, SDL_SCALEMODE_NEAREST);
 	SDL_SetRenderTarget(sdlRenderer, lowResScreen);
 #endif
@@ -399,8 +399,8 @@ void Renderer::render(Scene& scene, UI& ui) {
 	float yMouse;
 	SDL_GetMouseState(&xMouse, &yMouse);
 
-	xMouse /= WINDOW_WIDTH / RENDER_WIDTH;
-	yMouse /= WINDOW_HEIGHT / RENDER_HEIGHT;
+	xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
+	yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
 	xMouse -= mouseHotspot.x;
 	yMouse -= mouseHotspot.y;
@@ -409,7 +409,7 @@ void Renderer::render(Scene& scene, UI& ui) {
 	xMouse = (int)xMouse;
 	yMouse = (int)yMouse;
 
-	Camera c; // Camera at 0,0 (Cursor doe not depend on camera position)
+	Camera c; // Camera at 0,0 (Cursor does not depend on camera position)
 	renderTexture(Vector2<>(xMouse, yMouse), Vector2<float>(mouseTexture->getSize().x, mouseTexture->getSize().y), mouseTexture, c);
 #endif
 

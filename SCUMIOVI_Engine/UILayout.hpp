@@ -19,6 +19,8 @@ class UILayout {
 
 	std::vector<UIDialogueOption*> dialogueOptions;
 
+	Verb* highlightedVerb;
+
 public:
 	UILayout(std::string name);
 	std::vector<GameObject*>& getUIElements();
@@ -34,6 +36,7 @@ public:
 	void removeHightlightVerb();
 	void addUIElement(GameObject& uiElement);
 	void toggleVisibility();
+	void setHighlightedVerb(Verb* verb);
 	GameObject* getUIElement(std::string name);
 	std::string getName();
 	void clearDialogueOptions();

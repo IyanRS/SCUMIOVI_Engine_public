@@ -16,6 +16,10 @@ class UI {
 //	std::vector<UIVerbButton*> uiVerbButtons;
 //	bool visible = true;
 //
+
+	void highlightVerb(Verb& verb);
+	void removeHightlightVerb();
+
 public:
 	std::vector<GameObject*>& getUIElements();
 
@@ -25,8 +29,9 @@ public:
 	//GameObject& createUIItemSlot(Vector2<> position, Vector2<> size, Texture* background, Event& onUIUpdate);
 	void updateUI();
 	//void createInventoryMatrix(Vector2<> position, int columns, int rows, Texture* background, Event& onUIUpdate);
-	void highlightVerb(Verb& verb);
-	void removeHightlightVerb();
+
+	void setHighlightedVerb(Verb* verb);
+
 	//void addUIElement(GameObject& uiElement);
 	void toggleVisibility();
 	GameObject* getUIElement(std::string name);

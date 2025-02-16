@@ -40,3 +40,11 @@ GameObject* Player::getSelectedObject() {
 void Player::setSelectedObject(GameObject* gameObject) {
 	this->selectedObject = gameObject;
 }
+
+void Player::setTargetObject(GameObject* gameObject) {
+	this->targetObject = gameObject;
+}
+
+GameObject* Player::getTargetObject() {
+	return targetObject;
+}

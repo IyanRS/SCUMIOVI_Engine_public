@@ -55,6 +55,8 @@ void Game::startGame() {
 		return;
 	}
 	startEvent.execute();
+	
+
 	while (gameIsRunning) {
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
@@ -64,8 +66,11 @@ void Game::startGame() {
 				break;
 			case SDL_EVENT_MOUSE_BUTTON_DOWN:
 				// TODO: maybe move this click handling to inputManager
+				
 				SDL_MouseButtonFlags mouseButtonFlags = SDL_GetMouseState(nullptr, nullptr);
+				//SDL_Log("Click (game) %s", std::to_string(mouseButtonFlags).c_str());
 				switch (mouseButtonFlags) {
+				case 0:
 				case SDL_BUTTON_LEFT:
 					if (leftClickVerb == nullptr)
 						inputManager.click(ui, *currentScene, currentPlayer->getVerb());

@@ -82,14 +82,8 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 		//nextEvent.execute();
 	});
 
-	selectVerb = Verb("selectVerb");
-
-	anyVerb = Verb("any");
-	selectedVerb = Verb("selected");
-	defaultVerb = Verb("default");
-
 	highlightDefaultVerbEvent = Event([](EventInfo e) {
-		e.game.getUI().highlightVerb(*e.interactable.getDefaultVerb());
+		e.game.getUI().setHighlightedVerb(e.interactable.getDefaultVerb());
 	});
 	dontHighlightDefaultVerbEvent = Event([](EventInfo e) {
 		std::string verbName = e.interactable.getDefaultVerb()->getName();
@@ -153,15 +147,18 @@ GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::str
 
 	itemInScene->setLayer(-1);
 
-	Game& game = Game::getInstance();
-	itemInScene->addVerbInteraction(*game.getVerb("pickup"), Event([this, name, inventoryTextureSource](EventInfo e) {
+	itemInScene->addVerbInteraction(Verb::pickupVerb, Event([this, name, inventoryTextureSource](EventInfo e) {
 		GameObject& itemInScene = *(GameObject*)&e.interactable;
 		itemInScene.destroy();
 		Texture* itemInInventoryTexture = new Texture(name + "_item", inventoryTextureSource);
 		GameObject* itemInInventory = new GameObject(name + "_item", Vector2<>(), Vector2<>(-1, -1), itemInInventoryTexture);
 		e.player.getInventory().addItem(itemInInventory);
 		}) + dontHighlightDefaultVerbEvent + updateItems);
-	itemInScene->setDefaultVerb(game.getVerb("pickup"));
+	itemInScene->setDefaultVerb(&Verb::pickupVerb);
+
+	itemInScene->addVerbInteraction(Verb::pushVerb, Event([](EventInfo e) {
+		e.player.say("That wouldn't make any sense");
+	}));
 
 	scene.addGameObject(*itemInScene);
 	return *itemInScene;
@@ -308,7 +305,7 @@ void ScriptLoader::loadAndRunGame() {
 	//GameObject door = GameObject("door", Vector2<>(32, 72), Vector2<>(-1, -1), &doorTexture);
 	door.setLayer(-1);
 	scene.addGameObject(door);
-	Verb openVerb = Verb("open", "Open");
+	//Verb openVerb = Verb("open", "Open");
 
 	scummBarWalkableArea.showDebug();
 
@@ -339,23 +336,23 @@ void ScriptLoader::loadAndRunGame() {
 	int verbBackgroundColor[] = { 20, 0, 20, 0xff };
 	Texture verbBackground = Texture("white", verbBackgroundColor);
 
-	Verb giveVerb = Verb("give", "Give");
-	Verb pickupVerb = Verb("pickup", "Pick up");
-	Verb useVerb = Verb("use", "Use");
-	//Verb openVerb = Verb("open"); // Already defined before
-	Verb lookAtVerb = Verb("lookat", "Look at");
-	Verb pushVerb = Verb("push", "Push");
-	Verb closeVerb = Verb("close", "Close");
-	Verb talkVerb = Verb("talk", "Talk");
-	Verb pullVerb = Verb("pull", "Pull");
+	//Verb giveVerb = Verb("give", "Give");
+	//Verb pickupVerb = Verb("pickup", "Pick up");
+	//Verb useVerb = Verb("use", "Use");
+	////Verb openVerb = Verb("open"); // Already defined before
+	//Verb lookAtVerb = Verb("lookat", "Look at");
+	//Verb pushVerb = Verb("push", "Push");
+	//Verb closeVerb = Verb("close", "Close");
+	//Verb talkVerb = Verb("talk", "Talk");
+	//Verb pullVerb = Verb("pull", "Pull");
 
 	
 
 	game.getUI().getLayout("inventory").createVerbsMatrix(Vector2<>(2, 154), {
 
-		{&giveVerb, &pickupVerb, &useVerb}, 
-		{&openVerb, &lookAtVerb, &pushVerb}, 
-		{&closeVerb, &talkVerb, &pullVerb} }, 
+		{&Verb::giveVerb, &Verb::pickupVerb, &Verb::useVerb},
+		{&Verb::openVerb, &Verb::lookAtVerb, &Verb::pushVerb},
+		{&Verb::closeVerb, &Verb::talkVerb, &Verb::pullVerb} },
 		
 		&verbBackground);
 
@@ -375,8 +372,8 @@ void ScriptLoader::loadAndRunGame() {
 	Texture customCursorTexture = Texture("", "cursor.png");
 	game.setCustomCursor(customCursorTexture, Vector2<>(-1, -1));
 
-	game.bindLeftClickToVerb(&selectedVerb);
-	game.bindRightClickToVerb(&defaultVerb);
+	game.bindLeftClickToVerb(&Verb::selectedVerb);
+	game.bindRightClickToVerb(&Verb::defaultVerb);
 
 	Texture tableTexture2 = Texture("table2", "table2.png");
 	GameObject table2 = GameObject("table2", Vector2<>(20, 118), Vector2<>(-1, -1), &tableTexture2);
@@ -436,13 +433,14 @@ void ScriptLoader::loadAndRunGame() {
 
 	game.getUI().getLayout("dialogue").addUIElement(uiBackground);
 
-	stan.addVerbInteraction(talkVerb, Event([&testNode](EventInfo e) {
+	stan.addVerbInteraction(Verb::talkVerb, Event([&testNode](EventInfo e) {
+		//e.game.getScene().getCamera().setSize(Vector2<>(RENDER_WIDTH * 2, RENDER_HEIGHT * 2));
 		e.player.disableMovement();
 		e.game.getUI().getLayout("dialogue").createDialogueOptions(testNode);
 		e.game.getUI().setLayout("dialogue");
 	}));
 
-	stan.setDefaultVerb(&talkVerb);
+	stan.setDefaultVerb(&Verb::talkVerb);
 
 	scene.addGameObject(stan);
 

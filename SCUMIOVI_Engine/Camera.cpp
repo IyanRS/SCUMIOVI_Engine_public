@@ -9,6 +9,7 @@
 
 Camera::Camera() {
 	size = Vector2<>(RENDER_WIDTH, RENDER_HEIGHT);
+	//position = Vector2<float>(RENDER_WIDTH/2.0f, RENDER_HEIGHT/2.0f); // Center the camera
 }
 
 void Camera::followObject() {
@@ -34,7 +35,7 @@ Vector2<> Camera::getSize() {
 	return size;
 }
 
-void Camera::setSize(Vector2<> position) {
+void Camera::setSize(Vector2<> size) {
 	this->size = size;
 }
 

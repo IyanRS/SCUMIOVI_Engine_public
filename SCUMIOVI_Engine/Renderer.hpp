@@ -11,20 +11,22 @@
 
 #include "UI.hpp"
 
+#include "Common.hpp"
+
 class Renderer {
 	Camera zeroCamera; // Dummy camera at 0, 0
 	SDL_Window* sdlWindow;
 	SDL_Renderer* sdlRenderer;
 	ResourceManager& resourceManager;
 	void applyCameraTransform(Camera& camera, SDL_FRect& rect);
-	void applyScreenTransform(SDL_FRect& rect);
+	void applyScreenTransform(SDL_FRect& rect, Vector2<> renderFrameSize = { RENDER_HEIGHT, RENDER_WIDTH });
 	void applyCameraTransform(Camera& camera, Vector2<>& point);
-	void applyScreenTransform(Vector2<>& point);
+	void applyScreenTransform(Vector2<>& point, Vector2<> renderFrameSize = { RENDER_HEIGHT, RENDER_WIDTH });
 	std::chrono::system_clock::time_point lastRenderTime;
 	std::vector<std::array<GameObject*, 2>> currentlyOverlapping;
 	void renderGameObject(GameObject& gameObject, Camera& camera);
 	void checkOverlaps(GameObject& gameObject1, GameObject& gameObject2);
-	void renderText(Vector2<>, Text&, bool hasOutline=false);
+	void renderText(Vector2<>, Text&, Camera& camera, bool hasOutline=false);
 	std::string generateTextureKey(TTF_Font* font, const std::string& textString, const int color[3], bool hasOutline); // Used for hashing fonts
 	void renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, const std::string& textString, const int color[3], bool hasOutline=false);
 	void renderUI(UI& ui);

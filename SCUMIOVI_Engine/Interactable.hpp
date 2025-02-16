@@ -33,4 +33,5 @@ public:
 	void setMouseOverEvent(Event event);
 	Event& getMouseNotOverEvent();
 	void setMouseNotOverEvent(Event event);
+	bool hasVerbInteraction(Verb& verb);
 };

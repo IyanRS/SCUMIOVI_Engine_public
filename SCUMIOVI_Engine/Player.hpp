@@ -9,6 +9,7 @@ class Player : public GameObject {
 	bool canPlayerMove = true;
 	Verb* selectedVerb;
 	GameObject* selectedObject;
+	GameObject* targetObject;
 	Inventory inventory;
 public:
 	using GameObject::GameObject;
@@ -21,5 +22,7 @@ public:
 	Inventory& getInventory();
 	GameObject* getSelectedObject();
 	void setSelectedObject(GameObject* gameObject);
+	void setTargetObject(GameObject* gameObject);
+	GameObject* getTargetObject();
 	//void moveTo(Vector2<> pos, float seconds, Event callback);
 };

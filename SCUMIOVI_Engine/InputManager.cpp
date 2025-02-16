@@ -92,6 +92,8 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 }
 
 bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
+	//SDL_Log("Click");
+
 	float xMouse;
 	float yMouse;
 

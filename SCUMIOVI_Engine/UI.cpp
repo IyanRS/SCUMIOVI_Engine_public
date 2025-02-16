@@ -16,6 +16,10 @@ void UI::removeHightlightVerb() {
 	currentLayout->removeHightlightVerb();
 }
 
+void UI::setHighlightedVerb(Verb* verb) {
+	currentLayout->setHighlightedVerb(verb);
+}
+
 void UI::toggleVisibility() {
 	currentLayout->toggleVisibility();
 }
