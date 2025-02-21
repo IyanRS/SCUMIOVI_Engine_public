@@ -131,8 +131,25 @@ std::vector<UIVerbButton*> UILayout::createVerbsMatrix(Vector2<> position, std::
 	return buttons;
 }
 
-GameObject& UILayout::createUIItemSlot(Vector2<> position, Vector2<> size, Texture* background, Event& onUIUpdate) {
+GameObject& UILayout::createUIItemSlot(int index, Vector2<> position, Vector2<> size, Texture* background, Event& onUIUpdate) {
 	GameObject* itemSlot = new GameObject("itemSlot" + position.toString(), position, size, background);
+
+	itemSlot->setDefaultVerb(&Verb::anyVerb);
+	itemSlot->addVerbInteraction(Verb::anyVerb, Event([index](EventInfo e) {
+		SDL_Log("Selected item %d", index);
+		GameObject* item = e.player.getInventory().getItemAt(index);
+		item->interact(e.clickPos, e.player.getVerb());
+		//e.player.setSelectedObject(item);
+
+	}));
+	itemSlot->setMouseOverEvent(Event([this, index](EventInfo e) {
+		e.player.setTargetObject(e.player.getInventory().getItemAt(index));
+		updateUI();
+	}));
+	itemSlot->setMouseNotOverEvent(Event([this, index](EventInfo e) {
+		e.player.setTargetObject(nullptr);
+		updateUI();
+	}));
 
 	Game& game = Game::getInstance();
 	addUIElement(*itemSlot);
@@ -144,10 +161,10 @@ void UILayout::createInventoryMatrix(Vector2<> position, int columns, int rows, 
 	int width = 40;
 	int height = 22;
 
-	for (int i = 0; i < columns; i++) {
-		for (int j = 0; j < rows; j++) {
+	for (int j = 0; j < rows; j++) {
+		for (int i = 0; i < columns; i++) {
 			Vector2<> slotPos = Vector2<>(position.x + (width + 2) * i, position.y + (height + 2) * j);
-			createUIItemSlot(slotPos, Vector2<>(width, height), background, onUIUpdate);
+			createUIItemSlot(i + j * columns, slotPos, Vector2<>(width, height), background, onUIUpdate);
 		}
 	}
 }

@@ -6,6 +6,8 @@
 
 #include "Verb.hpp"
 
+static const int DEFAULT_BACKGROUND_LAYER = -100;
+
 Scene::Scene() {
 	debugPoints = std::list<Vector2<>>();
 	debugLines = std::list<std::array<Vector2<>, 2>>();
@@ -27,7 +29,7 @@ GameObject& Scene::addBackground(Scene& scene, std::string source, Vector2<int> 
 	// TODO: handle pointers memory
 	Texture* backgroundTexture = new Texture("", source, Vector2<int>(), size);
 	GameObject* background = new GameObject("background", Vector2<>(0, 0), Vector2<>(-1, -1), backgroundTexture);
-	background->setLayer(-100);
+	background->setLayer(DEFAULT_BACKGROUND_LAYER);
 
 	background->setDefaultVerb(&Verb::walkVerb);
 	background->addVerbInteraction(Verb::walkVerb, Event([this](EventInfo e) {

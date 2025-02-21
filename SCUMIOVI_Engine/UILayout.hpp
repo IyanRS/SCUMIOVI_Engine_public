@@ -28,7 +28,7 @@ public:
 	// TODO: add more parameters for customization: spacing, text size, text color, etc.
 	//GameObject& createUIVerbButton(Verb& verb, Vector2<> position, Vector2<> size, Texture* verbBackground, Event& onUIUpdate);
 	std::vector<UIVerbButton*> createVerbsMatrix(Vector2<> position, std::vector<std::vector<Verb*>> verbs, Texture* verbBackground);
-	GameObject& createUIItemSlot(Vector2<> position, Vector2<> size, Texture* background, Event& onUIUpdate);
+	GameObject& createUIItemSlot(int index, Vector2<> position, Vector2<> size, Texture* background, Event& onUIUpdate);
 	void createDialogueOptions(DialogueNode& dialogueNode);
 	void updateUI();
 	void createInventoryMatrix(Vector2<> position, int columns, int rows, Texture* background, Event& onUIUpdate);

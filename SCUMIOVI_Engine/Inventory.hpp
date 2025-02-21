@@ -10,6 +10,6 @@ class Inventory {
 public:
 	void addItem(GameObject* item);
 	void removeItem(GameObject& item);
-	GameObject& getItemAt(int index);
+	GameObject* getItemAt(int index);
 	std::vector<GameObject*>& getItems();
 };

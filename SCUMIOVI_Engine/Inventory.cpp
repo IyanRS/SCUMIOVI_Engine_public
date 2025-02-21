@@ -11,8 +11,11 @@ void Inventory::removeItem(GameObject& item) {
 	//items.erase(it);
 }
 
-GameObject& Inventory::getItemAt(int index) {
-	return *items[index];
+GameObject* Inventory::getItemAt(int index) {
+	if (index < 0 || index >= items.size()) {
+		return nullptr;
+	}
+	return items[index];
 }
 
 std::vector<GameObject*>& Inventory::getItems() {

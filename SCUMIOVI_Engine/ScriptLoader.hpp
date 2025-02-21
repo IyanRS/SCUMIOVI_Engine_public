@@ -13,8 +13,8 @@ class ScriptLoader {
 	GameObject& createUIVerbButton(Verb& verb,
 		Vector2<> position, Vector2<> size, Texture* verbBackground, Event& onUIUpdate);
 	GameObject& createUIItemSlot(Vector2<> position, Vector2<> size, Texture* background, Event& onUIUpdate);
-	void createUIVerbButtonMatrix(Vector2<> position, std::vector<std::vector<Verb>> verbs, Texture* verbBackground);
-	void createUIItemSlotsMatrix(Vector2<> position, int columns, int rows, Texture* background, Event& onUIUpdate);
+	//void createUIVerbButtonMatrix(Vector2<> position, std::vector<std::vector<Verb>> verbs, Texture* verbBackground);
+	//void createUIItemSlotsMatrix(Vector2<> position, int columns, int rows, Texture* background, Event& onUIUpdate);
 	//void highlightUIVerb(std::string verbName);
 	Event highlightDefaultVerbEvent;
 	Event dontHighlightDefaultVerbEvent;

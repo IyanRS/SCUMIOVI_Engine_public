@@ -152,6 +152,9 @@ GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::str
 		itemInScene.destroy();
 		Texture* itemInInventoryTexture = new Texture(name + "_item", inventoryTextureSource);
 		GameObject* itemInInventory = new GameObject(name + "_item", Vector2<>(), Vector2<>(-1, -1), itemInInventoryTexture);
+		itemInInventory->addVerbInteraction(Verb::pushVerb, Event([](EventInfo e) {
+			e.player.say("This is a test");
+			}));
 		e.player.getInventory().addItem(itemInInventory);
 		}) + dontHighlightDefaultVerbEvent + updateItems);
 	itemInScene->setDefaultVerb(&Verb::pickupVerb);
@@ -163,31 +166,6 @@ GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::str
 	scene.addGameObject(*itemInScene);
 	return *itemInScene;
 }
-
-GameObject& ScriptLoader::createUIItemSlot(Vector2<> position, Vector2<> size, Texture* background, Event& onUIUpdate) {
-	GameObject* itemSlot = new GameObject("itemSlot" + position.toString(), position, size, background);
-
-	Game& game = Game::getInstance();
-	game.getUI().getLayout("inventory").addUIElement(*itemSlot);
-
-	return *itemSlot;
-}
-
-void ScriptLoader::createUIItemSlotsMatrix(Vector2<> position, int columns, int rows, Texture* background, Event& onUIUpdate) {
-	int width = 40;
-	int height = 22;
-
-	for (int i = 0; i < columns; i++) {
-		for (int j = 0; j < rows; j++) {
-			Vector2<> slotPos = Vector2<>(position.x + (width + 2) * i, position.y + (height + 2) * j);
-			createUIItemSlot(slotPos, Vector2<>(width, height), background, onUIUpdate);
-		}
-	}
-}
-
-//Event ScriptLoader::pathEvent() {
-//
-//}
 
 void ScriptLoader::loadAndRunGame() {
 	// Monkey Island demo
@@ -356,7 +334,7 @@ void ScriptLoader::loadAndRunGame() {
 		
 		&verbBackground);
 
-	createUIItemSlotsMatrix(Vector2<>(150, 154), 4, 2, &verbBackground, updateItems);
+	game.getUI().getLayout("inventory").createInventoryMatrix(Vector2<>(150, 154), 4, 2, &verbBackground, updateItems);
 
 	GameObject uiCurrentVerbInfo = GameObject("uiCurrentVerbInfo", Vector2<>(160, 148), Vector2<>());
 	int color[4] = { 125, 44, 125, 0xff };
