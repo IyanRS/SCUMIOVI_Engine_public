@@ -13,7 +13,7 @@ void UILayout::updateUI() {
 	if (currentVerb != nullptr) {
 		// TODO: uiCurrentVerbInfo reference in UI class
 		if (getUIElement("uiCurrentVerbInfo"))
-			getUIElement("uiCurrentVerbInfo")->setTextOver(currentVerb->getInfo({ game.getCurrentPlayer().getTargetObject() }));
+			getUIElement("uiCurrentVerbInfo")->setTextOver(currentVerb->getInfo({ game.getCurrentPlayer().getSelectedObject(), game.getCurrentPlayer().getTargetObject() }));
 	}
 	removeHightlightVerb();
 	if (highlightedVerb != nullptr)

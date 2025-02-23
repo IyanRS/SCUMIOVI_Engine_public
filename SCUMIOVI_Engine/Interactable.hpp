@@ -10,6 +10,7 @@
 
 class Interactable {
 	std::map<std::string, Event> interactions;
+	//std::map<std::string, std::string> interactionsSelectedObjects;
 	Verb* defaultVerb;
 	Event mouseOverEvent;
 	Event mouseNotOverEvent;
@@ -27,6 +28,7 @@ public:
 	void setDefaultVerb(Verb* verb);
 	void setDefaultVerb(std::string verbName);
 	void addVerbInteraction(Verb& verb, Event event);
+	//void addVerbInteraction(Verb& verb, std::string selectedObjectName, Event event);
 	void removeInteraction(Verb& verb);
 	void removeInteraction(std::string verbName);
 	Event& getMouseOverEvent();

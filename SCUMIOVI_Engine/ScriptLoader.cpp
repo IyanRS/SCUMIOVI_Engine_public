@@ -152,8 +152,15 @@ GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::str
 		itemInScene.destroy();
 		Texture* itemInInventoryTexture = new Texture(name + "_item", inventoryTextureSource);
 		GameObject* itemInInventory = new GameObject(name + "_item", Vector2<>(), Vector2<>(-1, -1), itemInInventoryTexture);
-		itemInInventory->addVerbInteraction(Verb::pushVerb, Event([](EventInfo e) {
-			e.player.say("This is a test");
+		itemInInventory->addVerbInteraction(Verb::giveVerb, Event([](EventInfo e) {
+			if (e.player.getSelectedObject() == nullptr) {
+				e.player.setSelectedObject((GameObject*) & e.interactable);
+				e.player.say("Test1");
+			}
+			else {
+				e.player.setSelectedObject(nullptr);
+				e.player.say("Test2");
+			}
 			}));
 		e.player.getInventory().addItem(itemInInventory);
 		}) + dontHighlightDefaultVerbEvent + updateItems);
@@ -174,29 +181,30 @@ void ScriptLoader::loadAndRunGame() {
 		game.getUI().updateUI();
 	});
 
+
 	Scene scene;
 
 	WalkableArea scummBarWalkableArea = WalkableArea(
 		{
-		Vector2<>(100, 113),
-		Vector2<>(116, 125),
-		Vector2<>(146, 126),
-		Vector2<>(160, 111),
-		Vector2<>(216, 126),
-		Vector2<>(232, 121),
-		Vector2<>(313, 128),
-		Vector2<>(332, 111),
-		Vector2<>(362, 111),
-		Vector2<>(400, 138),
-		Vector2<>(501, 125),
-		Vector2<>(503, 104),
-		Vector2<>(572, 110),
-		Vector2<>(626, 142),
-		Vector2<>(241, 142),
-		Vector2<>(199, 134),
-		Vector2<>(161, 142),
-		Vector2<>(80, 141),
-		Vector2<>(40, 127)
+		Vector2<>(100,113),
+		Vector2<>(116,125),
+		Vector2<>(146,126),
+		Vector2<>(160,111),
+		Vector2<>(216,126),
+		Vector2<>(232,121),
+		Vector2<>(313,128),
+		Vector2<>(332,111),
+		Vector2<>(362,111),
+		Vector2<>(400,138),
+		Vector2<>(501,125),
+		Vector2<>(503,104),
+		Vector2<>(572,110),
+		Vector2<>(626,142),
+		Vector2<>(241,142),
+		Vector2<>(199,134),
+		Vector2<>(161,142),
+		Vector2<>(80,141),
+		Vector2<>(40,127),
 		}
 	);
 
@@ -423,5 +431,6 @@ void ScriptLoader::loadAndRunGame() {
 	scene.addGameObject(stan);
 
 	game.startGame();
+
 }
 

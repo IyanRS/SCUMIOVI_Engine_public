@@ -17,9 +17,12 @@ std::string VerbSyntax::getInfo(std::vector<GameObject*> objects) {
 	//TODO: improve this code (maybe allow to use "$object1" twice, 
 	// use only "$object1" and "$object3" without "$object2", etc.)
 
+	std::vector<GameObject*> nonNullObjects;
+
 	int nObjects = 0;
 	for (auto object : objects) {
 		if (object != nullptr) {
+			nonNullObjects.push_back(object);
 			nObjects++;
 		}
 	}
@@ -49,7 +52,7 @@ std::string VerbSyntax::getInfo(std::vector<GameObject*> objects) {
 	}
 	//syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$object0"), "Test");
 	for (int i = 0; i < nObjects; i++) {
-		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$object" + std::to_string(i)), objects[i]->getName());
+		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$object" + std::to_string(i)), nonNullObjects[i]->getName());
 	}
 	return syntaxToUse;
 }

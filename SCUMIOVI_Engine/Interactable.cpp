@@ -80,6 +80,11 @@ void Interactable::addVerbInteraction(Verb& verb, Event event) {
 	interactions[verb.getName()] = event;
 }
 
+//void Interactable::addVerbInteraction(Verb& verb, std::string selectedObjectName, Event event) {
+//	addVerbInteraction(verb, event);
+//	interactionsSelectedObjects[verb.getName()] = selectedObjectName;
+//}
+
 void Interactable::removeInteraction(Verb& verb) {
 	interactions.erase(verb.getName());
 }
