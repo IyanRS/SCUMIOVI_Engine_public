@@ -92,46 +92,6 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 			button->setTextOver(button->getTextOver().toString());
 	});
 
-	updateItems = Event([](EventInfo e) {
-
-		//std::vector< GameObject* >& uiElements = e.game.getUI().getUIElements();
-		std::vector< GameObject* >::iterator it = e.game.getUI().getUIElements().begin();
-		std::vector<GameObject*>& uiElements = e.game.getUI().getUIElements();
-
-		while (it != uiElements.end()) {
-			GameObject* element = (*it);
-			if (element->getName().find("_item") != std::string::npos) {
-				it = uiElements.erase(it);
-			}
-			else ++it;
-		}
-		//for (GameObject& uiElement : e.game.getUI().getUIElements()) {
-		//	if (uiElement.getName().find("item") != std::string::npos) {
-		//		
-		//	}
-		//}
-
-		// TODO: avoid hardcoded values
-		int currentIndex = 0;
-		int columns = 4;
-		int width = 40;
-		int height = 22;
-
-		for (GameObject* item : e.player.getInventory().getItems()) {
-			int row = currentIndex / 4;
-			int column = currentIndex % 4;
-
-			if (row < 2) {
-				item->setPosition(Vector2<>(150 + (column * width), 154 + (row * height)));
-				e.game.getUI().getLayout("inventory").addUIElement(*item);
-			}
-			else {
-				// Arrows logic
-			}
-			currentIndex++;
-		}
-		});
-
 	//updateUI = Event([](EventInfo e) {
 	//	Verb* currentVerb = e.game.getCurrentPlayer().getVerb();
 	//	if (currentVerb != nullptr) {
@@ -163,7 +123,8 @@ GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::str
 			}
 			}));
 		e.player.getInventory().addItem(itemInInventory);
-		}) + dontHighlightDefaultVerbEvent + updateItems);
+		e.game.getUI().updateUI();
+		}) + dontHighlightDefaultVerbEvent);
 	itemInScene->setDefaultVerb(&Verb::pickupVerb);
 
 	itemInScene->addVerbInteraction(Verb::pushVerb, Event([](EventInfo e) {
@@ -322,18 +283,6 @@ void ScriptLoader::loadAndRunGame() {
 	int verbBackgroundColor[] = { 20, 0, 20, 0xff };
 	Texture verbBackground = Texture("white", verbBackgroundColor);
 
-	//Verb giveVerb = Verb("give", "Give");
-	//Verb pickupVerb = Verb("pickup", "Pick up");
-	//Verb useVerb = Verb("use", "Use");
-	////Verb openVerb = Verb("open"); // Already defined before
-	//Verb lookAtVerb = Verb("lookat", "Look at");
-	//Verb pushVerb = Verb("push", "Push");
-	//Verb closeVerb = Verb("close", "Close");
-	//Verb talkVerb = Verb("talk", "Talk");
-	//Verb pullVerb = Verb("pull", "Pull");
-
-	
-
 	game.getUI().getLayout("inventory").createVerbsMatrix(Vector2<>(2, 154), {
 
 		{&Verb::giveVerb, &Verb::pickupVerb, &Verb::useVerb},
@@ -342,7 +291,9 @@ void ScriptLoader::loadAndRunGame() {
 		
 		&verbBackground);
 
-	game.getUI().getLayout("inventory").createInventoryMatrix(Vector2<>(150, 154), 4, 2, &verbBackground, updateItems);
+	Event emptyEvent = Event();
+
+	game.getUI().getLayout("inventory").createInventoryMatrix(Vector2<>(150, 154), 4, 2, &verbBackground, emptyEvent);
 
 	GameObject uiCurrentVerbInfo = GameObject("uiCurrentVerbInfo", Vector2<>(160, 148), Vector2<>());
 	int color[4] = { 125, 44, 125, 0xff };
@@ -374,9 +325,6 @@ void ScriptLoader::loadAndRunGame() {
 	GameObject stan = GameObject("stan", Vector2<>(155, 68), Vector2<>(-1,-1), &idleRightTexture);
 
 	stan.setLayer(-1);
-
-	//player.addTexture(&idleRightTexture);
-	//player.setTexture("idleRight");
 
 	stan.addAnimation(&stanAnimation);
 	stan.setAnimation("stanAnimation");

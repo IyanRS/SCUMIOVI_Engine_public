@@ -40,4 +40,6 @@ public:
 	UILayout& getLayout(std::string name);
 	void createDialogueOptions(DialogueNode& dialogueNode);
 	void clearDialogueOptions();
+	void incrementInventoryIndex(int increment);
+	int getInventoryIndex();
 };

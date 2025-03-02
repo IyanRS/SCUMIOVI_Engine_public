@@ -57,3 +57,11 @@ void UI::createDialogueOptions(DialogueNode& dialogueNode) {
 void UI::clearDialogueOptions() {
 	currentLayout->clearDialogueOptions();
 }
+
+void UI::incrementInventoryIndex(int increment) {
+	currentLayout->incrementInventoryIndex(increment);
+}
+
+int UI::getInventoryIndex() {
+	return currentLayout->getInventoryIndex();
+}

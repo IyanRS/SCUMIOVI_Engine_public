@@ -4,5 +4,5 @@
 
 class UIItemSlot : public GameObject {
 public:
-	UIItemSlot(Vector2<> position, Vector2<> size, Texture* slotBackground);
+	UIItemSlot(Vector2<> position, Vector2<> size, Texture* slotBackground, int relativeIndex);
 };

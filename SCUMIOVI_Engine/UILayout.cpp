@@ -18,6 +18,48 @@ void UILayout::updateUI() {
 	removeHightlightVerb();
 	if (highlightedVerb != nullptr)
 		highlightVerb(*highlightedVerb);
+	//auto currentItemIndex = currentInventoryIndex;
+	//for (auto inventorySlot : itemSlots) {
+
+	//	currentItemIndex++;
+	//}
+
+	//std::vector< GameObject* >& uiElements = e.game.getUI().getUIElements();
+	std::vector< GameObject* >::iterator it = getUIElements().begin();
+	std::vector<GameObject*>& uiElements = getUIElements();
+
+	while (it != uiElements.end()) {
+		GameObject* element = (*it);
+		if (element->getName().find("_item") != std::string::npos) {
+			it = uiElements.erase(it);
+		}
+		else ++it;
+	}
+
+	// TODO: avoid hardcoded values
+	int currentIndex = 0;
+	int columns = 4;
+	int width = 40;
+	int height = 22;
+
+	for (GameObject* item : game.getCurrentPlayer().getInventory().getItems()) {
+		int row = currentIndex / 4;
+		int column = currentIndex % 4;
+
+		if (row < 2) {
+			if (itemSlots.size() <= currentIndex)
+				break;
+			Vector2<> centerOffset = itemSlots[currentIndex]->getSize()/2-item->getSize()/2;
+
+			item->setPosition(Vector2<>(150 + (column * width), 154 + (row * height)) + centerOffset);
+			removeUIElement(*item);
+			addUIElement(*item);
+		}
+		else {
+			// Arrows logic
+		}
+		currentIndex++;
+	}
 }
 
 void UILayout::clearDialogueOptions() {
@@ -31,6 +73,13 @@ void UILayout::clearDialogueOptions() {
 	}
 }
 
+void UILayout::incrementInventoryIndex(int increment) {
+	currentInventoryIndex += increment;
+}
+
+int UILayout::getInventoryIndex() {
+	return currentInventoryIndex;
+}
 
 void UILayout::createDialogueOptions(DialogueNode& dialogueNode) {
 	clearDialogueOptions();
@@ -69,34 +118,6 @@ void UILayout::highlightVerb(Verb& verb) {
 	}
 }
 
-//GameObject& UI::createUIVerbButton(Verb& verb, Vector2<> position, Vector2<> size, Texture* verbBackground, Event& onUIUpdate) {
-//	GameObject* uiVerbText = new GameObject(verb.getName() + "Button", position, size, verbBackground);
-//	int color[4] = { 125, 44, 125, 0xff };
-//	Text text = Text(verb.getDisplayName(), 11, color, false, TEXT_CENTERED, true);
-//	uiVerbText->setTextOver(text);
-//	uiVerbText->setTextFormat(text);
-//	uiVerbText->setDefaultVerb(&Verb::anyVerb);
-//	std::string verbName = verb.getName();
-//	uiVerbText->addVerbInteraction(Verb::anyVerb, Event([verbName] {
-//		Game& game = Game::getInstance();
-//		Player& player = game.getCurrentPlayer();
-//		player.setVerb(verbName);
-//		}) + onUIUpdate);
-//	uiVerbText->setMouseOverEvent(Event([this, verbName] {
-//		//TODO:
-//		//highlightUIVerb(verbName);
-//		}));
-//	uiVerbText->setMouseNotOverEvent(Event([this, verbName](EventInfo e) {
-//		auto button = e.game.getUI().getUIElement(verbName + "Button");
-//		button->setTextOver(button->getTextOver().toString());
-//		}));
-//	Game& game = Game::getInstance();
-//
-//	game.getUI().addUIElement(*uiVerbText);
-//
-//	return *uiVerbText;
-//}
-
 std::vector<UIVerbButton*> UILayout::createVerbsMatrix(Vector2<> position, std::vector<std::vector<Verb*>> verbs, Texture* verbBackground) {
 	int height = 14;
 	std::vector<int> columnLengths;
@@ -132,27 +153,32 @@ std::vector<UIVerbButton*> UILayout::createVerbsMatrix(Vector2<> position, std::
 }
 
 GameObject& UILayout::createUIItemSlot(int index, Vector2<> position, Vector2<> size, Texture* background, Event& onUIUpdate) {
-	GameObject* itemSlot = new GameObject("itemSlot" + position.toString(), position, size, background);
 
-	itemSlot->setDefaultVerb(&Verb::anyVerb);
-	itemSlot->addVerbInteraction(Verb::anyVerb, Event([index](EventInfo e) {
-		SDL_Log("Selected item %d", index);
-		GameObject* item = e.player.getInventory().getItemAt(index);
-		item->interact(e.clickPos, e.player.getVerb());
-		//e.player.setSelectedObject(item);
 
-	}));
-	itemSlot->setMouseOverEvent(Event([this, index](EventInfo e) {
-		e.player.setTargetObject(e.player.getInventory().getItemAt(index));
-		updateUI();
-	}));
-	itemSlot->setMouseNotOverEvent(Event([this, index](EventInfo e) {
-		e.player.setTargetObject(nullptr);
-		updateUI();
-	}));
 
-	Game& game = Game::getInstance();
+	//GameObject* itemSlot = new GameObject("itemSlot" + position.toString(), position, size, background);
+	UIItemSlot* itemSlot = new UIItemSlot(position, size, background, index);
+
+	//itemSlot->setDefaultVerb(&Verb::anyVerb);
+	//itemSlot->addVerbInteraction(Verb::anyVerb, Event([index](EventInfo e) {
+	//	SDL_Log("Selected item %d", index);
+	//	GameObject* item = e.player.getInventory().getItemAt(index);
+	//	item->interact(e.clickPos, e.player.getVerb());
+	//	//e.player.setSelectedObject(item);
+
+	//}));
+	//itemSlot->setMouseOverEvent(Event([this, index](EventInfo e) {
+	//	e.player.setTargetObject(e.player.getInventory().getItemAt(index));
+	//	updateUI();
+	//}));
+	//itemSlot->setMouseNotOverEvent(Event([this, index](EventInfo e) {
+	//	e.player.setTargetObject(nullptr);
+	//	updateUI();
+	//}));
+
+	//Game& game = Game::getInstance();
 	addUIElement(*itemSlot);
+	itemSlots.push_back(itemSlot);
 
 	return *itemSlot;
 }
@@ -171,6 +197,12 @@ void UILayout::createInventoryMatrix(Vector2<> position, int columns, int rows, 
 
 void UILayout::addUIElement(GameObject& uiElement) {
 	uiElements.push_back(&uiElement);
+}
+
+void UILayout::removeUIElement(GameObject& uiElement) {
+	std::vector<GameObject*>::iterator position = std::find(uiElements.begin(), uiElements.end(), &uiElement);
+	if (position != uiElements.end()) // == myVector.end() means the element was not found
+		uiElements.erase(position);
 }
 
 void UILayout::toggleVisibility() {

@@ -10,6 +10,7 @@
 #include "UIDialogueOption.hpp"
 
 #include "DialogueNode.hpp"
+#include "UIItemSlot.hpp"
 
 class UILayout {
 	std::vector<GameObject*> uiElements; //TODO: Create Wrapper class for GameObject "UIElement"
@@ -20,6 +21,9 @@ class UILayout {
 	std::vector<UIDialogueOption*> dialogueOptions;
 
 	Verb* highlightedVerb;
+
+	std::vector<UIItemSlot*> itemSlots;
+	int currentInventoryIndex = 0;
 
 public:
 	UILayout(std::string name);
@@ -35,9 +39,12 @@ public:
 	void highlightVerb(Verb& verb);
 	void removeHightlightVerb();
 	void addUIElement(GameObject& uiElement);
+	void removeUIElement(GameObject& uiElement);
 	void toggleVisibility();
 	void setHighlightedVerb(Verb* verb);
 	GameObject* getUIElement(std::string name);
 	std::string getName();
 	void clearDialogueOptions();
+	void incrementInventoryIndex(int increment);
+	int getInventoryIndex();
 };
