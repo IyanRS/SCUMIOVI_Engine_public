@@ -38,9 +38,27 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 		}
 		Game& game = Game::getInstance();
 		EventInfo e = EventInfo(clickPos, game.getCurrentPlayer(), *this);
-		it->second.execute(e);
-		// TODO: default before and after Events? (game.changeToDefaultVerb(); could be inside the event after)
-		game.changeToDefaultVerb();
+		if (verb->RequiresSelectedObject()) {
+			if (game.getCurrentPlayer().getSelectedObject() == nullptr)
+				game.getCurrentPlayer().setSelectedObject((GameObject*)this);
+			else {
+				std::map<std::string, std::string>::iterator it1 = interactionsSelectedObjects.find(verb->getName());
+				if (it1 != interactionsSelectedObjects.end()) {
+					if (game.getCurrentPlayer().getSelectedObject()->getName() == it1->second) {
+						it->second.execute();
+						game.changeToDefaultVerb();
+						game.getCurrentPlayer().setSelectedObject(nullptr);
+					}
+				}
+			}
+		}
+		else {
+			it->second.execute(e);
+			// TODO: default before and after Events? (game.changeToDefaultVerb(); could be inside the event after)
+			game.changeToDefaultVerb();
+			game.getCurrentPlayer().setSelectedObject(nullptr);
+		}
+		//game.getUI().updateUI();
 		return true;
 	}
 	// TODO: handle invalid verbs, allow characters to say predefined lines such as "I can't do that".
@@ -80,10 +98,10 @@ void Interactable::addVerbInteraction(Verb& verb, Event event) {
 	interactions[verb.getName()] = event;
 }
 
-//void Interactable::addVerbInteraction(Verb& verb, std::string selectedObjectName, Event event) {
-//	addVerbInteraction(verb, event);
-//	interactionsSelectedObjects[verb.getName()] = selectedObjectName;
-//}
+void Interactable::addVerbInteraction(Verb& verb, std::string selectedObjectName, Event event) {
+	addVerbInteraction(verb, event);
+	interactionsSelectedObjects[verb.getName()] = selectedObjectName;
+}
 
 void Interactable::removeInteraction(Verb& verb) {
 	interactions.erase(verb.getName());

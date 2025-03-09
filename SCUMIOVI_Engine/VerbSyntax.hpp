@@ -15,6 +15,8 @@ public:
 
 	VerbSyntax(std::vector<std::string> syntaxStrings = {});
 	std::string getInfo(std::vector<GameObject*> objects);
+	std::string getInfo(GameObject* selected, GameObject* target);
+
 	//std::string getInfo(std::vector<std::string> objects);
 	int getStringsCount();
 };

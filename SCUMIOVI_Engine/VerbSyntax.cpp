@@ -57,6 +57,38 @@ std::string VerbSyntax::getInfo(std::vector<GameObject*> objects) {
 	return syntaxToUse;
 }
 
+std::string VerbSyntax::getInfo(GameObject* selected, GameObject* target) {
+	std::string syntaxToUse = "";
+	for (auto s : syntaxStrings) {
+		bool hasSyntaxForSelected = false;
+		bool hasSyntaxForTarget = false;
+		if (s.find("$selected") != std::string::npos) {
+			hasSyntaxForSelected = true;
+		}
+		if (s.find("$target") != std::string::npos) {
+			hasSyntaxForTarget = true;
+		}
+
+		// If the placeholders match the input parameters we will use that syntax for the verb
+		if (hasSyntaxForSelected == (selected != nullptr) && 
+			hasSyntaxForTarget == (target != nullptr))
+		{
+			syntaxToUse = s;
+			break;
+		}
+	}
+	if (syntaxToUse == "") {
+		// TODO: throw exception
+		syntaxToUse = "Couldn't find syntax";
+	}
+	//syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$object0"), "Test");
+	//for (int i = 0; i < nObjects; i++) {
+	syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$selected"), selected->getName());
+	syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$target"), target->getName());
+	//}
+	return syntaxToUse;
+}
+
 int VerbSyntax::getStringsCount() {
 	return syntaxStrings.size();
 }

@@ -110,8 +110,8 @@ GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::str
 	itemInScene->addVerbInteraction(Verb::pickupVerb, Event([this, name, inventoryTextureSource](EventInfo e) {
 		GameObject& itemInScene = *(GameObject*)&e.interactable;
 		itemInScene.destroy();
-		Texture* itemInInventoryTexture = new Texture(name + "_item", inventoryTextureSource);
-		GameObject* itemInInventory = new GameObject(name + "_item", Vector2<>(), Vector2<>(-1, -1), itemInInventoryTexture);
+		Texture* itemInInventoryTexture = new Texture(name, inventoryTextureSource);
+		GameObject* itemInInventory = new GameObject(name, Vector2<>(), Vector2<>(-1, -1), itemInInventoryTexture);
 		itemInInventory->addVerbInteraction(Verb::giveVerb, Event([](EventInfo e) {
 			if (e.player.getSelectedObject() == nullptr) {
 				e.player.setSelectedObject((GameObject*) & e.interactable);
@@ -126,6 +126,10 @@ GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::str
 		e.game.getUI().updateUI();
 		}) + dontHighlightDefaultVerbEvent);
 	itemInScene->setDefaultVerb(&Verb::pickupVerb);
+
+	itemInScene->addVerbInteraction(Verb::giveVerb, Event([](EventInfo e) {
+		e.player.say("That wouldn't make any sense");
+	}));
 
 	itemInScene->addVerbInteraction(Verb::pushVerb, Event([](EventInfo e) {
 		e.player.say("That wouldn't make any sense");
@@ -317,9 +321,11 @@ void ScriptLoader::loadAndRunGame() {
 	table2.setLayer(1);
 	scene.addGameObject(table2);
 
+	auto mug1 = addItemObject("mug", scene, "mug.png", "mug_item.png", Vector2<>(124, 97));
+	auto mug2 = addItemObject("mug", scene, "mug.png", "mug_item.png", Vector2<>(106, 95));
 
-	addItemObject("mug", scene, "mug.png", "mug_item.png", Vector2<>(124, 97));
-	addItemObject("mug2", scene, "mug.png", "mug_item.png", Vector2<>(106, 95));
+	
+	//mug2.addVerbInteraction(Verb::giveVerb, Event([](EventInfo e) {e.player.say("Test"); }));
 
 	Animation stanAnimation = Animation("stanAnimation", "Stan_transparent.png", Vector2<int>(36, 9), Vector2<int>(37, 57), 6, 6);
 	GameObject stan = GameObject("stan", Vector2<>(155, 68), Vector2<>(-1,-1), &idleRightTexture);
@@ -328,6 +334,10 @@ void ScriptLoader::loadAndRunGame() {
 
 	stan.addAnimation(&stanAnimation);
 	stan.setAnimation("stanAnimation");
+
+	stan.addVerbInteraction(Verb::giveVerb, "mug", Event([&stan](EventInfo e) {
+		stan.say("Test");
+	}));
 	
 	int stanTextColor[] = {0x3e, 0x97, 0xe6, 0xff};
 	Text stanTextFormat = Text("", 12, stanTextColor, true);

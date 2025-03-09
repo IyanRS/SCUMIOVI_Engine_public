@@ -16,11 +16,13 @@ class Verb {
 	Event* defaultEvent;
 
 	VerbSyntax verbSyntax;
+
+	bool requiresSelectedObject;
 public:
 	Verb();
 	Verb(std::string name);
 	Verb(std::string name, std::string displayName);
-	Verb(std::string name, std::string displayName, VerbSyntax syntax);
+	Verb(std::string name, std::string displayName, VerbSyntax syntax, bool requiresSelectedObject = false);
 	std::string& getDisplayName();
 	std::string& getName();
 	/// <summary>
@@ -30,7 +32,10 @@ public:
 	void setDefaultEvent(Event* event);
 	Event* getDefaultEvent();
 
+	bool RequiresSelectedObject();
+
 	std::string getInfo(std::vector<GameObject*> gameObjects);
+	std::string getInfo(GameObject* selected, GameObject* target);
 
 	static Verb defaultVerb;	// Represents default verb when interacting with an object
 	static Verb anyVerb;		// Represents any possible verb to allow interactions that don't depend on selected verb
