@@ -142,6 +142,11 @@ GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::str
 void ScriptLoader::loadAndRunGame() {
 	// Monkey Island demo
 
+	auto noInteractionEvent = new Event([](EventInfo e) {
+		e.player.say("I can't do that", 1.0f);
+	});
+	Verb::setDefaultDefaultEvent(noInteractionEvent);
+
 	Event updateUIEvent([this](EventInfo e) {
 		game.getUI().updateUI();
 	});

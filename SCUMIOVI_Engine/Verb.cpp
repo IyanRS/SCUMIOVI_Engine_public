@@ -22,18 +22,21 @@ Verb Verb::pullVerb = Verb("pull", "Pull");
 
 Verb::Verb() {
 	Game::getInstance().addVerb(this);
+	defaultEvent = defaultDefaultEvent;
 }
 
 Verb::Verb(std::string name) {
 	this->name = name;
 	this->displayName = name;
 	Game::getInstance().addVerb(this);
+	defaultEvent = defaultDefaultEvent;
 }
 
 Verb::Verb(std::string name, std::string displayName) {
 	this->name = name;
 	this->displayName = displayName;
 	Game::getInstance().addVerb(this);
+	defaultEvent = defaultDefaultEvent;
 }
 
 Verb::Verb(std::string name, std::string displayName, VerbSyntax syntax, bool requiresSelectedObject) {
@@ -42,6 +45,7 @@ Verb::Verb(std::string name, std::string displayName, VerbSyntax syntax, bool re
 	Game::getInstance().addVerb(this);
 	this->verbSyntax = syntax;
 	this->requiresSelectedObject = requiresSelectedObject;
+	defaultEvent = defaultDefaultEvent;
 }
 
 std::string& Verb::getDisplayName() {
@@ -52,12 +56,34 @@ std::string& Verb::getName() {
 	return name;
 }
 
+void Verb::setDefaultDefaultEvent(Event* event) {
+	defaultDefaultEvent = event;
+}
+
 void Verb::setDefaultEvent(Event* event) {
 	defaultEvent = event;
 }
 
 Event* Verb::getDefaultEvent() {
 	return defaultEvent;
+}
+
+
+void Verb::setBeforeActualEvent(Event* event) {
+	beforeActualEvent = event;
+}
+
+Event* Verb::getBeforeActualEvent() {
+	return beforeActualEvent;
+}
+
+
+void Verb::setAfterActualEvent(Event* event) {
+	afterActualEvent = event;
+}
+
+Event* Verb::getAfterActualEvent() {
+	return afterActualEvent;
 }
 
 std::string Verb::getInfo(std::vector<GameObject*> gameObjects) {

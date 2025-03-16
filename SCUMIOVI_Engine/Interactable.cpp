@@ -32,9 +32,9 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 	}
 	std::map<std::string, Event>::iterator it = interactions.find(verb->getName());
 	if (it != interactions.end()) {
-		Event* defaultEvent = verb->getDefaultEvent();
-		if (defaultEvent != nullptr) {
-			defaultEvent->execute();
+		Event* beforeActualEvent = verb->getBeforeActualEvent();
+		if (beforeActualEvent != nullptr) {
+			beforeActualEvent->execute();
 		}
 		Game& game = Game::getInstance();
 		EventInfo e = EventInfo(clickPos, game.getCurrentPlayer(), *this);
@@ -58,14 +58,19 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 			game.changeToDefaultVerb();
 			game.getCurrentPlayer().setSelectedObject(nullptr);
 		}
+		Event* afterActualEvent = verb->getAfterActualEvent();
+		if (afterActualEvent != nullptr) {
+			afterActualEvent->execute();
+		}
 		//game.getUI().updateUI();
 		return true;
 	}
 	// TODO: handle invalid verbs, allow characters to say predefined lines such as "I can't do that".
 	else {
-		if (defaultVerb == nullptr) {
-			return false;
-		}
+		//if (verb)
+		//if (defaultVerb == nullptr) {
+		//	return false;
+		//}
 		it = interactions.find(Verb::anyVerb.getName());
 		if (it != interactions.end()) {
 			Game& game = Game::getInstance();
@@ -74,6 +79,13 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 			return true;
 		}
 	}
+
+	Event* defaultEvent = verb->getDefaultEvent();
+	if (defaultEvent != nullptr) {
+		defaultEvent->execute();
+		return true;
+	}
+
 	Game& game = Game::getInstance();
 	game.changeToDefaultVerb();
 	return false;

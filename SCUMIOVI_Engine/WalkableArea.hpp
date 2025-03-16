@@ -20,10 +20,27 @@ class WalkableArea : public Interactable {
 	bool isVisible(Vector2<> a, Vector2<> b);
 	int getNIntersections(Vector2<> a, Vector2<> b);
 public:
+	/// <summary>
+	/// Adds debug lines to the screen to show the shape of the walk area.
+	/// </summary>
 	void showDebug();
 	WalkableArea(std::vector<Vector2<>>);
 	WalkableArea(std::initializer_list<Vector2<>>);
+	/// <summary>
+	/// Checks if the point is inside of the walk area polygon.
+	/// </summary>
+	/// <param name="point"></param>
 	bool isPointInside(Vector2<> point);
+	/// <summary>
+	/// Returns the closest point insde the walk area to the given point.
+	/// </summary>
+	/// <param name="point"></param>
 	Vector2<> getClosestPoint(Vector2<>);
+
+	/// <summary>
+	/// Calculates and returns a path from one point to another that is fully
+	/// inside the walkable area. Returns a zero size vector if it is not possible.
+	/// </summary>
+	/// <param name="point"></param>
 	std::vector<Vector2<>> findPath(Vector2<>, Vector2<>);
 };

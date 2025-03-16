@@ -13,11 +13,19 @@ class GameObject;
 class Verb {
 	std::string name;
 	std::string displayName;
-	Event* defaultEvent;
+
+	Event* defaultEvent;		// This event is executed just if the object of the interaction has no interaction with the used verb
+
+	Event* beforeActualEvent;	// This event is executed before the actual event of the verb interaction
+	Event* afterActualEvent;	// This event is executed after the actual event of the verb interaction
 
 	VerbSyntax verbSyntax;
 
+	// Newly created verbs will be added with this event as the default event
+	static inline Event* defaultDefaultEvent;
+
 	bool requiresSelectedObject;
+
 public:
 	Verb();
 	Verb(std::string name);
@@ -25,12 +33,21 @@ public:
 	Verb(std::string name, std::string displayName, VerbSyntax syntax, bool requiresSelectedObject = false);
 	std::string& getDisplayName();
 	std::string& getName();
-	/// <summary>
-	/// Sets the default event that will always be executed before the object interaction when using the verb
-	/// </summary>
-	/// <param name="event"></param>
+	
 	void setDefaultEvent(Event* event);
 	Event* getDefaultEvent();
+
+	static void setDefaultDefaultEvent(Event* event);
+
+	/// <summary>
+	/// Sets the event that will be executed before the object interaction when using the verb
+	/// </summary>
+	/// <param name="event"></param>
+	void setBeforeActualEvent(Event* event);
+	Event* getBeforeActualEvent();
+
+	void setAfterActualEvent(Event* event);
+	Event* getAfterActualEvent();
 
 	bool RequiresSelectedObject();
 
