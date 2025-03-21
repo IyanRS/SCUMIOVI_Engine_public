@@ -31,7 +31,7 @@ void UILayout::updateUI() {
 
 	while (it != uiElements.end()) {
 		GameObject* element = (*it);
-		if (element->getName().find("_item") != std::string::npos) {
+		if (element->hasTag("item")) {
 			it = uiElements.erase(it);
 		}
 		else ++it;

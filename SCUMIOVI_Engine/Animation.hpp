@@ -11,8 +11,8 @@ class Animation {
 	std::string name;
 public:
 	Animation();
-	Animation(std::string name, std::vector<Texture> frames);
-	Animation(std::string name, std::string source, Vector2<int> position, Vector2<int> size, int nFrames, int spacing = 0);
+	Animation(std::string name, std::vector<Texture> frames, bool loop = true, int frameRate = 10);
+	Animation(std::string name, std::string source, Vector2<int> position, Vector2<int> size, int nFrames, int spacing = 0, bool loop = true, int frameRate = 10);
 	std::vector<Texture>& getFrames();
 	//void setFrameRate(int frameRate);
 	int currentFrame = 0;

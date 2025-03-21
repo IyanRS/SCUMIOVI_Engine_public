@@ -58,6 +58,7 @@ public:
 	void bindRightClickToVerb(std::string verbName);
 	void bindLeftClickToVerb(Verb* verb);
 	void bindLeftClickToVerb(std::string verbName);
+	Verb* getDefaultVerb();
 	void setDefaultVerb(Verb* verb);
 	void setDefaultVerb(std::string verbName);
 	void changeToDefaultVerb();

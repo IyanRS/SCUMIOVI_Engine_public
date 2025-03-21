@@ -5,10 +5,10 @@ void Inventory::addItem(GameObject* item) {
 }
 
 void Inventory::removeItem(GameObject& item) {
-	//auto it = std::find(items.begin(), items.end(), item);
-	//if (it == items.end())
-	//	return;
-	//items.erase(it);
+	auto it = std::find(items.begin(), items.end(), &item);
+	if (it == items.end())
+		return;
+	items.erase(it);
 }
 
 GameObject* Inventory::getItemAt(int index) {

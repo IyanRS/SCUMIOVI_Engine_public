@@ -7,7 +7,10 @@ bool Interactable::onClick(Vector2<> clickPos, Verb* verb) {
 	if (verb->getName() == Verb::selectedVerb.getName())
 		return interact(clickPos, game.getCurrentPlayer().getVerb());
 	if (verb->getName() == Verb::defaultVerb.getName())
-		return interact(clickPos, defaultVerb);
+		if (defaultVerb == nullptr)
+			return interact(clickPos, game.getDefaultVerb());
+		else
+			return interact(clickPos, defaultVerb);
 	return interact(clickPos, verb);
 }
 
@@ -30,14 +33,15 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 		}
 		verb = defaultVerb;
 	}
+
+	Game& game = Game::getInstance();
+	EventInfo e = EventInfo(clickPos, game.getCurrentPlayer(), *this);
+
 	std::map<std::string, Event>::iterator it = interactions.find(verb->getName());
 	if (it != interactions.end()) {
 		Event* beforeActualEvent = verb->getBeforeActualEvent();
-		if (beforeActualEvent != nullptr) {
-			beforeActualEvent->execute();
-		}
-		Game& game = Game::getInstance();
-		EventInfo e = EventInfo(clickPos, game.getCurrentPlayer(), *this);
+		Event* afterActualEvent = verb->getAfterActualEvent();
+
 		if (verb->RequiresSelectedObject()) {
 			if (game.getCurrentPlayer().getSelectedObject() == nullptr)
 				game.getCurrentPlayer().setSelectedObject((GameObject*)this);
@@ -45,7 +49,13 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 				std::map<std::string, std::string>::iterator it1 = interactionsSelectedObjects.find(verb->getName());
 				if (it1 != interactionsSelectedObjects.end()) {
 					if (game.getCurrentPlayer().getSelectedObject()->getName() == it1->second) {
+						if (beforeActualEvent != nullptr) {
+							beforeActualEvent->execute(e);
+						}
 						it->second.execute();
+						if (afterActualEvent != nullptr) {
+							afterActualEvent->execute(e);
+						}
 						game.changeToDefaultVerb();
 						game.getCurrentPlayer().setSelectedObject(nullptr);
 					}
@@ -53,15 +63,19 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 			}
 		}
 		else {
+			if (beforeActualEvent != nullptr) {
+				beforeActualEvent->execute(e);
+			}
 			it->second.execute(e);
+			if (afterActualEvent != nullptr) {
+				afterActualEvent->execute(e);
+			}
 			// TODO: default before and after Events? (game.changeToDefaultVerb(); could be inside the event after)
 			game.changeToDefaultVerb();
 			game.getCurrentPlayer().setSelectedObject(nullptr);
 		}
-		Event* afterActualEvent = verb->getAfterActualEvent();
-		if (afterActualEvent != nullptr) {
-			afterActualEvent->execute();
-		}
+		
+		
 		//game.getUI().updateUI();
 		return true;
 	}
@@ -82,12 +96,12 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 
 	Event* defaultEvent = verb->getDefaultEvent();
 	if (defaultEvent != nullptr) {
-		defaultEvent->execute();
+		defaultEvent->execute(e);
 		return true;
 	}
 
-	Game& game = Game::getInstance();
 	game.changeToDefaultVerb();
+	game.getCurrentPlayer().setSelectedObject(nullptr);
 	return false;
 }
 

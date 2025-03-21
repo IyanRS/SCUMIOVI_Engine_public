@@ -6,17 +6,21 @@ std::vector<Texture>& Animation::getFrames() {
 
 Animation::Animation() {}
 
-Animation::Animation(std::string name, std::vector<Texture> frames) {
+Animation::Animation(std::string name, std::vector<Texture> frames, bool loop, int frameRate) {
 	this->name = name;
 	this->frames = frames;
+	this->loop = loop;
+	this->frameRate = frameRate;
 }
 
-Animation::Animation(std::string name, std::string source, Vector2<int> position, Vector2<int> size, int nFrames, int spacing) {
+Animation::Animation(std::string name, std::string source, Vector2<int> position, Vector2<int> size, int nFrames, int spacing, bool loop, int frameRate) {
 	this->name = name;
 	for (int i = 0; i < nFrames; i++) {
 		Texture texture = Texture("", source, position + i * (size.x + spacing), size);
 		frames.push_back(texture);
 	}
+	this->loop = loop;
+	this->frameRate = frameRate;
 }
 
 int Animation::getFrameRate() {
@@ -41,6 +45,8 @@ Animation Animation::getMirrored(std::string newAnimationName) {
 	for (Texture& frame : newAnimation.getFrames()) {
 		frame.toggleMirrored();
 	}
+	newAnimation.loop = loop;
+	newAnimation.frameRate = frameRate;
 	return newAnimation;
 }
 

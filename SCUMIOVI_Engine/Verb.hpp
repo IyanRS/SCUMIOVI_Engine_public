@@ -21,8 +21,8 @@ class Verb {
 
 	VerbSyntax verbSyntax;
 
-	// Newly created verbs will be added with this event as the default event
-	static inline Event* defaultDefaultEvent;
+	// Newly created verbs will be added with this event as their default event
+	static inline Event* defaultDefaultEvent = new Event();
 
 	bool requiresSelectedObject;
 

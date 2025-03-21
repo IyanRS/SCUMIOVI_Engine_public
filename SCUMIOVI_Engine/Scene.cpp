@@ -31,14 +31,14 @@ GameObject& Scene::addBackground(Scene& scene, std::string source, Vector2<int> 
 	GameObject* background = new GameObject("background", Vector2<>(0, 0), Vector2<>(-1, -1), backgroundTexture);
 	background->setLayer(DEFAULT_BACKGROUND_LAYER);
 
-	background->setDefaultVerb(&Verb::walkVerb);
-	background->addVerbInteraction(Verb::walkVerb, Event([this](EventInfo e) {
-		WalkableArea* walkableArea = getWalkableArea();
-		if (walkableArea != nullptr) {
-			Vector2<> walkTo = walkableArea->getClosestPoint(e.clickPos);
-			walkableArea->interact(walkTo, &Verb::walkVerb);
-		}
-	}));
+	//background->setDefaultVerb(&Verb::walkVerb);
+	//background->addVerbInteraction(Verb::walkVerb, Event([this](EventInfo e) {
+	//	WalkableArea* walkableArea = getWalkableArea();
+	//	if (walkableArea != nullptr) {
+	//		Vector2<> walkTo = walkableArea->getClosestPoint(e.clickPos);
+	//		walkableArea->interact(walkTo, &Verb::walkVerb);
+	//	}
+	//}));
 
 	scene.addGameObject(*background);
 	return *background;

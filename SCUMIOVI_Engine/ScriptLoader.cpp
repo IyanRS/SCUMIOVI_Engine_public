@@ -26,23 +26,37 @@ Event createMoveToEvent(Vector2<> pos, Event callback) {
 
 ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 	moveToEvent = Event([](EventInfo e) {
-		if (!e.player.canMove()) {
-			return;
+
+		WalkableArea* walkableArea = e.game.getScene().getWalkableArea();
+		if (walkableArea != nullptr) {
+			Vector2<> walkTo = walkableArea->getClosestPoint(e.clickPos);
+			if (!e.player.canMove()) {
+				return;
+			}
+			e.player.moveToAtSpeed(walkTo - (Vector2<>(e.player.getSize().x / 2, e.player.getSize().y * 0.85)), 100.0f);
+
+			e.game.changeToDefaultVerb();
+			e.player.setSelectedObject(nullptr);
+			e.game.getUI().updateUI();
 		}
-		std::string textureAfterWalk;
-		//if (e.clickPos.x < e.player.getPosition().x + e.player.getSize().x / 2) {
-		//	e.player.setAnimation("walkLeft");
-		//	e.player.setTexture("idleLeft");
+
+		//if (!e.player.canMove()) {
+		//	return;
 		//}
-		//else {
-		//	e.player.setAnimation("walkRight");
-		//	e.player.setTexture("idleRight");
-		//}
-		e.player.moveToAtSpeed(e.clickPos - (Vector2<>(e.player.getSize().x / 2, e.player.getSize().y * 0.85)), 100.0f, Event([] {
-			Game& game = Game::getInstance();
-			Player& player = game.getCurrentPlayer();
-			//player.setAnimation("");
-		}));
+		//std::string textureAfterWalk;
+		////if (e.clickPos.x < e.player.getPosition().x + e.player.getSize().x / 2) {
+		////	e.player.setAnimation("walkLeft");
+		////	e.player.setTexture("idleLeft");
+		////}
+		////else {
+		////	e.player.setAnimation("walkRight");
+		////	e.player.setTexture("idleRight");
+		////}
+		//e.player.moveToAtSpeed(e.clickPos - (Vector2<>(e.player.getSize().x / 2, e.player.getSize().y * 0.85)), 100.0f, Event([] {
+		//	Game& game = Game::getInstance();
+		//	Player& player = game.getCurrentPlayer();
+		//	//player.setAnimation("");
+		//}));
 	});
 
 	pathEvent = Event([](EventInfo e) {
@@ -98,6 +112,42 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 	//		e.game.getUI().getUIElement("uiCurrentVerbInfo")->setTextOver(currentVerb->getDisplayName());
 	//	}
 	//});
+
+	Event* walkEvent = new Event([this](EventInfo e) {
+		WalkableArea* walkableArea = game.getScene().getWalkableArea();
+		if (walkableArea != nullptr) {
+			moveToEvent.execute(e);
+			//Vector2<> walkTo = walkableArea->getClosestPoint(e.clickPos);
+			//if (!e.player.canMove()) {
+			//	return;
+			//}
+			//e.player.moveToAtSpeed(walkTo - (Vector2<>(e.player.getSize().x / 2, e.player.getSize().y * 0.85)), 100.0f);
+
+			//e.game.changeToDefaultVerb();
+			//e.player.setSelectedObject(nullptr);
+			//e.game.getUI().updateUI();
+		}
+		});
+	Verb::walkVerb.setDefaultEvent(walkEvent);
+
+	Event* afterGiveEvent = new Event([this](EventInfo e) {
+		GameObject* selected = e.player.getSelectedObject();
+		if (selected != nullptr) {
+			e.player.getInventory().removeItem(*selected);
+			e.game.changeToDefaultVerb();
+			e.player.setSelectedObject(nullptr);
+			e.game.getUI().updateUI();
+		}
+		});
+	Verb::giveVerb.setAfterActualEvent(afterGiveEvent);
+
+
+	auto noInteractionEvent = new Event([](EventInfo e) {
+		e.player.say("I can't do that", 1.0f);
+		e.game.changeToDefaultVerb();
+		e.player.setSelectedObject(nullptr);
+	});
+	Verb::setDefaultDefaultEvent(noInteractionEvent);
 }
 
 GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::string sceneTextureSource, std::string inventoryTextureSource, Vector2<> pos) {
@@ -108,10 +158,15 @@ GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::str
 	itemInScene->setLayer(-1);
 
 	itemInScene->addVerbInteraction(Verb::pickupVerb, Event([this, name, inventoryTextureSource](EventInfo e) {
+		if (e.player.getCurrentHorizontalDirection() == RIGHT)
+			game.getCurrentPlayer().playAnimation("interactRight");
+		else
+			game.getCurrentPlayer().playAnimation("interactLeft");
 		GameObject& itemInScene = *(GameObject*)&e.interactable;
 		itemInScene.destroy();
 		Texture* itemInInventoryTexture = new Texture(name, inventoryTextureSource);
 		GameObject* itemInInventory = new GameObject(name, Vector2<>(), Vector2<>(-1, -1), itemInInventoryTexture);
+		itemInInventory->addTag("item");
 		itemInInventory->addVerbInteraction(Verb::giveVerb, Event([](EventInfo e) {
 			if (e.player.getSelectedObject() == nullptr) {
 				e.player.setSelectedObject((GameObject*) & e.interactable);
@@ -127,25 +182,12 @@ GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::str
 		}) + dontHighlightDefaultVerbEvent);
 	itemInScene->setDefaultVerb(&Verb::pickupVerb);
 
-	itemInScene->addVerbInteraction(Verb::giveVerb, Event([](EventInfo e) {
-		e.player.say("That wouldn't make any sense");
-	}));
-
-	itemInScene->addVerbInteraction(Verb::pushVerb, Event([](EventInfo e) {
-		e.player.say("That wouldn't make any sense");
-	}));
-
 	scene.addGameObject(*itemInScene);
 	return *itemInScene;
 }
 
 void ScriptLoader::loadAndRunGame() {
 	// Monkey Island demo
-
-	auto noInteractionEvent = new Event([](EventInfo e) {
-		e.player.say("I can't do that", 1.0f);
-	});
-	Verb::setDefaultDefaultEvent(noInteractionEvent);
 
 	Event updateUIEvent([this](EventInfo e) {
 		game.getUI().updateUI();
@@ -179,8 +221,9 @@ void ScriptLoader::loadAndRunGame() {
 	);
 
 	game.setDefaultVerb(&Verb::walkVerb);
-	scummBarWalkableArea.setDefaultVerb(&Verb::walkVerb);
-	scummBarWalkableArea.addVerbInteraction(Verb::walkVerb, moveToEvent);
+
+	//scummBarWalkableArea.setDefaultVerb(&Verb::walkVerb);
+	//scummBarWalkableArea.addVerbInteraction(Verb::walkVerb, moveToEvent);
 	//scummBarWalkableArea.addVerbInteraction(walkVerb, pathEvent);
 	scene.setWalkableArea(&scummBarWalkableArea);
 	
@@ -192,12 +235,17 @@ void ScriptLoader::loadAndRunGame() {
 
 	Animation walkingRightAnimation = Animation("moveRight", "Guybrush_walk_side.png", Vector2<int>(0, 0), Vector2<int>(32, 47), 6);
 	Animation walkingLeftAnimation = walkingRightAnimation.getMirrored("moveLeft");
+	Animation walkingUpAnimation = Animation("moveUp", "Guybrush.png", Vector2<int>(5, 129), Vector2<int>(30, 48), 6, -4);
+	Animation walkingDownAnimation = Animation("moveDown", "Guybrush.png", Vector2<int>(64, 7), Vector2<int>(32, 47), 6, -4);
 
 	//Texture idleDown = Texture("idleDown", "Guybrush.png", Vector2<int>(5, 7), Vector2<int>(32, 47));
 	Texture idleRightTexture = Texture("idleRight", "Guybrush_walk_side.png", Vector2<int>(0, 0), Vector2<int>(32, 47));
 	//Texture idleLeft = idleRight.getMirrored("idleLeft");
-	Animation idleRight = Animation("idleRight", "Guybrush_walk_side.png", Vector2<int>(0, 0), Vector2<int>(32, 47), 1);
+
+	//Animation idleRight = Animation("idleRight", "Guybrush_walk_side.png", Vector2<int>(0, 0), Vector2<int>(32, 47), 1);
+	Animation idleRight = Animation("idleRight", "Guybrush.png", Vector2<int>(17, 178), Vector2<int>(32, 47), 1);
 	Animation idleLeft = idleRight.getMirrored("idleLeft");
+
 
 	Player player = Player("Guybrush", Vector2<>(80, 80));
 	player.setLayer(0);
@@ -212,9 +260,16 @@ void ScriptLoader::loadAndRunGame() {
 
 	player.addAnimation(&walkingRightAnimation);
 	player.addAnimation(&walkingLeftAnimation);
+	player.addAnimation(&walkingUpAnimation);
+	player.addAnimation(&walkingDownAnimation);
 	player.addAnimation(&idleRight);
 	player.addAnimation(&idleLeft);
 
+	Animation interactRight = Animation("interactRight", "Guybrush.png", Vector2<int>(453, 105), Vector2<int>(32, 47), 1, 0, false, 20);
+	Animation interactLeft = interactRight.getMirrored("interactLeft");
+
+	player.addAnimation(&interactRight);
+	player.addAnimation(&interactLeft);
 
 	player.moveToScene(scene);
 
@@ -230,8 +285,6 @@ void ScriptLoader::loadAndRunGame() {
 	player.addOverlapEvent(&scummBarBackTrigger, Event([] (EventInfo e) {
 		Game& game = Game::getInstance();
 		game.getCurrentPlayer().disableMovement();
-		SDL_Log("Triggerbox event");
-		e.player.say("triggerBoxTest");
 		if (game.getCurrentPlayer().getDirectionVector().x > 0) {
 			game.getCurrentPlayer().moveToAtSpeed(Vector2<>(340, 80), 100.0f, Event([] {
 				Game& game = Game::getInstance();
@@ -313,7 +366,7 @@ void ScriptLoader::loadAndRunGame() {
 
 	player.setVerb("walk");
 
-	Verb::walkVerb.setDefaultEvent(&updateUIEvent);
+	Verb::walkVerb.setBeforeActualEvent(&updateUIEvent);
 
 	Texture customCursorTexture = Texture("", "cursor.png");
 	game.setCustomCursor(customCursorTexture, Vector2<>(-1, -1));
@@ -341,7 +394,7 @@ void ScriptLoader::loadAndRunGame() {
 	stan.setAnimation("stanAnimation");
 
 	stan.addVerbInteraction(Verb::giveVerb, "mug", Event([&stan](EventInfo e) {
-		stan.say("Test");
+		stan.say("Gracias");
 	}));
 	
 	int stanTextColor[] = {0x3e, 0x97, 0xe6, 0xff};
@@ -362,9 +415,9 @@ void ScriptLoader::loadAndRunGame() {
 			}));
 		}));
 	}));
-	DialogueOption testOption2 = DialogueOption("Marcho que tengo que marchar", Event([&stan](EventInfo e) {
-		e.player.say("Marcho que tengo que marchar", 1.5, Event([&stan](EventInfo e) {
-			stan.say("Te me cuidas", 1.5, Event([](EventInfo e) {
+	DialogueOption testOption2 = DialogueOption("Me tengo que ir", Event([&stan](EventInfo e) {
+		e.player.say("Me tengo que ir", 1.5, Event([&stan](EventInfo e) {
+			stan.say("Nos vemos", 1.5, Event([](EventInfo e) {
 				e.game.getUI().setLayout("inventory");
 				e.player.enableMovement();
 			}));
@@ -392,6 +445,10 @@ void ScriptLoader::loadAndRunGame() {
 	stan.setDefaultVerb(&Verb::talkVerb);
 
 	scene.addGameObject(stan);
+
+	//game.getCurrentPlayer().setVerb(&Verb::walkVerb);
+
+	//player.setAnimation("moveUp");
 
 	game.startGame();
 

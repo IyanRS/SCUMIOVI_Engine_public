@@ -4,11 +4,13 @@
 
 // Special verbs that represent the default verb of the object that 
 // we can interact with or any possible verb
+
 Verb Verb::defaultVerb = Verb("default", "Default");
 Verb Verb::anyVerb = Verb("any", "Any");
 Verb Verb::selectedVerb = Verb("selected", "Selected");
 
 Verb Verb::walkVerb = Verb("walk", "Walk to");
+
 Verb Verb::pushVerb = Verb("push", "Push", VerbSyntax({ "Push", "Push $target"}));
 //Verb Verb::pushVerb = Verb("push", "Push");
 Verb Verb::closeVerb = Verb("close", "Close");
@@ -57,7 +59,7 @@ std::string& Verb::getName() {
 }
 
 void Verb::setDefaultDefaultEvent(Event* event) {
-	defaultDefaultEvent = event;
+	*defaultDefaultEvent = *event;
 }
 
 void Verb::setDefaultEvent(Event* event) {

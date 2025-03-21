@@ -153,6 +153,10 @@ void Game::setDefaultVerb(Verb* verb) {
 	defaultVerb = verb;
 }
 
+Verb* Game::getDefaultVerb() {
+	return defaultVerb;
+}
+
 void Game::setDefaultVerb(std::string verbName) {
 	defaultVerb = getVerb(verbName);
 }

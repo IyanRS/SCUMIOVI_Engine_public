@@ -127,6 +127,35 @@ void GameObject::setAnimation(std::string animationName) {
 	}
 }
 
+#include "Common.hpp"
+
+void GameObject::playAnimationTask(Animation* initialAnimation, Animation& newAnimation, Event callback) {
+	setAnimation(newAnimation.getName());
+	auto time = newAnimation.getFrames().size() * (newAnimation.getFrameRate() * 1.0f / FPS) * 1000;
+	std::this_thread::sleep_for(std::chrono::milliseconds((int)time));
+	if (initialAnimation == nullptr)
+		setAnimation("");
+	else
+		setAnimation(initialAnimation->getName());
+}
+
+void GameObject::playAnimation(std::string animationName, Event callback) {
+	if (animationName == "")
+		animation = nullptr;
+	for (Animation* anim : animations) {
+		if (anim->getName() == animationName) {
+			if (!anim->doesLoop()) {
+				auto task = std::bind(&GameObject::playAnimationTask, this, animation, *anim, callback);
+				std::thread backgroundTask(task);
+				backgroundTask.detach();
+			}
+			else {
+				setAnimation(anim->getName());
+			}
+		}
+	}
+}
+
 //Animation* GameObject::getAnimationByName(std::string name) {
 //	if (name == "")
 //		return nullptr;
@@ -218,10 +247,10 @@ void GameObject::setMovementAnimation(Vector2<> movementDirection) {
 	}
 	else if (verticalAnimationsDefined()) { // Moving vertically
 		if (movementDirection.y > 0) { // Moving up
-			animation = getAnimationByName("moveUp");;
+			animation = getAnimationByName("moveDown");;
 		}
 		else { // Moving down
-			animation = getAnimationByName("moveDown");;
+			animation = getAnimationByName("moveUp");;
 		}
 	}
 }
@@ -386,6 +415,21 @@ int GameObject::getState() {
 
 void GameObject::setTextFormat(Text& text) {
 	this->textFormat = text;
+}
+
+void GameObject::addTag(std::string tag) {
+	objectTags.insert(tag);
+}
+
+bool GameObject::hasTag(std::string tag) {
+	return objectTags.contains(tag);
+}
+
+VerticalDirection GameObject::getCurrentVerticalDirection() {
+	return lastMovementDirection.y < 0 ? UP : DOWN;
+}
+HorizontalDirection GameObject::getCurrentHorizontalDirection() {
+	return lastMovementDirection.x < 0 ? LEFT : RIGHT;
 }
 
 //void GameObject::setDialogue(Dialogue* dialogue) {

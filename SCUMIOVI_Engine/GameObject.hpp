@@ -14,9 +14,14 @@ class Scene;
 #include <vector>
 
 #include <string>
+#include <unordered_set>
+
 #include "Text.hpp"
 
 #include "Dialogue.hpp"
+
+enum VerticalDirection { UP, DOWN };
+enum HorizontalDirection { LEFT, RIGHT };
 
 class GameObject : public Interactable {
 	std::string name;
@@ -36,6 +41,7 @@ class GameObject : public Interactable {
 	Vector2<> currentMovingTarget = Vector2<>(-INFINITY, -INFINITY);
 	Vector2<> lastMovementDirection = Vector2<>(0, 0);
 	void moveToTask(Vector2<> position, float seconds = 0, Event callback = Event());
+	void playAnimationTask(Animation* initialAnimation, Animation& newAnimation, Event callback = Event());
 	void sayTask(Text& textOver, float seconds, Event callback = Event());
 	bool moving = false;
 	bool visibility = true;
@@ -48,6 +54,7 @@ class GameObject : public Interactable {
 	bool verticalAnimationsDefined();
 	bool horizontalIdleDefined();
 	bool verticalIdleDefined();
+
 	//Animation* moveUpAnimation = nullptr;
 	//Animation* moveDownAnimation = nullptr;
 	//Animation* moveLeftAnimation = nullptr;
@@ -58,6 +65,7 @@ class GameObject : public Interactable {
 	//Animation* idleRightAnimation = nullptr;
 
 	//Dialogue* dialogue;
+	std::unordered_set<std::string> objectTags;
 	
 public:
 	GameObject(std::string name,
@@ -81,6 +89,7 @@ public:
 	Animation* getAnimation();
 	void addAnimation(Animation* animation);
 	void setAnimation(std::string animatioName);
+	void playAnimation(std::string animatioName, Event event = Event());
 	Animation* getAnimationByName(std::string name);
 	//void setAnimation(Animation& animation);
 	//Event& getClickEvent();
@@ -111,4 +120,8 @@ public:
 	//void setDialogue(Dialogue* dialogue);
 	//void setMovementAnimations(Animation* moveUp, Animation* moveDown, Animation* moveLeft, Animation* moveRight);
 	//void setIdleAnimations(Animation* idleUp, Animation* idleDown, Animation* idleLeft, Animation* idleRight);
+	void addTag(std::string tag);
+	bool hasTag(std::string tag);
+	VerticalDirection getCurrentVerticalDirection();
+	HorizontalDirection getCurrentHorizontalDirection();
 };
