@@ -180,6 +180,9 @@ void GameObject::setScene(Scene* scene) {
 	currentScene = scene;
 }
 
+Scene* GameObject::getScene() {
+	return currentScene;
+}
 
 //void GameObject::addOverlapEvent(GameObject object, Event event) {
 //	overlapEvents.insert(GameObject, event);

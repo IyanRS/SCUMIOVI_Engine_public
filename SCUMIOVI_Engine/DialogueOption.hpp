@@ -15,4 +15,5 @@ public:
 	std::string getText();
 	void select();
 	void setNextNode(DialogueNode& node);
+	void finishDialogue(std::string layoutName);
 };

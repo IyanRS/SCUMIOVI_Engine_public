@@ -38,6 +38,7 @@ public:
 	void setLayout(std::string name);
 	void createLayout(std::string name);
 	UILayout& getLayout(std::string name);
+	UILayout* getLayout();
 	void createDialogueOptions(DialogueNode& dialogueNode);
 	void clearDialogueOptions();
 	void incrementInventoryIndex(int increment);

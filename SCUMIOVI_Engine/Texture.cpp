@@ -69,3 +69,7 @@ void Texture::getColor(int color[4]) {
 		color[i] = this->color[i];
 	}
 }
+
+void Texture::setName(std::string name) {
+	this->name = name;
+}

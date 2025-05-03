@@ -54,8 +54,11 @@ void Game::startGame() {
 		SDL_Log("An initial scene is required.");
 		return;
 	}
+	if (currentPlayer == nullptr) {
+		SDL_Log("An initial player is required.");
+		return;
+	}
 	startEvent.execute();
-	
 
 	while (gameIsRunning) {
 		while (SDL_PollEvent(&event)) {

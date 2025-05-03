@@ -36,6 +36,10 @@ void UI::setLayout(std::string name) {
 	}
 }
 
+UILayout* UI::getLayout() {
+	return currentLayout;
+}
+
 void UI::createLayout(std::string name) {
 	UILayout* layout = new UILayout(name); // TODO: free memory on destroy
 	layouts.push_back(layout);

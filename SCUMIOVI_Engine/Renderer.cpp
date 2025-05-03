@@ -65,6 +65,8 @@ void Renderer::renderUIElement(GameObject& uiElement) {
 }
 
 void Renderer::renderUI(UI& ui) {
+	if (ui.getLayout() == nullptr)
+		return;
 	auto elements = ui.getUIElements();
 	for (GameObject* uiElement : elements) {
 		renderUIElement(*uiElement);
@@ -395,22 +397,24 @@ void Renderer::render(Scene& scene, UI& ui) {
 	renderUI(ui);
 
 #ifdef PIXEL_PERFECT_CURSOR
-	float xMouse;
-	float yMouse;
-	SDL_GetMouseState(&xMouse, &yMouse);
+	if (mouseTexture != nullptr) {
+		float xMouse;
+		float yMouse;
+		SDL_GetMouseState(&xMouse, &yMouse);
 
-	xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
-	yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
+		xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
+		yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
-	xMouse -= mouseHotspot.x;
-	yMouse -= mouseHotspot.y;
+		xMouse -= mouseHotspot.x;
+		yMouse -= mouseHotspot.y;
 
-	// Round position
-	xMouse = (int)xMouse;
-	yMouse = (int)yMouse;
+		// Round position
+		xMouse = (int)xMouse;
+		yMouse = (int)yMouse;
 
-	Camera c; // Camera at 0,0 (Cursor does not depend on camera position)
-	renderTexture(Vector2<>(xMouse, yMouse), Vector2<float>(mouseTexture->getSize().x, mouseTexture->getSize().y), mouseTexture, c);
+		Camera c; // Camera at 0,0 (Cursor does not depend on camera position)
+		renderTexture(Vector2<>(xMouse, yMouse), Vector2<float>(mouseTexture->getSize().x, mouseTexture->getSize().y), mouseTexture, c);
+	}
 #endif
 
 

@@ -54,6 +54,9 @@ void InputManager::checkMouseOverObject(float xMouse, float yMouse, GameObject* 
 }
 
 void InputManager::mouseOver(UI& ui, Scene& scene) {
+	if (ui.getLayout() == nullptr)
+		return;
+
 	auto now = std::chrono::system_clock::now();
 	auto lastCheckTimeDiff = now - lastCheckTime;
 	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(lastCheckTimeDiff).count();
@@ -99,14 +102,16 @@ bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
 
 	SDL_GetMouseState(&xMouse, &yMouse);
 
-	// Transform click screen position to game position
-	xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
-	yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
+	if (ui.getLayout() != nullptr) {
+		// Transform click screen position to game position
+		xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
+		yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
-	std::vector uiElements = ui.getUIElements();
-	for (int i = uiElements.size()-1; i >= 0; i--) {
-		if (checkObjectClicked(xMouse, yMouse, uiElements[i], verb)) {
-			return true;
+		std::vector uiElements = ui.getUIElements();
+		for (int i = uiElements.size() - 1; i >= 0; i--) {
+			if (checkObjectClicked(xMouse, yMouse, uiElements[i], verb)) {
+				return true;
+			}
 		}
 	}
 

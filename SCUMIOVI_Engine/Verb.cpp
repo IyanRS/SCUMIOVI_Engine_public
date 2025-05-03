@@ -10,17 +10,15 @@ Verb Verb::anyVerb = Verb("any", "Any");
 Verb Verb::selectedVerb = Verb("selected", "Selected");
 
 Verb Verb::walkVerb = Verb("walk", "Walk to");
-
 Verb Verb::pushVerb = Verb("push", "Push", VerbSyntax({ "Push", "Push $target"}));
-//Verb Verb::pushVerb = Verb("push", "Push");
-Verb Verb::closeVerb = Verb("close", "Close");
-Verb Verb::openVerb = Verb("open", "Open");
-Verb Verb::talkVerb = Verb("talk", "Talk to");
+Verb Verb::closeVerb = Verb("close", "Close", VerbSyntax({ "Close", "Close $target" }));
+Verb Verb::openVerb = Verb("open", "Open", VerbSyntax({ "Open", "Open $target" }));
+Verb Verb::talkVerb = Verb("talk", "Talk to", VerbSyntax({ "Talk to", "Talk to $target" }));
 Verb Verb::giveVerb = Verb("give", "Give", VerbSyntax({ "Give", "Give $target", "Give $selected to", "Give $selected to $target" }), true);
-Verb Verb::pickupVerb = Verb("pickup", "Pick up");
-Verb Verb::useVerb = Verb("use", "Use");
-Verb Verb::lookAtVerb = Verb("lookat", "Look at");
-Verb Verb::pullVerb = Verb("pull", "Pull");
+Verb Verb::pickupVerb = Verb("pickup", "Pick up", VerbSyntax({ "Pick up", "Pick up $target" }));
+Verb Verb::useVerb = Verb("use", "Use", VerbSyntax({ "Use", "Use $target", "Use $selected on $target" }), true);
+Verb Verb::lookAtVerb = Verb("lookat", "Look at", VerbSyntax({ "Look at", "Look at $target" }));
+Verb Verb::pullVerb = Verb("pull", "Pull", VerbSyntax({ "Pull", "Pull $target" }));
 
 Verb::Verb() {
 	Game::getInstance().addVerb(this);

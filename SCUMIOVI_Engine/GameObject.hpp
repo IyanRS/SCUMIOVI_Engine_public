@@ -97,6 +97,7 @@ public:
 	std::map<GameObject*, Event>& getOverlapEvents();
 	Vector2<> getDirectionVector();
 	void moveToScene(Scene& scene);
+	Scene* getScene();
 	void setScene(Scene* scene);
 	void moveTo(Vector2<> pos, float seconds = 0, Event callback = Event());
 	void moveToAtSpeed(Vector2<> pos, float speed, Event callback = Event());

@@ -52,7 +52,7 @@ def parse_animation(animation_line):
     return output
 
 # Examples:
-# guybrush;guybrushWalkRight;guybrushWalkLeft;guybrushIdleRight;guybrushIdleLeft
+# guybrush,guybrushWalkRight,guybrushWalkLeft,guybrushIdleRight;guybrushIdleLeft
 
 def parse_player(player_line):
     player_line = player_line.strip()
@@ -118,9 +118,3 @@ def parse_game():
 
 if __name__ == '__main__':
     print(parse_game())
-
-    # if filename.endswith('.asm') or filename.endswith('.py'): 
-    #     # print(os.path.join(directory, filename))
-    #     continue
-    # else:
-    #     continue

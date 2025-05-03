@@ -27,4 +27,5 @@ public:
 	void toggleMirrored();
 	Texture getMirrored(std::string newTextureName);
 	void getColor(int color[4]);
+	void setName(std::string name);
 };
