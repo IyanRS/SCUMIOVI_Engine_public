@@ -1,0 +1,71 @@
+// ==========================================
+//  Auto-generated file. Do not edit by hand.
+// ==========================================
+
+#include "../../SCUMIOVI_Engine/ScriptLoader.hpp"
+
+void ScriptLoader::loadAndRunGame() {
+	// Monkey Island demo
+
+	Game& game = Game::getInstance();
+
+    // --- Animations ---
+    {% for a in animations %}
+    {% if a.mirror_of %}
+    Animation {{ a.name }} = {{ a.mirror_of }}.getMirrored("{{ a.name }}");
+    {% else %}
+    Animation {{ a.name }} = Animation(
+        "{{ a.name }}",
+        "{{ a.src }}",
+        {{ parse_vector(a.pos, type_hint="int") }},
+        {{ parse_vector(a.size, type_hint="int") }},
+        {{ a.frames }}
+    );
+    {% endif %}
+    {% endfor %}
+
+    // --- Players ---
+    {% for p in players %}
+    Player {{ p.id }} = Player("{{ p.id }}", Vector2<>(0,0));
+    {{ p.id }}.setLayer(0);
+    {% for anim in p.anims %}
+    {{ p.id }}.addAnimation(&{{ anim }});
+    {% endfor %}
+
+    Texture idleTexture = {{p.anims[0]}}.getFrames()[0];
+    idleTexture.setName("idle");
+    guybrush.addTexture(&idleTexture);
+    guybrush.setTexture("idle");
+
+    game.addPlayer({{ p.id }});
+    {% endfor %}
+
+    // --- Scenes ---
+    {% for s in scenes %}
+    Scene {{ s.name }};
+    // Walkable area
+    WalkableArea {{ s.name }}Walk = WalkableArea({
+        {% for pt in s.walk %}
+        {{ parse_vector(pt, type_hint='') }}, 
+        {% endfor %}
+    });
+    {{ s.name }}.setWalkableArea(&{{ s.name }}Walk);
+
+    // Backgrounds
+    {% for bg in s.bg %}
+    GameObject& {{ s.name }}Bg = {{ s.name }}.addBackground(
+        {{ s.name }}, "{{ bg.tex }}", {{ parse_vector(bg.pos, type_hint='int') }}
+    );
+    {% endfor %}
+    {% endfor %}
+
+    // --- Startup configuration ---
+    {% if config.main_character %}
+    game.setCurrentPlayer({{ config.main_character }});
+    {% endif %}
+    game.changeScene(*{{ config.main_character }}.getScene());
+    {% endif %}
+
+    game.startGame();
+
+}
