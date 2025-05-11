@@ -1,5 +1,6 @@
 #include "ScriptLoader.hpp"
 #include "Door.hpp"
+#include "Item.hpp"
 #include "DialogueNode.hpp"
 
 Event createMoveToEvent(Vector2<> pos, Event callback) {

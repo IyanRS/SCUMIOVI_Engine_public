@@ -3,11 +3,12 @@
 // ==========================================
 
 #include "../../SCUMIOVI_Engine/ScriptLoader.hpp"
+#include "../../SCUMIOVI_Engine/Door.hpp"
+#include "../../SCUMIOVI_Engine/Item.hpp"
+#include "../../SCUMIOVI_Engine/DialogueNode.hpp"
 
 void ScriptLoader::loadAndRunGame() {
 	// Monkey Island demo
-
-	Game& game = Game::getInstance();
 
     // --- Animations ---
     Animation guybrushWalkRight = Animation(
@@ -27,18 +28,42 @@ void ScriptLoader::loadAndRunGame() {
     );
     Animation guybrushIdleLeft = guybrushIdleRight.getMirrored("guybrushIdleLeft");
 
+    // --- Textures for objects ---
+    Texture tableTexture = Texture(
+        "table",
+        "table.png"
+    );
+    Texture table2Texture = Texture(
+        "table2",
+        "table2.png"
+    );
+    Texture mugTexture = Texture(
+        "mug",
+        "mug.png"
+    );
+    Texture mugItemTexture = Texture(
+        "mug_item",
+        "mug_item.png"
+    );
+
     // --- Players ---
     Player guybrush = Player("guybrush", Vector2<>(0,0));
-    guybrush.setLayer(0);
-    guybrush.addAnimation(&guybrushWalkRight);
-    guybrush.addAnimation(&guybrushWalkLeft);
-    guybrush.addAnimation(&guybrushIdleRight);
-    guybrush.addAnimation(&guybrushIdleLeft);
 
     Texture idleTexture = guybrushWalkRight.getFrames()[0];
     idleTexture.setName("idle");
     guybrush.addTexture(&idleTexture);
     guybrush.setTexture("idle");
+
+    guybrush.setMovementAnimations(
+        &guybrushWalkRight,
+        &guybrushWalkLeft,
+        nullptr,
+        nullptr,
+        &guybrushIdleRight,
+        &guybrushIdleLeft,
+        nullptr,
+        nullptr
+    );
 
     game.addPlayer(guybrush);
 
@@ -73,10 +98,81 @@ void ScriptLoader::loadAndRunGame() {
         scummbar, "SCUMM_BAR.png", Vector2<int>(640,144)
     );
 
+    // Objects
+    GameObject table(
+        "table",
+        Vector2<>(157,115),
+        Vector2<>(-1,-1),
+        &tableTexture
+    );
+    //scummbar.addGameObject(table);
+    table.moveToScene(scummbar);
+    table.setLayer(1);
+    GameObject table2(
+        "table2",
+        Vector2<>(20,118),
+        Vector2<>(-1,-1),
+        &table2Texture
+    );
+    //scummbar.addGameObject(table2);
+    table2.moveToScene(scummbar);
+    table2.setLayer(1);
+    GameObject mug = Item(
+        "mug",
+        Vector2<>(124,97),
+        &mugTexture,
+        &mugItemTexture
+    );
+    //scummbar.addGameObject(mug);
+    mug.moveToScene(scummbar);
+    mug.setLayer(-1);
+
+    // Players
+    guybrush.moveToScene(scummbar);
+    guybrush.setPosition(Vector2<>(80,80));
+
+
     // --- Startup configuration ---
     game.setCurrentPlayer(guybrush);
+    guybrush.setVerb("walk"); // TODO: custom default verb?
     game.changeScene(*guybrush.getScene());
     guybrush.moveToScene(scummbar);
+
+
+    // TODO: Custom UI
+    int blackColor[] = { 0x00, 0x00, 0x00, 0xff };
+	Texture blackImage = Texture("black", blackColor);
+	GameObject uiBackground = GameObject("uiBackground", Vector2<>(0, 144), Vector2<>(640, 56), &blackImage);
+
+	game.getUI().createLayout("inventory");
+	game.getUI().setLayout("inventory");
+
+	game.getUI().getLayout("inventory").addUIElement(uiBackground);
+    int verbBackgroundColor[] = { 20, 0, 20, 0xff };
+	Texture verbBackground = Texture("white", verbBackgroundColor);
+
+	game.getUI().getLayout("inventory").createVerbsMatrix(Vector2<>(2, 154), {
+
+		{&Verb::giveVerb, &Verb::pickupVerb, &Verb::useVerb},
+		{&Verb::openVerb, &Verb::lookAtVerb, &Verb::pushVerb},
+		{&Verb::closeVerb, &Verb::talkVerb, &Verb::pullVerb} },
+		
+		&verbBackground);
+
+	Event emptyEvent = Event();
+
+	game.getUI().getLayout("inventory").createInventoryMatrix(Vector2<>(150, 154), 4, 2, &verbBackground, emptyEvent);
+
+	GameObject uiCurrentVerbInfo = GameObject("uiCurrentVerbInfo", Vector2<>(160, 148), Vector2<>());
+	int color[4] = { 125, 44, 125, 0xff };
+	Text currentInfoText = Text("Test info", 11, color, false, TEXT_CENTERED);
+	uiCurrentVerbInfo.setTextOver(currentInfoText);
+	uiCurrentVerbInfo.setTextFormat(currentInfoText);
+	game.getUI().getLayout("inventory").addUIElement(uiCurrentVerbInfo);
+
+    // Custom cursor
+    Texture customCursorTexture = Texture("", "cursor.png");
+	game.setCustomCursor(customCursorTexture, Vector2<>(-1, -1));
 
     game.startGame();
 

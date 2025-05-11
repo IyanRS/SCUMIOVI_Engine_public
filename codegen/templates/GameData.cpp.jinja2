@@ -3,11 +3,12 @@
 // ==========================================
 
 #include "../../SCUMIOVI_Engine/ScriptLoader.hpp"
+#include "../../SCUMIOVI_Engine/Door.hpp"
+#include "../../SCUMIOVI_Engine/Item.hpp"
+#include "../../SCUMIOVI_Engine/DialogueNode.hpp"
 
 void ScriptLoader::loadAndRunGame() {
 	// Monkey Island demo
-
-	Game& game = Game::getInstance();
 
     // --- Animations ---
     {% for a in animations %}
@@ -24,18 +25,45 @@ void ScriptLoader::loadAndRunGame() {
     {% endif %}
     {% endfor %}
 
+    // --- Textures for objects ---
+    {% for o in objects %}
+    Texture {{ o.id }}Texture = Texture(
+        "{{ o.id }}",
+        "{{ o.image }}"{{ ',\n' + 
+           (',' + parse_vector(o.pos, type_hint="int") + '\n'
+          + ',' + parse_vector(o.size, type_hint="int") if o.size else 'Vector2<int>(-1,-1)' + '\n')
+            if o.pos else ''}}
+    );
+    {% if o.type == 'item' %}
+    Texture {{ o.id }}ItemTexture = Texture(
+        "{{ o.id }}_item",
+        "{{ o.itemImage }}"
+    );
+    {% endif %}
+    {% endfor %}
+
     // --- Players ---
     {% for p in players %}
     Player {{ p.id }} = Player("{{ p.id }}", Vector2<>(0,0));
-    {{ p.id }}.setLayer(0);
     {% for anim in p.anims %}
     {{ p.id }}.addAnimation(&{{ anim }});
     {% endfor %}
 
-    Texture idleTexture = {{p.anims[0]}}.getFrames()[0];
+    Texture idleTexture = {{p.animationMoveRight}}.getFrames()[0];
     idleTexture.setName("idle");
-    guybrush.addTexture(&idleTexture);
-    guybrush.setTexture("idle");
+    {{ p.id }}.addTexture(&idleTexture);
+    {{ p.id }}.setTexture("idle");
+
+    {{ p.id }}.setMovementAnimations(
+        {{ '&' + p.animationMoveRight if p.animationMoveRight else 'nullptr' }},
+        {{ '&' + p.animationMoveLeft if p.animationMoveLeft else 'nullptr' }},
+        {{ '&' + p.animationMoveUp if p.animationMoveUp else 'nullptr' }},
+        {{ '&' + p.animationMoveDown if p.animationMoveDown else 'nullptr' }},
+        {{ '&' + p.animationIdleRight if p.animationIdleRight else 'nullptr' }},
+        {{ '&' + p.animationIdleLeft if p.animationIdleLeft else 'nullptr' }},
+        {{ '&' + p.animationIdleUp if p.animationIdleUp else 'nullptr' }},
+        {{ '&' + p.animationIdleDown if p.animationIdleDown else 'nullptr' }}
+    );
 
     game.addPlayer({{ p.id }});
     {% endfor %}
@@ -57,13 +85,88 @@ void ScriptLoader::loadAndRunGame() {
         {{ s.name }}, "{{ bg.tex }}", {{ parse_vector(bg.pos, type_hint='int') }}
     );
     {% endfor %}
+
+    // Objects
+    {% set ns = namespace(isItem=false) %}
+    {% for o in s.objects %}
+    {% for obj in objects %}
+    {% if o.id == obj.id and obj.type == 'item' %}
+        {% set ns.isItem = True %}
+    {% endif %}
+    {% endfor %}
+    {% if ns.isItem == True %}
+    GameObject {{ o.id }} = Item(
+        "{{ o.id }}",
+        {{ parse_vector(o.pos, type_hint='') }},
+        &{{ o.id }}Texture,
+        &{{ o.id }}ItemTexture
+    );
+    {% set ns.isItem = False %}
+    {% else %}
+    GameObject {{ o.id }}(
+        "{{ o.id }}",
+        {{ parse_vector(o.pos,type_hint='') }},
+        Vector2<>(-1,-1),
+        &{{ o.id }}Texture
+    );
+    {% endif %}
+    //{{ s.name }}.addGameObject({{ o.id }});
+    {{ o.id }}.moveToScene({{ s.name }});
+    {{ o.id }}.setLayer({{ o.layer }});
+    {% endfor %}
+
+    // Players
+    {% if s.player %}
+    {{ s.player.id }}.moveToScene({{ s.name }});
+    {{ s.player.id }}.setPosition({{ parse_vector(s.player.pos, type_hint='') }});
+    {% endif %}
+
     {% endfor %}
 
     // --- Startup configuration ---
     {% if config.main_character %}
     game.setCurrentPlayer({{ config.main_character }});
+    {{ config.main_character }}.setVerb("walk"); // TODO: custom default verb?
     {% endif %}
     game.changeScene(*{{ config.main_character }}.getScene());
+    {{ config.main_character }}.moveToScene({{ config.main_scene }});
+
+
+    // TODO: Custom UI
+    int blackColor[] = { 0x00, 0x00, 0x00, 0xff };
+	Texture blackImage = Texture("black", blackColor);
+	GameObject uiBackground = GameObject("uiBackground", Vector2<>(0, 144), Vector2<>(640, 56), &blackImage);
+
+	game.getUI().createLayout("inventory");
+	game.getUI().setLayout("inventory");
+
+	game.getUI().getLayout("inventory").addUIElement(uiBackground);
+    int verbBackgroundColor[] = { 20, 0, 20, 0xff };
+	Texture verbBackground = Texture("white", verbBackgroundColor);
+
+	game.getUI().getLayout("inventory").createVerbsMatrix(Vector2<>(2, 154), {
+
+		{&Verb::giveVerb, &Verb::pickupVerb, &Verb::useVerb},
+		{&Verb::openVerb, &Verb::lookAtVerb, &Verb::pushVerb},
+		{&Verb::closeVerb, &Verb::talkVerb, &Verb::pullVerb} },
+		
+		&verbBackground);
+
+	Event emptyEvent = Event();
+
+	game.getUI().getLayout("inventory").createInventoryMatrix(Vector2<>(150, 154), 4, 2, &verbBackground, emptyEvent);
+
+	GameObject uiCurrentVerbInfo = GameObject("uiCurrentVerbInfo", Vector2<>(160, 148), Vector2<>());
+	int color[4] = { 125, 44, 125, 0xff };
+	Text currentInfoText = Text("Test info", 11, color, false, TEXT_CENTERED);
+	uiCurrentVerbInfo.setTextOver(currentInfoText);
+	uiCurrentVerbInfo.setTextFormat(currentInfoText);
+	game.getUI().getLayout("inventory").addUIElement(uiCurrentVerbInfo);
+
+    // Custom cursor
+    {% if config.cursor %}
+    Texture customCursorTexture = Texture("", "{{ config.cursor }}");
+	game.setCustomCursor(customCursorTexture, Vector2<>(-1, -1));
     {% endif %}
 
     game.startGame();

@@ -26,15 +26,15 @@ enum HorizontalDirection { LEFT, RIGHT };
 class GameObject : public Interactable {
 	std::string name;
 	Vector2<> position;
-	Animation* animation;
+	Animation* animation = nullptr;
 	std::vector<Animation*> animations;
 	std::vector<Texture*> textures;
-	Texture* texture;
+	Texture* texture = nullptr;
 	int layer = 0;
 	Vector2<> size;
 	bool interactable = true;
 	//Event clickEvent;
-	Scene* currentScene;
+	Scene* currentScene = nullptr;
 	std::map<GameObject*, Event> overlapEvents;
 	Text textOver;
 	Text textFormat;
@@ -55,14 +55,14 @@ class GameObject : public Interactable {
 	bool horizontalIdleDefined();
 	bool verticalIdleDefined();
 
-	//Animation* moveUpAnimation = nullptr;
-	//Animation* moveDownAnimation = nullptr;
-	//Animation* moveLeftAnimation = nullptr;
-	//Animation* moveRightAnimation = nullptr;
-	//Animation* idleUpAnimation = nullptr;
-	//Animation* idleDownAnimation = nullptr;
-	//Animation* idleLeftAnimation = nullptr;
-	//Animation* idleRightAnimation = nullptr;
+	Animation* moveUpAnimation = nullptr;
+	Animation* moveDownAnimation = nullptr;
+	Animation* moveLeftAnimation = nullptr;
+	Animation* moveRightAnimation = nullptr;
+	Animation* idleUpAnimation = nullptr;
+	Animation* idleDownAnimation = nullptr;
+	Animation* idleLeftAnimation = nullptr;
+	Animation* idleRightAnimation = nullptr;
 
 	//Dialogue* dialogue;
 	std::unordered_set<std::string> objectTags;
@@ -125,4 +125,8 @@ public:
 	bool hasTag(std::string tag);
 	VerticalDirection getCurrentVerticalDirection();
 	HorizontalDirection getCurrentHorizontalDirection();
+	void setMovementAnimations(Animation* moveRightAnimation, Animation* moveLeftAnimation,
+		Animation* moveUpAnimation, Animation* moveDownAnimation,
+		Animation* idleRightAnimation, Animation* idleLeftAnimation,
+		Animation* idleUpAnimation, Animation* idleDownAnimation);
 };

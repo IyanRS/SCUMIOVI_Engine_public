@@ -193,43 +193,62 @@ Scene* GameObject::getScene() {
 //}
 
 bool GameObject::horizontalAnimationsDefined() {
-	//return moveRightAnimation != nullptr && moveLeftAnimation != nullptr;
-	return getAnimationByName("moveRight") && getAnimationByName("moveLeft");
+	return moveRightAnimation != nullptr && moveLeftAnimation != nullptr;
+	//return getAnimationByName("moveRight") && getAnimationByName("moveLeft");
 }
 
 bool GameObject::verticalAnimationsDefined() {
-	//return moveUpAnimation != nullptr && moveDownAnimation != nullptr;
-	return getAnimationByName("moveUp") && getAnimationByName("moveDown");
+	return moveUpAnimation != nullptr && moveDownAnimation != nullptr;
+	//return getAnimationByName("moveUp") && getAnimationByName("moveDown");
 }
 
 bool GameObject::horizontalIdleDefined() {
-	//return idleRightAnimation != nullptr && idleLeftAnimation != nullptr;
-	return getAnimationByName("idleRight") && getAnimationByName("idleLeft");
+	return idleRightAnimation != nullptr && idleLeftAnimation != nullptr;
+	//return getAnimationByName("idleRight") && getAnimationByName("idleLeft");
 }
 
 bool GameObject::verticalIdleDefined() {
-	//return idleUpAnimation != nullptr && idleDownAnimation != nullptr;
-	return getAnimationByName("idleUp") && getAnimationByName("idleDown");
+	return idleUpAnimation != nullptr && idleDownAnimation != nullptr;
+	//return getAnimationByName("idleUp") && getAnimationByName("idleDown");
 }
 
 void GameObject::setIdleAnimation(Vector2<> lastMovementDirection) {
 	if ((abs(lastMovementDirection.x) > abs(lastMovementDirection.y) // Moving horizontally
 		|| !verticalIdleDefined()) && horizontalIdleDefined()) {
 		if (lastMovementDirection.x > 0) { // Moving right
-			animation = getAnimationByName("idleRight");
+			//animation = getAnimationByName("idleRight");
+			animation = idleRightAnimation;
 		}
 		else { // Moving left
-			animation = getAnimationByName("idleLeft");
+			//animation = getAnimationByName("idleLeft");
+			animation = idleLeftAnimation;
 		}
 	}
 	else if (verticalIdleDefined()) { // Moving vertically
 		if (lastMovementDirection.y > 0) { // Moving up
-			animation = getAnimationByName("idleUp");
+			//animation = getAnimationByName("idleUp");
+			animation = idleUpAnimation;
 		}
 		else { // Moving down
-			animation = getAnimationByName("idleDown");
+			//animation = getAnimationByName("idleDown");
+			animation = idleDownAnimation;
 		}
 	}
+}
+
+void GameObject::setMovementAnimations(Animation* moveRightAnimation, Animation* moveLeftAnimation,
+	Animation* moveUpAnimation, Animation* moveDownAnimation,
+	Animation* idleRightAnimation, Animation* idleLeftAnimation,
+	Animation* idleUpAnimation, Animation* idleDownAnimation) {
+	this->moveRightAnimation = moveRightAnimation;
+	this->moveLeftAnimation = moveLeftAnimation;
+	this->moveUpAnimation = moveUpAnimation;
+	this->moveDownAnimation = moveDownAnimation;
+
+	this->idleRightAnimation = idleRightAnimation;
+	this->idleLeftAnimation = idleLeftAnimation;
+	this->idleUpAnimation = idleUpAnimation;
+	this->idleDownAnimation = idleDownAnimation;
 }
 
 void GameObject::setMovementAnimation(Vector2<> movementDirection) {
@@ -242,18 +261,22 @@ void GameObject::setMovementAnimation(Vector2<> movementDirection) {
 	if ((abs(movementDirection.x) > abs(movementDirection.y) // Moving horizontally
 		|| !verticalAnimationsDefined()) && horizontalAnimationsDefined()) {
 		if (movementDirection.x > 0) { // Moving right
-			animation = getAnimationByName("moveRight");
+			//animation = getAnimationByName("moveRight");
+			animation = moveRightAnimation;
 		}
 		else { // Moving left
-			animation = getAnimationByName("moveLeft");
+			//animation = getAnimationByName("moveLeft");
+			animation = moveLeftAnimation;
 		}
 	}
 	else if (verticalAnimationsDefined()) { // Moving vertically
 		if (movementDirection.y > 0) { // Moving up
-			animation = getAnimationByName("moveDown");;
+			//animation = getAnimationByName("moveDown");
+			animation = moveDownAnimation;
 		}
 		else { // Moving down
-			animation = getAnimationByName("moveUp");;
+			//animation = getAnimationByName("moveUp");
+			animation = moveUpAnimation;
 		}
 	}
 }

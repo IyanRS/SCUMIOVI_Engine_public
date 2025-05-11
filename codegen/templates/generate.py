@@ -15,6 +15,10 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 CSV_SEPARATOR = ','
 VALUES_SEPARATOR = ';'
 
+WALKABLE_AREA_FILE = 'WalkableArea.csv'
+BACKGROUND_FILE = 'Background.csv'
+SCENE_OBJECTS_FILE = 'GameObjects.csv'
+
 # --- Parsing helpers ---
 def parse_vector(coords, type_hint=""):
     x, y = coords.strip().split(VALUES_SEPARATOR)
@@ -37,29 +41,116 @@ def parse_animation(line):
 
 # Parse single player line into a dict
 def parse_player(line):
-    values = [v.strip() for v in line.split(CSV_SEPARATOR)]
+    # values = [v.strip() for v in line.split(CSV_SEPARATOR)]
+    # return {
+    #     'id': values[0],
+    #     'anims': values[1:5]
+    # }
+
     return {
-        'id': values[0],
-        'anims': values[1:5]
+        'id': line['id'].strip(),
+        'animationMoveRight': line['animationMoveRight'].strip(),
+        'animationMoveLeft': line['animationMoveLeft'].strip(),
+        'animationIdleRight': line['animationIdleRight'].strip(),
+        'animationIdleLeft': line['animationIdleLeft'].strip(),
     }
 
-# Parse Scenes folder into a structured dict
-def parse_scene(scene_path):
-    name = os.path.basename(scene_path)
-    walk_points = []
-    backgrounds = []
-    for fname in os.listdir(scene_path):
-        full = os.path.join(scene_path, fname)
-        if 'WalkableArea.csv' in fname:
-            with open(full) as f:
-                for l in f:
-                    if l.strip(): walk_points.append(l.strip())
-        if 'Background.csv' in fname:
-            with open(full) as f:
-                for l in f:
-                    tex, pos = [v.strip() for v in l.split(CSV_SEPARATOR)]
-                    backgrounds.append({'tex': tex, 'pos': pos})
-    return {'name': name, 'walk': walk_points, 'bg': backgrounds}
+# Parse single object line into a dict
+def parse_object(line):
+    if line['type'] == '':
+        return {
+            'id': line['id'].strip(),
+            'type': line['type'].strip(),
+            'image': line['image'].strip(),
+            'offset': line['offset'].strip(),
+            'size': line['size'].strip(),
+        }
+    elif line['type'].split(VALUES_SEPARATOR)[0] == 'item':
+        return {
+            'id': line['id'].strip(),
+            'type': line['type'].split(VALUES_SEPARATOR)[0].strip(),
+            'itemImage': line['type'].split(VALUES_SEPARATOR)[1].strip(),
+            'image': line['image'].strip(),
+            'offset': line['offset'].strip(),
+            'size': line['size'].strip(),
+        }
+
+# # Parse Scenes folder into a structured dict
+# def parse_scene(scene_path):
+#     name = os.path.basename(scene_path)
+#     walk_points = []
+#     backgrounds = []
+#     for fname in os.listdir(scene_path):
+#         full = os.path.join(scene_path, fname)
+#         if 'WalkableArea.csv' in fname:
+#             with open(full) as f:
+#                 for l in f:
+#                     if l.strip(): walk_points.append(l.strip())
+#         if 'Background.csv' in fname:
+#             with open(full) as f:
+#                 for l in f:
+#                     tex, pos = [v.strip() for v in l.split(CSV_SEPARATOR)]
+#                     backgrounds.append({'tex': tex, 'pos': pos})
+#     return {'name': name, 'walk': walk_points, 'bg': backgrounds}
+
+def parse_scene(scene_folder, player_ids):
+    """
+    Returns a dict:
+      {
+        'name': 'scummBar',
+        'walk': [ '100;113', '116;125', … ],
+        'bg':   [ {'tex':'SCUMM_Bar.png','pos':'0;0'}, … ],
+        'player': {'id':'Guybrush','pos':'80;80'},
+        'objects': [ {'id':'table','tex':'table.png','pos':'157;115'}, … ]
+      }
+    """
+    scene_name = os.path.basename(scene_folder)
+    walk = []
+    bg   = []
+    # 1) walkable area
+    wa_path = os.path.join(scene_folder, WALKABLE_AREA_FILE)
+    if os.path.exists(wa_path):
+        with open(wa_path, newline='') as f:
+            for line in f:
+                walk.append(line.strip())   # keep the raw "x;y" for parse_vector()
+
+    # 2) backgrounds
+    bg_path = os.path.join(scene_folder, BACKGROUND_FILE)
+    if os.path.exists(bg_path):
+        with open(bg_path, newline='') as f:
+            reader = csv.reader(f)
+            for fields in reader:
+                tex, pos = fields[0].strip(), fields[1].strip()
+                bg.append({'tex': tex, 'pos': pos})
+
+    # 3) objects (including the player)
+    player_obj = None
+    objects    = []
+    obj_path = os.path.join(scene_folder, SCENE_OBJECTS_FILE)
+    if os.path.exists(obj_path):
+        with open(obj_path, newline='') as f:
+            reader = csv.DictReader(f)
+            # Expect headers: id,texture[,itemTexture],pos
+            for row in reader:
+                oid = row['id'].strip()
+                entry = {
+                    'id': oid,
+                    'pos': row['pos'].strip(),
+                    'layer': row['layer'].strip()
+                }
+                if oid in player_ids:
+                    # this is the player
+                    player_obj = { 'id': oid, 'pos': entry['pos'], 'layer': entry['layer'] }
+                else:
+                    objects.append(entry)
+
+    return {
+        'name':   scene_name,
+        'walk':   walk,
+        'bg':     bg,
+        'player': player_obj,
+        'objects': objects
+    }
 
 def parse_settings():
     config = {}
@@ -76,22 +167,30 @@ def parse_settings():
 
 # Collect all data
 def collect_data():
-    animations, players, scenes = [], [], []
+    animations, players, objects, scenes = [], [], [], []
     # Animations
     with open(os.path.join(GAME_FILES_FOLDER, 'Animations.csv')) as f:
         for l in f:
             animations.append(parse_animation(l))
     # Players
     with open(os.path.join(GAME_FILES_FOLDER, 'Players.csv')) as f:
-        for l in f:
-            players.append(parse_player(l))
+        reader = csv.DictReader(f)
+        for row in reader:
+            players.append(parse_player(row))
+    with open(os.path.join(GAME_FILES_FOLDER, 'Objects.csv')) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            objects.append(parse_object(row))
+    player_ids = { p['id'] for p in players }
     # Scenes
     scenes_dir = os.path.join(GAME_FILES_FOLDER, 'Scenes')
-    for sd in os.listdir(scenes_dir):
-        scenes.append(parse_scene(os.path.join(scenes_dir, sd)))
+    for dirname in os.listdir(scenes_dir):
+        path = os.path.join(scenes_dir, dirname)
+        if os.path.isdir(path):
+            scenes.append(parse_scene(path, player_ids))
     # Settings
     settings = parse_settings()
-    return {'animations': animations, 'players': players, 'scenes': scenes, 'config': settings}
+    return {'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects}
 
 # --- Main: generate via Jinja2 and compile ---
 def main():

@@ -1,0 +1,4 @@
+id,type,image,offset,size
+table,,table.png,,
+table2,,table2.png,,
+mug,item;mug_item.png,mug.png,,

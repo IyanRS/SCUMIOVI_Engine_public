@@ -1,1 +1,2 @@
-guybrush,guybrushWalkRight,guybrushWalkLeft,guybrushIdleRight,guybrushIdleLeft
+id,animationMoveRight,animationMoveLeft,animationMoveUp,animationMoveDown,animationIdleRight,animationIdleLeft,animationIdleUp,animationIdleDown
+guybrush,guybrushWalkRight,guybrushWalkLeft,,,guybrushIdleRight,guybrushIdleLeft,,
