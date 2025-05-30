@@ -53,6 +53,7 @@ def parse_player(line):
         'animationMoveLeft': line['animationMoveLeft'].strip(),
         'animationIdleRight': line['animationIdleRight'].strip(),
         'animationIdleLeft': line['animationIdleLeft'].strip(),
+        'text_format': line['text_format'].strip()
     }
 
 # Parse single object line into a dict
@@ -64,6 +65,7 @@ def parse_object(line):
             'image': line['image'].strip(),
             'offset': line['offset'].strip(),
             'size': line['size'].strip(),
+            'text_format': line['text_format'].strip()
         }
     elif line['type'].split(VALUES_SEPARATOR)[0] == 'item':
         return {
@@ -73,6 +75,7 @@ def parse_object(line):
             'image': line['image'].strip(),
             'offset': line['offset'].strip(),
             'size': line['size'].strip(),
+            'text_format': line['text_format'].strip()
         }
 
 # # Parse Scenes folder into a structured dict
@@ -165,13 +168,79 @@ def parse_settings():
                     config[key] = val
     return config
 
+scripts = {}
+
+def change_indentation(code_str, indent_with='\t\t'):
+    """
+    Prepends 'indent_with' to each non-blank line of the given code string, preserving existing indentation.
+    """
+    lines = code_str.splitlines()
+    indented = []
+    for line in lines:
+        if line.strip():
+            indented.append(f"{indent_with}{line}")
+        else:
+            indented.append(line)
+    return '\n'.join(indented)
+
+def parse_interaction(row):
+    """
+    Parses a single interaction row.
+    Expected fields: id, type, target, text, animation, sound
+    """
+    return {
+        'object_id': row['object_id'].strip(),
+        'verb': row['verb'].strip(),
+        'other_object_id': row['other_object_id'].strip(),
+        'script_file': row['script_file'].strip(),
+        'script': change_indentation(scripts[row['script_file'].strip()]) # Makes indentation look better in generated code
+    }
+
+def parse_scripts(scripts_folder):
+    """
+    Parses all script files in the given folder.
+    Returns a list of script names.
+    """
+    global scripts
+
+    for filename in os.listdir(scripts_folder):
+        # Read the content of the script and append it to the scripts dictionary with the filename as key
+        script_path = os.path.join(scripts_folder, filename)
+        with open(script_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            scripts[filename] = content
+    return scripts
+
+def parse_text_format(row):
+    """
+    Parses a single text format row.
+    Expected fields: format_id,file,size,color,outline,position,shadow
+    Examples:
+        default,arial.ttf,12,0xffffff,true,top,true
+        stan_text_format,arial.ttf,12,0x3e97e6,true,top,true
+    """
+    return {
+        'format_id': row['format_id'].strip(),
+        'file': row['file'].strip(),
+        'size': row['size'].strip(),
+        # Convert color to hex to 3 element int array (e.g. 0xffffff -> [255, 255, 255])
+        'color': [int(row['color'].strip()[i:i+2], 16) for i in (2, 4, 6)] if row['color'].strip().startswith('0x') else [int(row['color'].strip()[i:i+2], 16) for i in (0, 2, 4)],
+        'outline': row['outline'].strip().lower() == 'true',
+        'position': row['position'].strip(),
+        'shadow': row['shadow'].strip().lower() == 'true'
+    }
+
 # Collect all data
 def collect_data():
-    animations, players, objects, scenes = [], [], [], []
+    animations, players, objects, scenes, interactions, text_formats = [], [], [], [], [], []
     # Animations
     with open(os.path.join(GAME_FILES_FOLDER, 'Animations.csv')) as f:
         for l in f:
             animations.append(parse_animation(l))
+    with open(os.path.join(GAME_FILES_FOLDER, 'TextFormats.csv')) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            text_formats.append(parse_text_format(row))
     # Players
     with open(os.path.join(GAME_FILES_FOLDER, 'Players.csv')) as f:
         reader = csv.DictReader(f)
@@ -181,6 +250,11 @@ def collect_data():
         reader = csv.DictReader(f)
         for row in reader:
             objects.append(parse_object(row))
+    parse_scripts(os.path.join(GAME_FILES_FOLDER, 'Scripts'))
+    with open(os.path.join(GAME_FILES_FOLDER, 'Interactions.csv')) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            interactions.append(parse_interaction(row))
     player_ids = { p['id'] for p in players }
     # Scenes
     scenes_dir = os.path.join(GAME_FILES_FOLDER, 'Scenes')
@@ -190,7 +264,7 @@ def collect_data():
             scenes.append(parse_scene(path, player_ids))
     # Settings
     settings = parse_settings()
-    return {'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects}
+    return {'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'text_formats': text_formats}
 
 # --- Main: generate via Jinja2 and compile ---
 def main():

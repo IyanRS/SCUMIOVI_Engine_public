@@ -8,8 +8,6 @@
 #include "../../SCUMIOVI_Engine/DialogueNode.hpp"
 
 void ScriptLoader::loadAndRunGame() {
-	// Monkey Island demo
-
     // --- Animations ---
     {% for a in animations %}
     {% if a.mirror_of %}
@@ -30,9 +28,9 @@ void ScriptLoader::loadAndRunGame() {
     Texture {{ o.id }}Texture = Texture(
         "{{ o.id }}",
         "{{ o.image }}"{{ ',\n' + 
-           (',' + parse_vector(o.pos, type_hint="int") + '\n'
-          + ',' + parse_vector(o.size, type_hint="int") if o.size else 'Vector2<int>(-1,-1)' + '\n')
-            if o.pos else ''}}
+           ('\t\t' + parse_vector(o.offset, type_hint="int") + ',\n'
+          + '\t\t' + parse_vector(o.size, type_hint="int") if o.size else 'Vector2<int>(-1,-1)' + '\n')
+            if o.offset else ''}}
     );
     {% if o.type == 'item' %}
     Texture {{ o.id }}ItemTexture = Texture(
@@ -40,6 +38,19 @@ void ScriptLoader::loadAndRunGame() {
         "{{ o.itemImage }}"
     );
     {% endif %}
+    {% endfor %}
+
+    // --- Text formats ---
+    {% for t in text_formats %}
+    int {{ t.format_id }}FormatColor[] = { {{ t.color[0] }}, {{ t.color[1] }}, {{ t.color[2] }}, 0xff };
+    Text {{ t.format_id }}Format = Text(
+        "",
+        {{ t.size }},
+        {{ t.format_id }}FormatColor,
+        {{ "true" if t.outline else "false" }},
+        {{ "TEXT_ON_BOTTOM" if t.position == 'bottom' else "TEXT_CENTERED" if t.position == 'center' else "TEXT_ON_TOP" }},
+        {{ "true" if t.shadow else "false" }}
+    );
     {% endfor %}
 
     // --- Players ---
@@ -64,6 +75,7 @@ void ScriptLoader::loadAndRunGame() {
         {{ '&' + p.animationIdleUp if p.animationIdleUp else 'nullptr' }},
         {{ '&' + p.animationIdleDown if p.animationIdleDown else 'nullptr' }}
     );
+    {{ p.id }}.setTextFormat({{ p.text_format }}Format);
 
     game.addPlayer({{ p.id }});
     {% endfor %}
@@ -110,9 +122,16 @@ void ScriptLoader::loadAndRunGame() {
         &{{ o.id }}Texture
     );
     {% endif %}
+
     //{{ s.name }}.addGameObject({{ o.id }});
     {{ o.id }}.moveToScene({{ s.name }});
     {{ o.id }}.setLayer({{ o.layer }});
+    {% endfor %}
+
+    {% for obj in objects %}
+    {% if obj.text_format %}
+    {{obj.id}}.setTextFormat({{obj.text_format}}Format);
+    {% endif %}
     {% endfor %}
 
     // Players
@@ -168,6 +187,28 @@ void ScriptLoader::loadAndRunGame() {
     Texture customCursorTexture = Texture("", "{{ config.cursor }}");
 	game.setCustomCursor(customCursorTexture, Vector2<>(-1, -1));
     {% endif %}
+
+    {% if config.default_verb %}
+	game.setDefaultVerb("{{ config.default_verb }}");
+    {% else %}
+    game.setDefaultVerb("walk");
+    {% endif %}
+
+    // Interactions
+    {% for i in interactions %}
+    {% if i.other_object_id %}
+    {{ i.object_id }}.addVerbInteraction(*game.getVerb("{{ i.verb }}"), "{{ i.other_object_id }}", Event([](EventInfo e) {
+{{ i.script }}
+    }));
+    {% else %}
+    {{ i.object_id }}.addVerbInteraction(*game.getVerb("{{ i.verb }}"), Event([](EventInfo e) {
+{{ i.script }}
+    }));
+    {% endif %}
+    {% endfor %}
+
+    game.bindLeftClickToVerb(&Verb::selectedVerb);
+    game.bindRightClickToVerb(&Verb::defaultVerb);
 
     game.startGame();
 

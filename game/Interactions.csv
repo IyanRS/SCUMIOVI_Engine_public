@@ -1,0 +1,2 @@
+object_id,verb,other_object_id,script_file
+stan,give,mug,give_mug_stan.cpp

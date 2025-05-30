@@ -8,8 +8,6 @@
 #include "../../SCUMIOVI_Engine/DialogueNode.hpp"
 
 void ScriptLoader::loadAndRunGame() {
-	// Monkey Island demo
-
     // --- Animations ---
     Animation guybrushWalkRight = Animation(
         "guybrushWalkRight",
@@ -45,6 +43,32 @@ void ScriptLoader::loadAndRunGame() {
         "mug_item",
         "mug_item.png"
     );
+    Texture stanTexture = Texture(
+        "stan",
+        "Stan_transparent.png",
+		Vector2<int>(36,9),
+		Vector2<int>(37,57)
+    );
+
+    // --- Text formats ---
+    int defaultFormatColor[] = { 255, 255, 255, 0xff };
+    Text defaultFormat = Text(
+        "",
+        12,
+        defaultFormatColor,
+        true,
+        TEXT_ON_TOP,
+        true
+    );
+    int stan_text_formatFormatColor[] = { 62, 151, 230, 0xff };
+    Text stan_text_formatFormat = Text(
+        "",
+        12,
+        stan_text_formatFormatColor,
+        true,
+        TEXT_ON_TOP,
+        true
+    );
 
     // --- Players ---
     Player guybrush = Player("guybrush", Vector2<>(0,0));
@@ -64,6 +88,7 @@ void ScriptLoader::loadAndRunGame() {
         nullptr,
         nullptr
     );
+    guybrush.setTextFormat(defaultFormat);
 
     game.addPlayer(guybrush);
 
@@ -105,6 +130,7 @@ void ScriptLoader::loadAndRunGame() {
         Vector2<>(-1,-1),
         &tableTexture
     );
+
     //scummbar.addGameObject(table);
     table.moveToScene(scummbar);
     table.setLayer(1);
@@ -114,6 +140,7 @@ void ScriptLoader::loadAndRunGame() {
         Vector2<>(-1,-1),
         &table2Texture
     );
+
     //scummbar.addGameObject(table2);
     table2.moveToScene(scummbar);
     table2.setLayer(1);
@@ -123,9 +150,22 @@ void ScriptLoader::loadAndRunGame() {
         &mugTexture,
         &mugItemTexture
     );
+
     //scummbar.addGameObject(mug);
     mug.moveToScene(scummbar);
     mug.setLayer(-1);
+    GameObject stan(
+        "stan",
+        Vector2<>(155,68),
+        Vector2<>(-1,-1),
+        &stanTexture
+    );
+
+    //scummbar.addGameObject(stan);
+    stan.moveToScene(scummbar);
+    stan.setLayer(-1);
+
+    stan.setTextFormat(stan_text_formatFormat);
 
     // Players
     guybrush.moveToScene(scummbar);
@@ -173,6 +213,20 @@ void ScriptLoader::loadAndRunGame() {
     // Custom cursor
     Texture customCursorTexture = Texture("", "cursor.png");
 	game.setCustomCursor(customCursorTexture, Vector2<>(-1, -1));
+
+	game.setDefaultVerb("walk");
+
+    // Interactions
+    stan.addVerbInteraction(*game.getVerb("give"), "mug", Event([](EventInfo e) {
+		if (e.player.getCurrentHorizontalDirection() == RIGHT)
+		    e.player.playAnimation("interactRight");
+		else
+		    e.player.playAnimation("interactLeft");
+		e.player.getScene()->getGameObject("stan")->say("Gracias");
+    }));
+
+    game.bindLeftClickToVerb(&Verb::selectedVerb);
+    game.bindRightClickToVerb(&Verb::defaultVerb);
 
     game.startGame();
 
