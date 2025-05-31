@@ -9,11 +9,9 @@ class DialogueNode;
 class DialogueOption {
 	std::string text;
 	DialogueNode* nextNode;
-	Event event;
 public:
-	DialogueOption(std::string text, Event event);
+	DialogueOption(std::string text, DialogueNode* nextNode = nullptr);
 	std::string getText();
 	void select();
 	void setNextNode(DialogueNode& node);
-	void finishDialogue(std::string layoutName);
 };

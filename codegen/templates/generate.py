@@ -4,6 +4,7 @@ import csv
 import shutil
 import subprocess
 import sys
+import re
 from jinja2 import Environment, FileSystemLoader
 
 # --- Paths and settings ---
@@ -41,12 +42,6 @@ def parse_animation(line):
 
 # Parse single player line into a dict
 def parse_player(line):
-    # values = [v.strip() for v in line.split(CSV_SEPARATOR)]
-    # return {
-    #     'id': values[0],
-    #     'anims': values[1:5]
-    # }
-
     return {
         'id': line['id'].strip(),
         'animationMoveRight': line['animationMoveRight'].strip(),
@@ -77,24 +72,6 @@ def parse_object(line):
             'size': line['size'].strip(),
             'text_format': line['text_format'].strip()
         }
-
-# # Parse Scenes folder into a structured dict
-# def parse_scene(scene_path):
-#     name = os.path.basename(scene_path)
-#     walk_points = []
-#     backgrounds = []
-#     for fname in os.listdir(scene_path):
-#         full = os.path.join(scene_path, fname)
-#         if 'WalkableArea.csv' in fname:
-#             with open(full) as f:
-#                 for l in f:
-#                     if l.strip(): walk_points.append(l.strip())
-#         if 'Background.csv' in fname:
-#             with open(full) as f:
-#                 for l in f:
-#                     tex, pos = [v.strip() for v in l.split(CSV_SEPARATOR)]
-#                     backgrounds.append({'tex': tex, 'pos': pos})
-#     return {'name': name, 'walk': walk_points, 'bg': backgrounds}
 
 def parse_scene(scene_folder, player_ids):
     """
@@ -183,17 +160,34 @@ def change_indentation(code_str, indent_with='\t\t'):
             indented.append(line)
     return '\n'.join(indented)
 
+def get_dialogue_script(filename):
+    dialogue = filename.replace('.txt', '')
+    return 	f'vars:&mainNode\ne.player.disableMovement();\ne.game.getUI().setLayout(e.game.getUI().getDialogueLayout()->getName());\nmainNode.enterNode();'
+
+def separate_script_vars(script):
+    vars = []
+    lines = script.splitlines()
+    if lines[0].strip().startswith('vars:'):
+        vars = lines[0].strip()[5:].strip().split(',')
+        # Remove the first line with vars from the script
+        script = '\n'.join(lines[1:])
+        return script, vars
+    return script, []
+
 def parse_interaction(row):
     """
     Parses a single interaction row.
     Expected fields: id, type, target, text, animation, sound
     """
+    script = change_indentation(get_dialogue_script(row['script'].strip())) if 'dialogue(' in row['script'] else change_indentation(scripts[row['script'].strip()])
+    script, vars = separate_script_vars(script)
     return {
         'object_id': row['object_id'].strip(),
         'verb': row['verb'].strip(),
         'other_object_id': row['other_object_id'].strip(),
-        'script_file': row['script_file'].strip(),
-        'script': change_indentation(scripts[row['script_file'].strip()]) # Makes indentation look better in generated code
+        'script_file': row['script'].strip(),
+        'vars': vars,
+        'script': script
     }
 
 def parse_scripts(scripts_folder):
@@ -230,9 +224,71 @@ def parse_text_format(row):
         'shadow': row['shadow'].strip().lower() == 'true'
     }
 
+# --- Dialogue parsing helpers ---
+class DialogueLine:
+    def __init__(self, speaker, text, delay=None, target=None, action=None):
+        self.speaker = speaker
+        self.text = text
+        self.delay = float(delay) if delay else None
+        self.target = target
+        self.action = action
+
+class DialogueOption:
+    def __init__(self, text, target_label):
+        self.text = text
+        self.target = target_label
+
+class DialogueLabel:
+    def __init__(self, name):
+        self.name = name
+        self.lines = []
+        self.options = []
+        self.is_exit = False
+
+def parse_dialogue_file(path):
+    labels = {}
+    current = None
+    option_re = re.compile(r'^\s*"([^"]+)":\s*(\w+)$')
+    line_re = re.compile(r'^\s*(?:(\w+):)?\s*"([^"]*)"(?:\s*\(([^)]+)\))?(?:\s*:\s*(\w+))?$')
+    exec_re = re.compile(r'execute\(([^)]+)\)')
+    exit_re = re.compile(r'exit')
+
+    with open(path, 'r', encoding='utf-8') as f:
+        for raw in f:
+            line = raw.strip()
+            if not line:
+                continue
+            if line.endswith(':') and not line.startswith('"'):
+                lbl = line[:-1]
+                current = DialogueLabel(lbl)
+                labels[lbl] = current
+                continue
+            if exit_re.fullmatch(line):
+                current.is_exit = True
+                continue
+            m_exec = exec_re.search(line)
+            if m_exec:
+                current.lines.append(DialogueLine(None, None, action=m_exec.group(1)))
+                continue
+            m_opt = option_re.match(line)
+            if m_opt:
+                text, target = m_opt.groups()
+                current.options.append(DialogueOption(text, target))
+                continue
+            m = line_re.match(line)
+            if m:
+                speaker, text, delay, jump = m.groups()
+                if not speaker and jump:
+                    current.options.append(DialogueOption(text, jump))
+                else:
+                    current.lines.append(DialogueLine(speaker or 'player', text, delay, target=jump))
+                continue
+            print(f"Warning: unparsed: {line}")
+    return labels
+
 # Collect all data
 def collect_data():
-    animations, players, objects, scenes, interactions, text_formats = [], [], [], [], [], []
+    animations, players, objects, scenes, interactions, text_formats, dialogues = [], [], [], [], [], [], []
     # Animations
     with open(os.path.join(GAME_FILES_FOLDER, 'Animations.csv')) as f:
         for l in f:
@@ -262,9 +318,14 @@ def collect_data():
         path = os.path.join(scenes_dir, dirname)
         if os.path.isdir(path):
             scenes.append(parse_scene(path, player_ids))
+    # Dialogues
+    dialogues_dir = os.path.join(GAME_FILES_FOLDER, 'Dialogues')
+    for dirname in os.listdir(dialogues_dir):
+        path = os.path.join(dialogues_dir, dirname)
+        dialogues.append(parse_dialogue_file(path))
     # Settings
     settings = parse_settings()
-    return {'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'text_formats': text_formats}
+    return {'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'text_formats': text_formats, 'dialogues': dialogues}
 
 # --- Main: generate via Jinja2 and compile ---
 def main():

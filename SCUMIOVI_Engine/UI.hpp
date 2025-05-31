@@ -20,6 +20,9 @@ class UI {
 	void highlightVerb(Verb& verb);
 	void removeHightlightVerb();
 
+	UILayout* dialogueLayout;
+	UILayout* afterDialogueLayout;
+
 public:
 	std::vector<GameObject*>& getUIElements();
 
@@ -43,4 +46,8 @@ public:
 	void clearDialogueOptions();
 	void incrementInventoryIndex(int increment);
 	int getInventoryIndex();
+	void setDialogueLayout(UILayout* layout);
+	UILayout* getDialogueLayout();
+	void setAfterDialogueLayout(UILayout* layout);
+	UILayout* getAfterDialogueLayout();
 };

@@ -7,9 +7,12 @@
 
 class DialogueNode {
 	std::vector<DialogueOption> options;
+	Event dialogueEvent;
 
 public:
-	//DialogueNode(std::string text);
+	DialogueNode(Event event) : dialogueEvent(event) {};
 	std::vector<DialogueOption>& getOptions();
 	void setOptions(std::vector<DialogueOption> options);
+	void showOptions();
+	void enterNode();
 };

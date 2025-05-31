@@ -216,6 +216,123 @@ void ScriptLoader::loadAndRunGame() {
 
 	game.setDefaultVerb("walk");
 
+	game.getUI().createLayout("dialogue");
+	game.getUI().getLayout("dialogue").addUIElement(uiBackground);
+    game.getUI().setDialogueLayout(&game.getUI().getLayout("dialogue"));
+    game.getUI().setAfterDialogueLayout(&game.getUI().getLayout("inventory"));
+
+    // ==========================================
+    //  Auto-generated dialogue code
+    // ==========================================
+
+
+        // --- DialogueNode for "main" ---
+
+    DialogueNode mainNode = DialogueNode(Event([&stan, &mainNode](EventInfo e) {
+            stan.say(
+            "Hello Guybrush",
+            0.6,
+            Event([&mainNode](EventInfo e) {
+                e.player.say(
+            "Hi",
+            0.2,
+            Event([&mainNode](EventInfo e) {
+                    mainNode.showOptions();
+                }));  
+            }));  
+    }));  
+
+        // --- DialogueNode for "label2" ---
+
+    DialogueNode label2Node = DialogueNode(Event([&stan, &label2Node](EventInfo e) {
+            stan.say(
+            "I'm fine,\nwhat about you?",
+            0,
+            Event([&label2Node](EventInfo e) {
+                e.player.say(
+            "I'm fine too",
+            0,
+            Event([&label2Node](EventInfo e) {
+                    label2Node.showOptions();
+                }));  
+            }));  
+    }));  
+
+        // --- DialogueNode for "label3" ---
+
+    DialogueNode label3Node = DialogueNode(Event([&stan, &label3Node](EventInfo e) {
+            stan.say(
+            "Are you ok?",
+            0,
+            Event([&label3Node](EventInfo e) {
+                label3Node.showOptions();
+            }));  
+    }));  
+
+        // --- DialogueNode for "label4" ---
+
+    DialogueNode label4Node = DialogueNode(Event([&stan, &label4Node](EventInfo e) {
+            stan.say(
+            "...",
+            0,
+            Event([&label4Node](EventInfo e) {
+                label4Node.showOptions();
+            }));  
+    }));  
+
+        // --- DialogueNode for "byelabel" ---
+
+    DialogueNode byelabelNode = DialogueNode(Event([&stan, &byelabelNode](EventInfo e) {
+            stan.say(
+            "See you",
+            0,
+            Event([&byelabelNode](EventInfo e) {
+                byelabelNode.showOptions();
+            }));  
+    }));  
+
+        // --- DialogueNode for "scripttest" ---
+
+    DialogueNode scripttestNode = DialogueNode(Event([&stan, &scripttestNode](EventInfo e) {
+            stan.say(
+            "What do you want to try?",
+            0,
+            Event([&scripttestNode](EventInfo e) {
+                    // Content of script imported from dialogue_script_test.cpp
+            }));  
+    }));  
+
+
+    DialogueOption mainNodeOption1 = DialogueOption(
+        "How are you?",
+        &label2Node
+    );
+    DialogueOption mainNodeOption2 = DialogueOption(
+        "I need to go",
+        &byelabelNode
+    );
+    DialogueOption mainNodeOption3 = DialogueOption(
+        "AAAAa aAaAAaa",
+        &label3Node
+    );
+    DialogueOption label2NodeOption1 = DialogueOption(
+        "Well, I need to go",
+        &byelabelNode
+    );
+    DialogueOption label2NodeOption2 = DialogueOption(
+        "Let me test something",
+        &scripttestNode
+    );
+    DialogueOption label3NodeOption1 = DialogueOption(
+        "AaaaAA aAAAAAAaa AAa",
+        &label4Node
+    );
+
+    mainNode.setOptions({ mainNodeOption1, mainNodeOption2, mainNodeOption3 });
+    label2Node.setOptions({ label2NodeOption1, label2NodeOption2 });
+    label3Node.setOptions({ label3NodeOption1 });
+
+
     // Interactions
     stan.addVerbInteraction(*game.getVerb("give"), "mug", Event([](EventInfo e) {
 		if (e.player.getCurrentHorizontalDirection() == RIGHT)
@@ -223,6 +340,11 @@ void ScriptLoader::loadAndRunGame() {
 		else
 		    e.player.playAnimation("interactLeft");
 		e.player.getScene()->getGameObject("stan")->say("Gracias");
+    }));
+    stan.addVerbInteraction(*game.getVerb("talk"), Event([&mainNode](EventInfo e) {
+		e.player.disableMovement();
+		e.game.getUI().setLayout(e.game.getUI().getDialogueLayout()->getName());
+		mainNode.enterNode();
     }));
 
     game.bindLeftClickToVerb(&Verb::selectedVerb);

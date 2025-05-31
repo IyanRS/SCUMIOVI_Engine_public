@@ -1,2 +1,3 @@
-object_id,verb,other_object_id,script_file
+object_id,verb,other_object_id,script
 stan,give,mug,give_mug_stan.cpp
+stan,talk,,dialogue(stan.txt)

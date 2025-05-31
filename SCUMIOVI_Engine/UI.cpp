@@ -69,3 +69,17 @@ void UI::incrementInventoryIndex(int increment) {
 int UI::getInventoryIndex() {
 	return currentLayout->getInventoryIndex();
 }
+
+void UI::setDialogueLayout(UILayout* layout) {
+	dialogueLayout = layout;
+}
+UILayout* UI::getDialogueLayout() {
+	return dialogueLayout;
+}
+
+void UI::setAfterDialogueLayout(UILayout* layout) {
+	afterDialogueLayout = layout;
+}
+UILayout* UI::getAfterDialogueLayout() {
+	return afterDialogueLayout;
+}

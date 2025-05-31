@@ -1,0 +1,21 @@
+main:
+	stan: "Hello Guybrush" (0.6)
+	player: "Hi" (0.2)
+	"How are you?": label2
+	"I need to go": byelabel
+	"AAAAa aAaAAaa": label3
+label2:
+	stan: "I'm fine,\nwhat about you?"
+	player: "I'm fine too"
+	"Well, I need to go": byelabel
+	"Let me test something": scripttest
+label3:
+	stan: "Are you ok?"
+	"AaaaAA aAAAAAAaa AAa": label4
+label4:
+	stan: "..."
+byelabel:
+	stan: "See you"
+scripttest:
+	stan: "What do you want to try?"
+	execute(dialogue_script_test.cpp)

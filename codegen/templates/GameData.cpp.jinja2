@@ -194,14 +194,76 @@ void ScriptLoader::loadAndRunGame() {
     game.setDefaultVerb("walk");
     {% endif %}
 
+	game.getUI().createLayout("dialogue");
+	game.getUI().getLayout("dialogue").addUIElement(uiBackground);
+    game.getUI().setDialogueLayout(&game.getUI().getLayout("dialogue"));
+    game.getUI().setAfterDialogueLayout(&game.getUI().getLayout("inventory"));
+
+    // ==========================================
+    //  Auto-generated dialogue code
+    // ==========================================
+
+    {% macro cpp_string(s) -%}
+    {{ s
+    | replace('"', '\\"')
+    }}
+    {%- endmacro %}
+
+    {% for dialogue_map in dialogues %}
+    {% for label, dlg in dialogue_map.items() %}
+        // --- DialogueNode for "{{ label }}" ---
+
+    DialogueNode {{ label }}Node = DialogueNode(Event([&stan, &{{ label }}Node](EventInfo e) {
+        {# 1) One .say() per line, each nesting an Event #}
+        {% for line in dlg.lines if line.text is not none %}
+        {{ ' ' * (4 + 4 * loop.index0) }}{% if line.speaker == 'player' %}e.player{% else %}{{ line.speaker }}{% endif %}.say(
+            "{{ cpp_string(line.text) }}",
+            {{ line.delay if line.delay is not none else 0 }},
+            Event([&{{ label }}Node](EventInfo e) {
+        {% endfor %}
+        {# 2) After last line: either injected script or showOptions() #}
+        {% if dlg.lines[-1].action %}
+        {{ ' ' * (4 + 4 * dlg.lines|length) }}// Content of script imported from {{ dlg.lines[-1].action }}
+        {% else %}
+        {{ ' ' * (4 + 4 * dlg.lines|length) }}{{ label }}Node.showOptions();
+        {% endif %}
+        {# 3) Close each inner say/Event, innermost first #}
+        {% set n = dlg.lines|selectattr("text")|list|length %}
+        {% for i in range(n-1, -1, -1) %}
+        {{ ' ' * (4 + 4 * i) }}}));  
+        {% endfor %}
+    }));  {# closes outer Event and DialogueNode ctor #}
+
+
+    {% endfor %}
+
+    {# 4) Now define DialogueOption objects #}
+    {% for label, dlg in dialogue_map.items() %}
+        {% for opt in dlg.options %}
+    DialogueOption {{ label }}NodeOption{{ loop.index }} = DialogueOption(
+        "{{ cpp_string(opt.text) }}",
+        &{{ opt.target }}Node
+    );
+        {% endfor %}
+    {% endfor %}
+
+    {# 5) Finally wire up setOptions() calls #}
+    {% for label, dlg in dialogue_map.items() %}
+        {% if dlg.options %}
+    {{ label }}Node.setOptions({ {% for opt in dlg.options %}{{ label }}NodeOption{{ loop.index }}{{ ", " if not loop.last }}{% endfor %} });
+        {% endif %}
+    {% endfor %}
+
+    {% endfor %}
+
     // Interactions
     {% for i in interactions %}
     {% if i.other_object_id %}
-    {{ i.object_id }}.addVerbInteraction(*game.getVerb("{{ i.verb }}"), "{{ i.other_object_id }}", Event([](EventInfo e) {
+    {{ i.object_id }}.addVerbInteraction(*game.getVerb("{{ i.verb }}"), "{{ i.other_object_id }}", Event([{{ i.vars|join(', ') }}](EventInfo e) {
 {{ i.script }}
     }));
     {% else %}
-    {{ i.object_id }}.addVerbInteraction(*game.getVerb("{{ i.verb }}"), Event([](EventInfo e) {
+    {{ i.object_id }}.addVerbInteraction(*game.getVerb("{{ i.verb }}"), Event([{{ i.vars|join(', ') }}](EventInfo e) {
 {{ i.script }}
     }));
     {% endif %}
