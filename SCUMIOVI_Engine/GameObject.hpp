@@ -4,6 +4,10 @@
 #include "Animation.hpp"
 #include "Event.hpp"
 #include "Interactable.hpp"
+#include "MovementComponent.hpp"
+#include "TextComponent.hpp"
+#include "AnimationComponent.hpp"
+#include "GraphicsComponent.hpp"
 
 class Scene;
 //#include "Scene.hpp"
@@ -24,42 +28,24 @@ enum VerticalDirection { UP, DOWN };
 enum HorizontalDirection { LEFT, RIGHT };
 
 class GameObject : public Interactable {
+	friend class MovementComponent;
+	friend class TextComponent;
+	friend class AnimationComponent;
+	friend class GraphicsComponent;
+
 	std::string name;
 	Vector2<> position;
-	Animation* animation = nullptr;
-	std::vector<Animation*> animations;
-	std::vector<Texture*> textures;
-	Texture* texture = nullptr;
-	int layer = 0;
 	Vector2<> size;
 	bool interactable = true;
 	//Event clickEvent;
 	Scene* currentScene = nullptr;
 	std::map<GameObject*, Event> overlapEvents;
-	Text textOver;
-	Text textFormat;
-	Vector2<> lastMovementDirection = Vector2<>(0, 0);
+	MovementComponent movement;
+	TextComponent text;
+	AnimationComponent animator;
+	GraphicsComponent graphics;
 
-	// --- Delta-time movement state (replaces moveToTask thread) ---
-	bool moving = false;
-	Vector2<> moveStart;
-	Vector2<> moveDest;
-	float moveDuration = 0.0f;
-	float moveElapsed  = 0.0f;
-	Event moveCallback;
-
-	// --- Delta-time say state (replaces sayTask thread) ---
-	float sayTimer = 0.0f;   // counts down; when <= 0 clear the text
-	Event sayCallback;
-
-	// --- One-shot animation state (replaces playAnimationTask thread) ---
-	Animation* animReturnTo  = nullptr;  // animation to restore after the one-shot
-	int        animReturnFrame = -1;     // total frame count of the one-shot (-1 = not pending)
-	Event      animCallback;
-
-	bool visibility = true;
 	int state = 0;
-	int dialogDefaultTextColor[4];
 
 	void setIdleAnimation(Vector2<> lastMovementDirection);
 	void setMovementAnimation(Vector2<> movementDirection);
@@ -67,15 +53,6 @@ class GameObject : public Interactable {
 	bool verticalAnimationsDefined();
 	bool horizontalIdleDefined();
 	bool verticalIdleDefined();
-
-	Animation* moveUpAnimation = nullptr;
-	Animation* moveDownAnimation = nullptr;
-	Animation* moveLeftAnimation = nullptr;
-	Animation* moveRightAnimation = nullptr;
-	Animation* idleUpAnimation = nullptr;
-	Animation* idleDownAnimation = nullptr;
-	Animation* idleLeftAnimation = nullptr;
-	Animation* idleRightAnimation = nullptr;
 
 	//Dialogue* dialogue;
 	std::unordered_set<std::string> objectTags;

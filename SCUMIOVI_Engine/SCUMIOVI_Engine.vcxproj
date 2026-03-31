@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClCompile Include="..\codegen\src\generated\GameData.cpp" />
     <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="AnimationComponent.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Delay.cpp" />
     <ClCompile Include="Delay.hpp" />
@@ -156,11 +157,13 @@
     <ClCompile Include="EventInfo.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="GraphicsComponent.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="Interactable.cpp" />
     <ClCompile Include="Inventory.cpp" />
     <ClCompile Include="Item.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MovementComponent.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
@@ -169,6 +172,7 @@
     <ClCompile Include="ScriptLoader.cpp" />
     <ClCompile Include="Text.cpp" />
     <ClCompile Include="Text.hpp" />
+    <ClCompile Include="TextComponent.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="UI.cpp" />
     <ClCompile Include="UIDialogueOption.cpp" />
@@ -182,6 +186,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.hpp" />
+    <ClInclude Include="AnimationComponent.hpp" />
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="Common.hpp" />
     <ClInclude Include="Dialogue.hpp" />
@@ -192,16 +197,19 @@
     <ClInclude Include="EventInfo.hpp" />
     <ClInclude Include="Game.hpp" />
     <ClInclude Include="GameObject.hpp" />
+    <ClInclude Include="GraphicsComponent.hpp" />
     <ClInclude Include="InputManager.hpp" />
     <ClInclude Include="Interactable.hpp" />
     <ClInclude Include="Inventory.hpp" />
     <ClInclude Include="Item.hpp" />
+    <ClInclude Include="MovementComponent.hpp" />
     <ClInclude Include="Player.hpp" />
     <ClInclude Include="Renderer.hpp" />
     <ClInclude Include="ResourceManager.hpp" />
     <ClInclude Include="Scene.hpp" />
     <ClInclude Include="SceneTransitionObject.hpp" />
     <ClInclude Include="ScriptLoader.hpp" />
+    <ClInclude Include="TextComponent.hpp" />
     <ClInclude Include="Texture.hpp" />
     <ClInclude Include="UI.hpp" />
     <ClInclude Include="UIDialogueOption.hpp" />
