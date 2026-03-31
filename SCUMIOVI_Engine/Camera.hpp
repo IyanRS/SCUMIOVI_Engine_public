@@ -9,10 +9,17 @@ class GameObject;
 class Camera {
 	Vector2<> position;
 	Vector2<> size;
-	GameObject* objectToFollow;
+	GameObject* objectToFollow = nullptr;
 	void followObject();
-	Vector2<> currentMovingTarget = Vector2<>(-INFINITY, -INFINITY);
-	void moveToTask(Vector2<> position, float seconds = 0, Event callback = Event());
+
+	// --- Delta-time movement (replaces threaded moveToTask) ---
+	bool isMoving = false;
+	Vector2<> moveStart;
+	Vector2<> moveTarget;
+	float moveDuration = 0.0f;  // total seconds for this move
+	float moveElapsed  = 0.0f;  // seconds elapsed so far
+	Event moveCallback;
+
 public:
 	Camera();
 	Vector2<> getPosition();
@@ -21,4 +28,6 @@ public:
 	void moveTo(Vector2<> position, float seconds, Event callback = Event());
 	void setObjectToFollow(GameObject& object);
 	void stopFollowingObject();
+	// Called once per frame by Scene::update()
+	void update(float deltaTime);
 };

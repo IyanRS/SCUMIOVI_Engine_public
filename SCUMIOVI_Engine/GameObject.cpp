@@ -1,26 +1,24 @@
 #include "GameObject.hpp"
 
 #include "Scene.hpp"
-#include <thread>
 
 #include "Vector2.hpp"
 
-// TODO: avoid code repetition with camera moveTo (class Movable?)
-#define SECONDS_TO_MILLISECONDS 1000
-#define UPDATE_FREQUENCY_MS 16 // ~60 times/second
+#include "Common.hpp"
+
 #define EPSILON 0.001f
+#define TEXT_SPEED 10.0f
+
+// ---------------------------------------------------------------------------
+// Constructors
+// ---------------------------------------------------------------------------
 
 GameObject::GameObject(
 	std::string name,
-	Vector2<> position, 
-	Vector2<> size) 
+	Vector2<> position,
+	Vector2<> size)
 {
-	if (name == "") {
-		//TODO: use some random/UUID generated string, avoid nameless gameObjects
-	}
-
 	this->name = name;
-
 	this->position = position;
 	this->size = size;
 }
@@ -30,9 +28,8 @@ GameObject::GameObject(
 	Vector2<> position,
 	Vector2<> size,
 	Texture* texture) {
-	
-	this->name = name;
 
+	this->name = name;
 	this->position = position;
 	this->size = size;
 
@@ -46,13 +43,16 @@ GameObject::GameObject(
 	Vector2<> size,
 	Animation* animation) {
 	this->name = name;
-
 	this->position = position;
 	this->size = size;
 
 	animations.push_back(animation);
 	this->animation = animation;
 }
+
+// ---------------------------------------------------------------------------
+// Basic accessors
+// ---------------------------------------------------------------------------
 
 Vector2<> GameObject::getPosition() {
 	return position;
@@ -65,15 +65,15 @@ void GameObject::setPosition(Vector2<> position) {
 Vector2<> GameObject::getSize() {
 	float sizeX = size.x;
 	float sizeY = size.y;
-	if (sizeX == -1)
+	if (sizeX == -1 && texture != nullptr)
 		sizeX = texture->getSize().x;
-	if (sizeY == -1)
+	if (sizeY == -1 && texture != nullptr)
 		sizeY = texture->getSize().y;
 	return Vector2<>(sizeX, sizeY);
 }
 
 void GameObject::setSize(Vector2<> newSize) {
-	this->size = size;
+	this->size = newSize;
 }
 
 Texture* GameObject::getTexture() {
@@ -85,14 +85,14 @@ void GameObject::addTexture(Texture* texture) {
 }
 
 void GameObject::setTexture(std::string textureName) {
-	if (textureName == "")
+	if (textureName == "") {
 		texture = nullptr;
-	for (Texture* texture : textures) {
-		if (texture->getName() == textureName) {
-			this->texture = texture;
-		}
-		else {
-			// TODO: Log error
+		return;
+	}
+	for (Texture* t : textures) {
+		if (t->getName() == textureName) {
+			this->texture = t;
+			return;
 		}
 	}
 }
@@ -116,10 +116,11 @@ Animation* GameObject::getAnimationByName(std::string name) {
 	return nullptr;
 }
 
-
 void GameObject::setAnimation(std::string animationName) {
-	if (animationName == "")
+	if (animationName == "") {
 		animation = nullptr;
+		return;
+	}
 	for (Animation* anim : animations) {
 		if (anim->getName() == animationName) {
 			animation = anim;
@@ -127,48 +128,228 @@ void GameObject::setAnimation(std::string animationName) {
 	}
 }
 
-#include "Common.hpp"
-
-void GameObject::playAnimationTask(Animation* initialAnimation, Animation& newAnimation, Event callback) {
-	setAnimation(newAnimation.getName());
-	auto time = newAnimation.getFrames().size() * (newAnimation.getFrameRate() * 1.0f / FPS) * 1000;
-	std::this_thread::sleep_for(std::chrono::milliseconds((int)time));
-	if (initialAnimation == nullptr)
-		setAnimation("");
-	else
-		setAnimation(initialAnimation->getName());
-}
-
+// ---------------------------------------------------------------------------
+// playAnimation — non-looping one-shot: records what to return to after the
+// animation finishes. The Renderer already increments currentFrame each
+// render call, so we just need to know the total frame count and fire the
+// callback whenever that count is reached (checked in update()).
+// ---------------------------------------------------------------------------
 void GameObject::playAnimation(std::string animationName, Event callback) {
-	if (animationName == "")
+	if (animationName == "") {
 		animation = nullptr;
+		return;
+	}
 	for (Animation* anim : animations) {
 		if (anim->getName() == animationName) {
 			if (!anim->doesLoop()) {
-				auto task = std::bind(&GameObject::playAnimationTask, this, animation, *anim, callback);
-				std::thread backgroundTask(task);
-				backgroundTask.detach();
-			}
-			else {
+				// Remember what animation to return to once the one-shot finishes
+				animReturnTo    = animation;
+				anim->currentFrame = 0;
+				animation       = anim;
+				// Total displayable frames = nFrames * frameRate render-ticks
+				animReturnFrame = (int)anim->getFrames().size() * anim->getFrameRate();
+				animCallback    = callback;
+			} else {
 				setAnimation(anim->getName());
 			}
+			return;
 		}
 	}
 }
 
-//Animation* GameObject::getAnimationByName(std::string name) {
-//	if (name == "")
-//		return nullptr;
-//	for (Animation anim : )
-//}
+// ---------------------------------------------------------------------------
+// Movement animation helpers (unchanged logic, no threads needed)
+// ---------------------------------------------------------------------------
 
-//void GameObject::setAnimation(Animation& animation) {
-//	this->animation = animation;
-//}
+bool GameObject::horizontalAnimationsDefined() {
+	return moveRightAnimation != nullptr && moveLeftAnimation != nullptr;
+}
 
-//Event& GameObject::getClickEvent() {
-//	return clickEvent;
-//}
+bool GameObject::verticalAnimationsDefined() {
+	return moveUpAnimation != nullptr && moveDownAnimation != nullptr;
+}
+
+bool GameObject::horizontalIdleDefined() {
+	return idleRightAnimation != nullptr && idleLeftAnimation != nullptr;
+}
+
+bool GameObject::verticalIdleDefined() {
+	return idleUpAnimation != nullptr && idleDownAnimation != nullptr;
+}
+
+void GameObject::setIdleAnimation(Vector2<> lastDir) {
+	if ((abs(lastDir.x) > abs(lastDir.y) || !verticalIdleDefined()) && horizontalIdleDefined()) {
+		animation = (lastDir.x > 0) ? idleRightAnimation : idleLeftAnimation;
+	} else if (verticalIdleDefined()) {
+		animation = (lastDir.y > 0) ? idleUpAnimation : idleDownAnimation;
+	}
+}
+
+void GameObject::setMovementAnimations(
+	Animation* moveRight, Animation* moveLeft,
+	Animation* moveUp,    Animation* moveDown,
+	Animation* idleRight, Animation* idleLeft,
+	Animation* idleUp,    Animation* idleDown)
+{
+	moveRightAnimation = moveRight;
+	moveLeftAnimation  = moveLeft;
+	moveUpAnimation    = moveUp;
+	moveDownAnimation  = moveDown;
+	idleRightAnimation = idleRight;
+	idleLeftAnimation  = idleLeft;
+	idleUpAnimation    = idleUp;
+	idleDownAnimation  = idleDown;
+}
+
+void GameObject::setMovementAnimation(Vector2<> movementDirection) {
+	if (movementDirection.x == 0 && movementDirection.y == 0) {
+		setIdleAnimation(lastMovementDirection);
+		return;
+	}
+
+	lastMovementDirection = movementDirection;
+
+	if ((abs(movementDirection.x) > abs(movementDirection.y)
+		|| !verticalAnimationsDefined()) && horizontalAnimationsDefined()) {
+		animation = (movementDirection.x > 0) ? moveRightAnimation : moveLeftAnimation;
+	} else if (verticalAnimationsDefined()) {
+		animation = (movementDirection.y > 0) ? moveDownAnimation : moveUpAnimation;
+	}
+}
+
+// ---------------------------------------------------------------------------
+// moveTo — non-blocking: records state, returns immediately.
+// ---------------------------------------------------------------------------
+void GameObject::moveTo(Vector2<> pos, float seconds, Event callback) {
+	// Already heading to the exact same destination — ignore
+	if (moving && moveDest.distanceTo(pos) < EPSILON)
+		return;
+
+	if (position.distanceTo(pos) < EPSILON) {
+		callback.execute();
+		return;
+	}
+
+	if (seconds <= EPSILON) {
+		// Instantaneous
+		position = pos;
+		setMovementAnimation(Vector2<>(0, 0));
+		callback.execute();
+		return;
+	}
+
+	moving       = true;
+	moveStart    = position;
+	moveDest     = pos;
+	moveDuration = seconds;
+	moveElapsed  = 0.0f;
+	moveCallback = callback;
+
+	setMovementAnimation(getDirectionVector());
+}
+
+void GameObject::moveToAtSpeed(Vector2<> pos, float speed, Event callback) {
+	float time = position.distanceTo(pos) / speed;
+	moveTo(pos, time, callback);
+}
+
+void GameObject::moveToAtSpeed(std::vector<Vector2<>> positions, float speed, std::vector<Event> callbacks) {
+	while (callbacks.size() < positions.size()) {
+		callbacks.push_back(Event());
+	}
+
+	// Chain each waypoint: when we arrive at positions[i], move to positions[i+1]
+	for (int i = (int)positions.size() - 2; i >= 0; i--) {
+		float time = position.distanceTo(positions[i + 1]) / speed;
+		callbacks[i].addAction([this, positions, i, callbacks, speed] {
+			moveToAtSpeed(positions[i + 1], speed, callbacks[i + 1]);
+		});
+	}
+
+	moveToAtSpeed(positions[0], speed, callbacks[0]);
+}
+
+// ---------------------------------------------------------------------------
+// say — records how long the text should show; update() clears it.
+// ---------------------------------------------------------------------------
+void GameObject::say(Text& textToSay, float seconds, Event callback) {
+	if (seconds <= 0) {
+		seconds = (float)textToSay.toString().size() / TEXT_SPEED;
+		if (seconds < 0.5f) seconds = 0.5f;  // minimum display time
+	}
+	setTextOver(textToSay);
+	sayTimer    = seconds;
+	sayCallback = callback;
+}
+
+void GameObject::say(std::string text, float seconds, Event callback) {
+	Text textToSay = Text(text, textFormat);
+	say(textToSay, seconds, callback);
+}
+
+void GameObject::addOverlapEvent(GameObject* object, Event event) {
+	overlapEvents[object] = event;
+}
+
+std::map<GameObject*, Event>& GameObject::getOverlapEvents() {
+	return overlapEvents;
+}
+
+Vector2<> GameObject::getDirectionVector() {
+	if (!moving)
+		return Vector2<>();
+	return (moveDest - position).normalized();
+}
+
+// ---------------------------------------------------------------------------
+// update() — called every frame by Scene::update(dt). Advances movement,
+// say-timer, and one-shot animation without any threads.
+// ---------------------------------------------------------------------------
+void GameObject::update(float deltaTime) {
+
+	// 1) Movement interpolation
+	if (moving) {
+		moveElapsed += deltaTime;
+		if (moveElapsed >= moveDuration) {
+			position = moveDest;
+			moving   = false;
+			setMovementAnimation(Vector2<>(0, 0));
+			moveCallback.execute();
+		} else {
+			float t  = moveElapsed / moveDuration;
+			position = moveStart + (moveDest - moveStart) * t;
+			setMovementAnimation(getDirectionVector());
+		}
+	}
+
+	// 2) Say timer
+	if (sayTimer > 0.0f) {
+		sayTimer -= deltaTime;
+		if (sayTimer <= 0.0f) {
+			sayTimer = 0.0f;
+			Text empty;
+			setTextOver(empty);
+			sayCallback.execute();
+			sayCallback = Event();  // clear to avoid double-fire
+		}
+	}
+
+	// 3) One-shot animation done?
+	if (animReturnFrame >= 0 && animation != nullptr) {
+		if (animation->currentFrame >= animReturnFrame - 1) {
+			// Animation has finished; restore previous animation
+			animation      = animReturnTo;
+			animReturnTo   = nullptr;
+			animReturnFrame = -1;
+			animCallback.execute();
+			animCallback = Event();
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Visibility, scene, tags, state, text helpers
+// ---------------------------------------------------------------------------
 
 void GameObject::moveToScene(Scene& scene) {
 	if (currentScene != nullptr)
@@ -184,188 +365,13 @@ Scene* GameObject::getScene() {
 	return currentScene;
 }
 
-//void GameObject::addOverlapEvent(GameObject object, Event event) {
-//	overlapEvents.insert(GameObject, event);
-//}
-
-//std::map<GameObject, Event> GameObject::getOverlapEvents() {
-//
-//}
-
-bool GameObject::horizontalAnimationsDefined() {
-	return moveRightAnimation != nullptr && moveLeftAnimation != nullptr;
-	//return getAnimationByName("moveRight") && getAnimationByName("moveLeft");
-}
-
-bool GameObject::verticalAnimationsDefined() {
-	return moveUpAnimation != nullptr && moveDownAnimation != nullptr;
-	//return getAnimationByName("moveUp") && getAnimationByName("moveDown");
-}
-
-bool GameObject::horizontalIdleDefined() {
-	return idleRightAnimation != nullptr && idleLeftAnimation != nullptr;
-	//return getAnimationByName("idleRight") && getAnimationByName("idleLeft");
-}
-
-bool GameObject::verticalIdleDefined() {
-	return idleUpAnimation != nullptr && idleDownAnimation != nullptr;
-	//return getAnimationByName("idleUp") && getAnimationByName("idleDown");
-}
-
-void GameObject::setIdleAnimation(Vector2<> lastMovementDirection) {
-	if ((abs(lastMovementDirection.x) > abs(lastMovementDirection.y) // Moving horizontally
-		|| !verticalIdleDefined()) && horizontalIdleDefined()) {
-		if (lastMovementDirection.x > 0) { // Moving right
-			//animation = getAnimationByName("idleRight");
-			animation = idleRightAnimation;
-		}
-		else { // Moving left
-			//animation = getAnimationByName("idleLeft");
-			animation = idleLeftAnimation;
-		}
-	}
-	else if (verticalIdleDefined()) { // Moving vertically
-		if (lastMovementDirection.y > 0) { // Moving up
-			//animation = getAnimationByName("idleUp");
-			animation = idleUpAnimation;
-		}
-		else { // Moving down
-			//animation = getAnimationByName("idleDown");
-			animation = idleDownAnimation;
-		}
-	}
-}
-
-void GameObject::setMovementAnimations(Animation* moveRightAnimation, Animation* moveLeftAnimation,
-	Animation* moveUpAnimation, Animation* moveDownAnimation,
-	Animation* idleRightAnimation, Animation* idleLeftAnimation,
-	Animation* idleUpAnimation, Animation* idleDownAnimation) {
-	this->moveRightAnimation = moveRightAnimation;
-	this->moveLeftAnimation = moveLeftAnimation;
-	this->moveUpAnimation = moveUpAnimation;
-	this->moveDownAnimation = moveDownAnimation;
-
-	this->idleRightAnimation = idleRightAnimation;
-	this->idleLeftAnimation = idleLeftAnimation;
-	this->idleUpAnimation = idleUpAnimation;
-	this->idleDownAnimation = idleDownAnimation;
-}
-
-void GameObject::setMovementAnimation(Vector2<> movementDirection) {
-	if (movementDirection.x == 0 && movementDirection.y == 0) { // Not moving
-		setIdleAnimation(lastMovementDirection);
-		return;
-	}
-
-	lastMovementDirection = movementDirection;
-	if ((abs(movementDirection.x) > abs(movementDirection.y) // Moving horizontally
-		|| !verticalAnimationsDefined()) && horizontalAnimationsDefined()) {
-		if (movementDirection.x > 0) { // Moving right
-			//animation = getAnimationByName("moveRight");
-			animation = moveRightAnimation;
-		}
-		else { // Moving left
-			//animation = getAnimationByName("moveLeft");
-			animation = moveLeftAnimation;
-		}
-	}
-	else if (verticalAnimationsDefined()) { // Moving vertically
-		if (movementDirection.y > 0) { // Moving up
-			//animation = getAnimationByName("moveDown");
-			animation = moveDownAnimation;
-		}
-		else { // Moving down
-			//animation = getAnimationByName("moveUp");
-			animation = moveUpAnimation;
-		}
-	}
-}
-
-void GameObject::moveToTask(Vector2<> targetPosition, float seconds, Event callback) {
-	float nSteps = seconds * SECONDS_TO_MILLISECONDS / UPDATE_FREQUENCY_MS;
-	Vector2<> moveStep = (targetPosition - position) / nSteps;
-	Vector2<> direction = (targetPosition - position).normalized();
-	setMovementAnimation(getDirectionVector());
-	for (int i = 0; i < nSteps; i++) {
-		if (targetPosition.x != currentMovingTarget.x || targetPosition.y != currentMovingTarget.y) {
-			//callback.execute();
-			return;
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_FREQUENCY_MS));
-		position = position + moveStep;
-	}
-	currentMovingTarget = Vector2<>(-INFINITY, -INFINITY);
-	moving = false;
-	setMovementAnimation(Vector2<>(0,0));
-	callback.execute();
-}
-
-#include <SDL3/SDL.h>
-
-void GameObject::moveTo(Vector2<> pos, float seconds, Event callback) {
-	if (pos.distanceTo(currentMovingTarget) < EPSILON) {
-		return;
-	}
-	if (position.distanceTo(pos) < EPSILON) {
-		callback.execute();
-		return;
-	}
-	if (seconds <= EPSILON) {
-		this->position = pos;
-		callback.execute();
-		return;
-	}
-	//std::this_thread::sleep_for(std::chrono::seconds(time));
-	moving = true;
-	currentMovingTarget = pos;
-	auto task = std::bind(&GameObject::moveToTask, this, pos, seconds, callback);
-	std::thread backgroundTask(task);
-	backgroundTask.detach();
-	//std::thread backgroundTask(&moveToTask, pos, seconds, callback);
-}
-
-void GameObject::moveToAtSpeed(std::vector<Vector2<>> positions, float speed, std::vector<Event> callbacks) {
-
-	while (callbacks.size() < positions.size()) {
-		callbacks.push_back(Event());
-	}
-
-	for (int i = positions.size()-2; i >= 0; i--) {
-		float time = position.distanceTo(positions[i+1]) / speed;
-		callbacks[i].addAction([this, positions, i, callbacks] {
-			moveToAtSpeed(positions[i+1], 100.0f, callbacks[i]);
-		});
-	}
-
-	//float time = position.distanceTo(positions[0]) / speed;
-	moveToAtSpeed(positions[0], speed, callbacks[0]);
-}
-
-void GameObject::moveToAtSpeed(Vector2<> pos, float speed, Event callback) {
-	float time = position.distanceTo(pos) / speed;
-	moveTo(pos, time, callback);
-}
-
-void GameObject::addOverlapEvent(GameObject* object, Event event) {
-	overlapEvents[object] = event;
-}
-
-std::map<GameObject*, Event>& GameObject::getOverlapEvents() {
-	return overlapEvents;
-}
-
-Vector2<> GameObject::getDirectionVector() {
-	if (!moving)
-		return Vector2<>();
-	return (currentMovingTarget - position).normalized();
-}
-
 void GameObject::toggleVisibility() {
 	visibility = !visibility;
 }
 
 void GameObject::destroy() {
-	currentScene->removeGameObject(*this);
+	if (currentScene != nullptr)
+		currentScene->removeGameObject(*this);
 }
 
 bool GameObject::isVisible() {
@@ -405,32 +411,6 @@ void GameObject::setTextOver(std::string text) {
 	setTextOver(newTextOver);
 }
 
-void GameObject::sayTask(Text& textOver, float seconds, Event callback) {
-	setTextOver(textOver);
-	std::this_thread::sleep_for(std::chrono::milliseconds((int)(seconds*1000)));
-	if (getTextOver().toString() != getTextOver().toString()) // If some other action has changed the text after the delay, we don't do anything
-		return;
-	Text emptyText = Text();
-	setTextOver(emptyText); // Otherwise we clear the text
-	callback.execute();
-}
-
-#define TEXT_SPEED 10.0f
-
-void GameObject::say(Text& textOver, float seconds, Event callback) {
-	if (seconds <= 0) { // Calculate seconds based on length
-		seconds = textOver.toString().size() / TEXT_SPEED;
-	}
-	auto task = std::bind(&GameObject::sayTask, this, textOver, seconds, callback);
-	std::thread backgroundTask(task);
-	backgroundTask.detach();
-}
-
-void GameObject::say(std::string text, float seconds, Event callback) {
-	Text textToSay = Text(text, textFormat);
-	say(textToSay, seconds, callback);
-}
-
 void GameObject::setState(int state) {
 	this->state = state;
 }
@@ -454,10 +434,7 @@ bool GameObject::hasTag(std::string tag) {
 VerticalDirection GameObject::getCurrentVerticalDirection() {
 	return lastMovementDirection.y < 0 ? UP : DOWN;
 }
+
 HorizontalDirection GameObject::getCurrentHorizontalDirection() {
 	return lastMovementDirection.x < 0 ? LEFT : RIGHT;
 }
-
-//void GameObject::setDialogue(Dialogue* dialogue) {
-//	this->dialogue = dialogue;
-//}

@@ -5,7 +5,6 @@
 //#include "UI.hpp"
 #include "ResourceManager.hpp"
 
-#include <chrono>
 #include <vector>
 #include <array>
 
@@ -22,7 +21,6 @@ class Renderer {
 	void applyScreenTransform(SDL_FRect& rect, Vector2<> renderFrameSize = { RENDER_HEIGHT, RENDER_WIDTH });
 	void applyCameraTransform(Camera& camera, Vector2<>& point);
 	void applyScreenTransform(Vector2<>& point, Vector2<> renderFrameSize = { RENDER_HEIGHT, RENDER_WIDTH });
-	std::chrono::system_clock::time_point lastRenderTime;
 	std::vector<std::array<GameObject*, 2>> currentlyOverlapping;
 	void renderGameObject(GameObject& gameObject, Camera& camera);
 	void checkOverlaps(GameObject& gameObject1, GameObject& gameObject2);

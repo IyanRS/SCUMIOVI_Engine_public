@@ -1,15 +1,11 @@
 #include "Camera.hpp"
-#include <thread>
 
 #include "Common.hpp"
 
-#define SECONDS_TO_MILLISECONDS 1000
-#define CAMERA_UPDATE_FREQUENCY_MS 16 // ~60 times/second
-#define EPSILON 0.00001
+#define EPSILON 0.00001f
 
 Camera::Camera() {
 	size = Vector2<>(RENDER_WIDTH, RENDER_HEIGHT);
-	//position = Vector2<float>(RENDER_WIDTH/2.0f, RENDER_HEIGHT/2.0f); // Center the camera
 }
 
 void Camera::followObject() {
@@ -39,32 +35,50 @@ void Camera::setSize(Vector2<> size) {
 	this->size = size;
 }
 
-void Camera::moveToTask(Vector2<> targetPosition, float seconds, Event callback) {
-	float nSteps = seconds * SECONDS_TO_MILLISECONDS / CAMERA_UPDATE_FREQUENCY_MS;
-	Vector2<> moveStep = (targetPosition - this->position) / nSteps;
-	for (int i = 0; i < nSteps; i++) {
-		if (targetPosition.x != currentMovingTarget.x || targetPosition.y != currentMovingTarget.y) {
-			//callback.execute();
-			return;
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(CAMERA_UPDATE_FREQUENCY_MS));
-		this->position = this->position + moveStep;
-	}
-	callback.execute();
-}
-
 void Camera::moveTo(Vector2<> pos, float seconds, Event callback) {
-	if (pos.x == currentMovingTarget.x && pos.y == currentMovingTarget.y)
+	// Already heading there — ignore duplicate calls
+	if (isMoving && moveTarget.x == pos.x && moveTarget.y == pos.y)
 		return;
+
 	if (seconds <= EPSILON) {
-		this->position = pos;
+		// Instantaneous
+		position = pos;
 		callback.execute();
 		return;
 	}
-	currentMovingTarget = pos;
-	//std::this_thread::sleep_for(std::chrono::seconds(time));
-	auto task = std::bind(&Camera::moveToTask, this, pos, seconds, callback);
-	std::thread backgroundTask(task);
-	backgroundTask.detach();
-	//std::thread backgroundTask(&moveToTask, pos, seconds, callback);
+
+	isMoving     = true;
+	moveStart    = position;
+	moveTarget   = pos;
+	moveDuration = seconds;
+	moveElapsed  = 0.0f;
+	moveCallback = callback;
+}
+
+// -------------------------------------------------------------------------
+// update() — called once per frame by Scene::update(dt).
+// Advances the camera's lerp-based movement without any sleeping.
+// -------------------------------------------------------------------------
+void Camera::update(float deltaTime) {
+	// If a follow target is set, snap to it (overrides any moveTo)
+	if (objectToFollow != nullptr) {
+		followObject();
+		return;
+	}
+
+	if (!isMoving)
+		return;
+
+	moveElapsed += deltaTime;
+
+	if (moveElapsed >= moveDuration) {
+		// Arrived
+		position = moveTarget;
+		isMoving = false;
+		moveCallback.execute();
+	} else {
+		// Linear interpolation
+		float t = moveElapsed / moveDuration;
+		position = moveStart + (moveTarget - moveStart) * t;
+	}
 }

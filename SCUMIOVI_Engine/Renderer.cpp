@@ -3,7 +3,6 @@
 #include "Common.hpp"
 
 #include <SDL3_ttf/SDL_ttf.h>
-#include <thread>
 
 Renderer::Renderer() : resourceManager(ResourceManager::getInstance()) {
 	int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
@@ -26,7 +25,6 @@ Renderer::Renderer() : resourceManager(ResourceManager::getInstance()) {
 		SDL_Log("TTF_CreateRendererTextEngine error %s", SDL_GetError());
 	}
 
-	lastRenderTime = std::chrono::system_clock::now();
 }
 
 
@@ -349,20 +347,6 @@ void Renderer::setCustomMouse(Texture& mouseTexture, Vector2<> mouseHotspot) {
 }
 
 void Renderer::render(Scene& scene, UI& ui) {
-
-
-	auto now = std::chrono::system_clock::now();
-	auto lastRenderTimeDiff = now - lastRenderTime;
-	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(lastRenderTimeDiff).count();
-
-	long long msUntilNextFrame = (1000 / FPS) - ms;
-
-	//SDL_Log(std::to_string(msUntilNextFrame).c_str());
-
-	if (msUntilNextFrame > 0) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(msUntilNextFrame));
-	}
-
 #ifdef PIXEL_PERFECT
 	SDL_Texture* lowResScreen = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_RGBA8888,
 		SDL_TEXTUREACCESS_TARGET, scene.getCamera().getSize().x, scene.getCamera().getSize().y);
@@ -428,5 +412,4 @@ void Renderer::render(Scene& scene, UI& ui) {
 #ifdef PIXEL_PERFECT
 	SDL_DestroyTexture(lowResScreen);
 #endif
-	lastRenderTime = now;
-}
+}

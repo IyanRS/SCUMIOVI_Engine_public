@@ -38,14 +38,27 @@ class GameObject : public Interactable {
 	std::map<GameObject*, Event> overlapEvents;
 	Text textOver;
 	Text textFormat;
-	Vector2<> currentMovingTarget = Vector2<>(-INFINITY, -INFINITY);
 	Vector2<> lastMovementDirection = Vector2<>(0, 0);
-	void moveToTask(Vector2<> position, float seconds = 0, Event callback = Event());
-	void playAnimationTask(Animation* initialAnimation, Animation& newAnimation, Event callback = Event());
-	void sayTask(Text& textOver, float seconds, Event callback = Event());
+
+	// --- Delta-time movement state (replaces moveToTask thread) ---
 	bool moving = false;
+	Vector2<> moveStart;
+	Vector2<> moveDest;
+	float moveDuration = 0.0f;
+	float moveElapsed  = 0.0f;
+	Event moveCallback;
+
+	// --- Delta-time say state (replaces sayTask thread) ---
+	float sayTimer = 0.0f;   // counts down; when <= 0 clear the text
+	Event sayCallback;
+
+	// --- One-shot animation state (replaces playAnimationTask thread) ---
+	Animation* animReturnTo  = nullptr;  // animation to restore after the one-shot
+	int        animReturnFrame = -1;     // total frame count of the one-shot (-1 = not pending)
+	Event      animCallback;
+
 	bool visibility = true;
-	int state;
+	int state = 0;
 	int dialogDefaultTextColor[4];
 
 	void setIdleAnimation(Vector2<> lastMovementDirection);
@@ -129,4 +142,6 @@ public:
 		Animation* moveUpAnimation, Animation* moveDownAnimation,
 		Animation* idleRightAnimation, Animation* idleLeftAnimation,
 		Animation* idleUpAnimation, Animation* idleDownAnimation);
+	// Called once per frame by Scene::update()
+	void update(float deltaTime);
 };

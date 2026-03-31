@@ -1,5 +1,4 @@
 #include "Scene.hpp"
-#include <thread>
 
 #include "Camera.hpp"
 #include <algorithm>
@@ -93,4 +92,15 @@ std::list<Vector2<>> Scene::getDebugPoints() {
 
 std::list<std::array<Vector2<>, 2>> Scene::getDebugLines() {
 	return debugLines;
+}
+
+void Scene::update(float deltaTime) {
+	// Update all game objects (copy vector to avoid iterator invalidation if destroy() is called)
+	std::vector<GameObject*> objectsCopy = gameObjects;
+	for (GameObject* obj : objectsCopy) {
+		if (obj != nullptr)
+			obj->update(deltaTime);
+	}
+	// Update the camera
+	camera.update(deltaTime);
 }

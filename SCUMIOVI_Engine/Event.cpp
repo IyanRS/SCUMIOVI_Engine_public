@@ -2,9 +2,7 @@
 #include <SDL3/SDL.h>
 
 #include "Vector2.hpp"
-
 #include "Game.hpp"
-#include <thread>
 
 Event::Event() {}
 
@@ -18,6 +16,23 @@ Event::Event(std::vector<Action> actions) {
 	}
 }
 
+// -------------------------------------------------------------------------
+// Pending-event queue (static, process-lifetime storage)
+// -------------------------------------------------------------------------
+struct PendingEvent {
+	Event event;
+	EventInfo* info;
+	float remainingSec;
+};
+
+static std::vector<PendingEvent>& pendingQueue() {
+	static std::vector<PendingEvent> queue;
+	return queue;
+}
+
+// -------------------------------------------------------------------------
+// execute() — synchronous entry point (no EventInfo from a click)
+// -------------------------------------------------------------------------
 void Event::execute() {
 	Game& game = Game::getInstance();
 	Player& p = game.getCurrentPlayer();
@@ -26,19 +41,15 @@ void Event::execute() {
 	execute(eventInfo);
 }
 
-void Event::executeAfterDelay(Event e, float seconds) {
-	std::this_thread::sleep_for(std::chrono::milliseconds((int)(seconds * 1000)));
-	e.execute();
-}
-
+// -------------------------------------------------------------------------
+// execute(EventInfo) — runs the action list, stops at the first Delay and
+// schedules the remainder in the pending queue instead of sleeping a thread.
+// -------------------------------------------------------------------------
 void Event::execute(EventInfo eventInfo) {
 	float delaySeconds = 0;
 	int i = 0;
 	for (Action action : actions) {
-		// Use std::visit to invoke the correct function depending on the type
 		std::visit([eventInfo, &delaySeconds](auto&& func) {
-
-			// TODO: maybe create a class for each, might be a better design
 
 			if constexpr (std::is_same_v<std::decay_t<decltype(func)>, Delay>) {
 				delaySeconds = func.getSeconds();
@@ -46,25 +57,47 @@ void Event::execute(EventInfo eventInfo) {
 
 			// Check if func can accept EventInfo as argument
 			if constexpr (std::is_invocable_v<decltype(func), EventInfo>) {
-				func(eventInfo);  // Call with EventInfo argument
+				func(eventInfo);
 			}
 			// Check if func can be called without arguments
 			else if constexpr (std::is_invocable_v<decltype(func)>) {
-				func();  // Call with no arguments
+				func();
 			}
 		}, action);
 
 		if (delaySeconds > 0) {
+			// Build an event containing every action that comes after the delay
 			Event eventAfterDelay = Event();
-			for (int j = i + 1; j < actions.size(); j++) {
+			for (int j = i + 1; j < (int)actions.size(); j++) {
 				eventAfterDelay.addAction(actions[j]);
 			}
-			auto task = std::bind(&Event::executeAfterDelay, this, eventAfterDelay, delaySeconds);
-			std::thread backgroundTask(task);
-			backgroundTask.detach();
+			// Push into the per-frame queue instead of spinning up a thread
+			PendingEvent pending;
+			pending.event = eventAfterDelay;
+			pending.info  = nullptr; // will re-derive EventInfo on fire
+			pending.remainingSec = delaySeconds;
+			pendingQueue().push_back(pending);
 			break;
 		}
 		i++;
+	}
+}
+
+// -------------------------------------------------------------------------
+// tick(dt) — called once per frame from the game loop.
+// Counts down pending events and fires any that have expired.
+// -------------------------------------------------------------------------
+void Event::tick(float deltaTime) {
+	auto& queue = pendingQueue();
+
+	// Iterate manually so we can safely erase while looping
+	for (int i = (int)queue.size() - 1; i >= 0; i--) {
+		queue[i].remainingSec -= deltaTime;
+		if (queue[i].remainingSec <= 0.0f) {
+			// Fire — reconstruct a default EventInfo if none was stored
+			queue[i].event.execute();
+			queue.erase(queue.begin() + i);
+		}
 	}
 }
 
@@ -88,6 +121,7 @@ Event Event::operator+(const Event& e2) {
 
 Event& Event::operator=(const Event& other) {
 	if (this != &other) {
+		actions.clear();
 		for (Action a : other.actions) {
 			actions.push_back(a);
 		}

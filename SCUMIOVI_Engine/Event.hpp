@@ -13,12 +13,13 @@
 const float EVENT_NOT_TRIGGERED_BY_CLICK = -INFINITY;
 
 class Event {
+public:
   using Action = std::variant<std::function<void()>,
                               std::function<void(EventInfo)>, Delay>;
-
+private:
   std::vector<Action> actions;
 
-  void executeAfterDelay(Event e, float seconds);
+
 
 public:
   Event();
@@ -26,8 +27,11 @@ public:
   Event(std::vector<Action> actions);
   void execute();
   void execute(EventInfo eventInfo);
-  // void addAction(void* action);
   void addAction(Action action);
+
+  // Called once per frame by the game loop. Advances delay timers
+  // and fires events whose timers have expired.
+  static void tick(float deltaTime);
 
   Event operator+(const Event &e2);
   Event &operator=(const Event &other);

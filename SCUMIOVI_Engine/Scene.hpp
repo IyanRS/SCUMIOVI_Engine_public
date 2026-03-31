@@ -41,4 +41,6 @@ public:
 	void addDebugLine(Vector2<>, Vector2<>);
 	std::list<Vector2<>> getDebugPoints();
 	std::list<std::array<Vector2<>, 2>> getDebugLines();
+	// Called once per frame by the game loop
+	void update(float deltaTime);
 };

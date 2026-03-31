@@ -49,6 +49,12 @@ void Game::changeScene(Scene& newScene) {
 	currentScene = &newScene;
 }
 
+// ---------------------------------------------------------------------------
+// startGame() — the main game loop. Delta time is computed here and
+// distributed to the scene (which propagates to all GameObjects and the
+// Camera) and to the Event pending queue. Frame capping is also done here
+// so that Renderer::render() no longer needs to sleep.
+// ---------------------------------------------------------------------------
 void Game::startGame() {
 	if (currentScene == nullptr) {
 		SDL_Log("An initial scene is required.");
@@ -60,7 +66,15 @@ void Game::startGame() {
 	}
 	startEvent.execute();
 
+	// High-precision frame timing
+	Uint64 perfFreq    = SDL_GetPerformanceFrequency();
+	Uint64 lastCounter = SDL_GetPerformanceCounter();
+	const float targetFrameTime = 1.0f / FPS;
+
 	while (gameIsRunning) {
+		// -----------------------------------------------------------------
+		// Input handling
+		// -----------------------------------------------------------------
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
 			case SDL_EVENT_QUIT:
@@ -69,9 +83,7 @@ void Game::startGame() {
 				break;
 			case SDL_EVENT_MOUSE_BUTTON_DOWN:
 				// TODO: maybe move this click handling to inputManager
-				
 				SDL_MouseButtonFlags mouseButtonFlags = SDL_GetMouseState(nullptr, nullptr);
-				//SDL_Log("Click (game) %s", std::to_string(mouseButtonFlags).c_str());
 				switch (mouseButtonFlags) {
 				case 0:
 				case SDL_BUTTON_LEFT:
@@ -79,26 +91,50 @@ void Game::startGame() {
 						inputManager.click(ui, *currentScene, currentPlayer->getVerb());
 					else
 						inputManager.click(ui, *currentScene, leftClickVerb);
-					//defaultClickEvent.execute(inputManager.getClickPosition(currentScene->getCamera()));
 					break;
 				case 4: // TODO: should be SDL_BUTTON_RIGHT (3) SDL bug?
 					if (rightClickVerb == nullptr)
 						inputManager.click(ui, *currentScene, currentPlayer->getVerb());
 					else
 						inputManager.click(ui, *currentScene, rightClickVerb);
-					//if (!inputManager.click(ui, *currentScene)) {
-					//	defaultClickEvent.execute(inputManager.getClickPosition(currentScene->getCamera()));
-					//}
 					break;
 				}
 				break;
 			}
 		}
 
-		// Main loop
+		// -----------------------------------------------------------------
+		// Compute delta time from last frame
+		// -----------------------------------------------------------------
+		Uint64 currentCounter = SDL_GetPerformanceCounter();
+		float deltaTime = (float)(currentCounter - lastCounter) / (float)perfFreq;
+		// Clamp to avoid huge spikes (e.g. after a breakpoint / system sleep)
+		if (deltaTime > 0.1f) deltaTime = 0.1f;
+		lastCounter = currentCounter;
+
+		// -----------------------------------------------------------------
+		// Update step — drives all GameObjects, Camera, and delayed Events
+		// -----------------------------------------------------------------
 		inputManager.mouseOver(ui, *currentScene);
+		currentScene->update(deltaTime);
+		Event::tick(deltaTime);
+
+		// -----------------------------------------------------------------
+		// Render
+		// -----------------------------------------------------------------
 		renderer.render(*currentScene, ui);
+
+		// -----------------------------------------------------------------
+		// Frame cap — sleep only the remaining time in this frame budget
+		// -----------------------------------------------------------------
+		Uint64 afterRenderCounter = SDL_GetPerformanceCounter();
+		float frameTime = (float)(afterRenderCounter - lastCounter) / (float)perfFreq;
+		float sleepTime = targetFrameTime - frameTime;
+		if (sleepTime > 0.001f) {
+			SDL_Delay((Uint32)(sleepTime * 1000.0f));
+		}
 	}
+
 	endEvent.execute();
 }
 
