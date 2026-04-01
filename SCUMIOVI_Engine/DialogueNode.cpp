@@ -20,7 +20,7 @@ void DialogueNode::showOptions() {
 
 	// Otherwise, exit the dialogue and return to regular gameplay
 	game.getUI().setLayout(game.getUI().getAfterDialogueLayout()->getName());
-	game.getCurrentPlayer().enableMovement();
+	game.getCurrentPlayer()->enableMovement();
 	game.getUI().setHighlightedVerb(nullptr);
 	game.getUI().updateUI();
 }

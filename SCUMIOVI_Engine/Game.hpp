@@ -13,13 +13,13 @@ protected:
 	Game();
 	static Game* game_;
 
-	std::list<Player*> players;
+	std::list<std::shared_ptr<Player>> players;
 	bool gameIsRunning = true;
 	Renderer renderer;
 	InputManager inputManager;
-	Scene* currentScene;
+	Scene* currentScene = nullptr;
 	SDL_Event event;
-	Player* currentPlayer;
+	std::shared_ptr<Player> currentPlayer;
 	Event startEvent;
 	Event endEvent;
 	std::list<Verb*> verbs;
@@ -30,20 +30,20 @@ protected:
 
 	Event defaultClickEvent; // When the player clicks but no object interaction is found
 
-	Verb* rightClickVerb;
-	Verb* leftClickVerb;
-	Verb* defaultVerb;
+	Verb* rightClickVerb = nullptr;
+	Verb* leftClickVerb = nullptr;
+	Verb* defaultVerb = nullptr;
 
 public:
 	Game(Game& other) = delete;
 	void operator=(const Game&) = delete;
 	static Game& getInstance();
-	Player& getCurrentPlayer();
-	void setCurrentPlayer(Player& player);
-	void addPlayer(Player& player);
-	void removePlayer(Player& player);
-	std::list<Player*> getPlayers();
-	Player* getPlayerByName(std::string name);
+	std::shared_ptr<Player> getCurrentPlayer();
+	void setCurrentPlayer(std::shared_ptr<Player> player);
+	void addPlayer(std::shared_ptr<Player> player);
+	void removePlayer(std::shared_ptr<Player> player);
+	std::list<std::shared_ptr<Player>> getPlayers();
+	std::shared_ptr<Player> getPlayerByName(std::string name);
 	void startGame();
 	Scene& getScene();
 	void changeScene(Scene& newScene);

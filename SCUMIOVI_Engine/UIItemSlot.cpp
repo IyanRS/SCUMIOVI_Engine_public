@@ -7,7 +7,7 @@ UIItemSlot::UIItemSlot(Vector2<> position, Vector2<> size, Texture* slotBackgrou
 	setDefaultVerb(&Verb::anyVerb);
 	addVerbInteraction(Verb::anyVerb, Event([relativeIndex](EventInfo e) {
 		SDL_Log("Selected item %d", relativeIndex);
-		GameObject* item = e.player.getInventory().getItemAt(relativeIndex + e.game.getUI().getInventoryIndex());
+		auto item = e.player.getInventory().getItemAt(relativeIndex + e.game.getUI().getInventoryIndex());
 		if (item != nullptr)
 			item->interact(e.clickPos, e.player.getVerb());
 		e.player.setSelectedObject(item);

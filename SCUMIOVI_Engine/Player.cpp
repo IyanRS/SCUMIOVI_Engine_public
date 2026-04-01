@@ -33,18 +33,18 @@ Inventory& Player::getInventory() {
 	return inventory;
 }
 
-GameObject* Player::getSelectedObject() {
-	return selectedObject;
+std::shared_ptr<GameObject> Player::getSelectedObject() {
+	return selectedObject.lock();
 }
 
-void Player::setSelectedObject(GameObject* gameObject) {
+void Player::setSelectedObject(std::shared_ptr<GameObject> gameObject) {
 	this->selectedObject = gameObject;
 }
 
-void Player::setTargetObject(GameObject* gameObject) {
+void Player::setTargetObject(std::shared_ptr<GameObject> gameObject) {
 	this->targetObject = gameObject;
 }
 
-GameObject* Player::getTargetObject() {
-	return targetObject;
+std::shared_ptr<GameObject> Player::getTargetObject() {
+	return targetObject.lock();
 }

@@ -6,10 +6,10 @@
 #include "Verb.hpp"
 
 class Inventory {
-	std::vector<GameObject*> items;
+	std::vector<std::shared_ptr<GameObject>> items;
 public:
-	void addItem(GameObject* item);
+	void addItem(std::shared_ptr<GameObject> item);
 	void removeItem(GameObject& item);
-	GameObject* getItemAt(int index);
-	std::vector<GameObject*>& getItems();
+	std::shared_ptr<GameObject> getItemAt(int index);
+	std::vector<std::shared_ptr<GameObject>>& getItems();
 };

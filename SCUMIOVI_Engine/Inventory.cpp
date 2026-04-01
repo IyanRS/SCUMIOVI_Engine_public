@@ -1,23 +1,25 @@
 #include "Inventory.hpp"
 
-void Inventory::addItem(GameObject* item) {
+void Inventory::addItem(std::shared_ptr<GameObject> item) {
 	items.push_back(item);
 }
 
 void Inventory::removeItem(GameObject& item) {
-	auto it = std::find(items.begin(), items.end(), &item);
+	auto it = std::find_if(items.begin(), items.end(), [&item](const std::shared_ptr<GameObject>& ptr) {
+		return ptr.get() == &item;
+	});
 	if (it == items.end())
 		return;
 	items.erase(it);
 }
 
-GameObject* Inventory::getItemAt(int index) {
+std::shared_ptr<GameObject> Inventory::getItemAt(int index) {
 	if (index < 0 || index >= items.size()) {
 		return nullptr;
 	}
 	return items[index];
 }
 
-std::vector<GameObject*>& Inventory::getItems() {
+std::vector<std::shared_ptr<GameObject>>& Inventory::getItems() {
 	return items;
 }

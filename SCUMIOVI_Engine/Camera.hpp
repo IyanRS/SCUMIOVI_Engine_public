@@ -9,10 +9,10 @@ class GameObject;
 class Camera {
 	Vector2<> position;
 	Vector2<> size;
-	GameObject* objectToFollow = nullptr;
+	std::weak_ptr<GameObject> objectToFollow;
 	void followObject();
 
-	// --- Delta-time movement (replaces threaded moveToTask) ---
+	// Delta-time movement
 	bool isMoving = false;
 	Vector2<> moveStart;
 	Vector2<> moveTarget;
@@ -26,7 +26,7 @@ public:
 	Vector2<> getSize();
 	void setSize(Vector2<> size);
 	void moveTo(Vector2<> position, float seconds, Event callback = Event());
-	void setObjectToFollow(GameObject& object);
+	void setObjectToFollow(std::shared_ptr<GameObject> object);
 	void stopFollowingObject();
 	// Called once per frame by Scene::update()
 	void update(float deltaTime);

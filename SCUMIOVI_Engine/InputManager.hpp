@@ -6,9 +6,9 @@
 #include <chrono>
 
 class InputManager {
-	bool checkObjectClicked(float xMouse, float yMouse, GameObject* object, Verb* verb);
-	void checkMouseOverObject(float xMouse, float yMouse, GameObject* object);
-	std::unordered_set<GameObject*> currentlyMouseOver;
+	bool checkObjectClicked(float xMouse, float yMouse, std::shared_ptr<GameObject> object, Verb* verb);
+	void checkMouseOverObject(float xMouse, float yMouse, std::shared_ptr<GameObject> object);
+	std::unordered_set<std::shared_ptr<GameObject>> currentlyMouseOver;
 	std::chrono::system_clock::time_point lastCheckTime;
 public:
 	bool click(UI& ui, Scene& scene, Verb* verb);

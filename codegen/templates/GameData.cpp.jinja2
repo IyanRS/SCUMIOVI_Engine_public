@@ -55,17 +55,17 @@ void ScriptLoader::loadAndRunGame() {
 
     // --- Players ---
     {% for p in players %}
-    Player {{ p.id }} = Player("{{ p.id }}", Vector2<>(0,0));
+    auto {{ p.id }} = std::make_shared<Player>("{{ p.id }}", Vector2<>(0,0));
     {% for anim in p.anims %}
-    {{ p.id }}.addAnimation(&{{ anim }});
+    {{ p.id }}->addAnimation(&{{ anim }});
     {% endfor %}
 
     Texture idleTexture = {{p.animationMoveRight}}.getFrames()[0];
     idleTexture.setName("idle");
-    {{ p.id }}.addTexture(&idleTexture);
-    {{ p.id }}.setTexture("idle");
+    {{ p.id }}->addTexture(&idleTexture);
+    {{ p.id }}->setTexture("idle");
 
-    {{ p.id }}.setMovementAnimations(
+    {{ p.id }}->setMovementAnimations(
         {{ '&' + p.animationMoveRight if p.animationMoveRight else 'nullptr' }},
         {{ '&' + p.animationMoveLeft if p.animationMoveLeft else 'nullptr' }},
         {{ '&' + p.animationMoveUp if p.animationMoveUp else 'nullptr' }},
@@ -75,7 +75,7 @@ void ScriptLoader::loadAndRunGame() {
         {{ '&' + p.animationIdleUp if p.animationIdleUp else 'nullptr' }},
         {{ '&' + p.animationIdleDown if p.animationIdleDown else 'nullptr' }}
     );
-    {{ p.id }}.setTextFormat({{ p.text_format }}Format);
+    {{ p.id }}->setTextFormat({{ p.text_format }}Format);
 
     game.addPlayer({{ p.id }});
     {% endfor %}
@@ -93,7 +93,7 @@ void ScriptLoader::loadAndRunGame() {
 
     // Backgrounds
     {% for bg in s.bg %}
-    GameObject& {{ s.name }}Bg = {{ s.name }}.addBackground(
+    auto {{ s.name }}Bg = {{ s.name }}.addBackground(
         {{ s.name }}, "{{ bg.tex }}", {{ parse_vector(bg.pos, type_hint='int') }}
     );
     {% endfor %}
@@ -107,7 +107,7 @@ void ScriptLoader::loadAndRunGame() {
     {% endif %}
     {% endfor %}
     {% if ns.isItem == True %}
-    GameObject {{ o.id }} = Item(
+    auto {{ o.id }} = std::make_shared<Item>(
         "{{ o.id }}",
         {{ parse_vector(o.pos, type_hint='') }},
         &{{ o.id }}Texture,
@@ -115,7 +115,7 @@ void ScriptLoader::loadAndRunGame() {
     );
     {% set ns.isItem = False %}
     {% else %}
-    GameObject {{ o.id }}(
+    auto {{ o.id }} = std::make_shared<GameObject>(
         "{{ o.id }}",
         {{ parse_vector(o.pos,type_hint='') }},
         Vector2<>(-1,-1),
@@ -124,20 +124,20 @@ void ScriptLoader::loadAndRunGame() {
     {% endif %}
 
     //{{ s.name }}.addGameObject({{ o.id }});
-    {{ o.id }}.moveToScene({{ s.name }});
-    {{ o.id }}.setLayer({{ o.layer }});
+    {{ o.id }}->moveToScene({{ s.name }});
+    {{ o.id }}->setLayer({{ o.layer }});
     {% endfor %}
 
     {% for obj in objects %}
     {% if obj.text_format %}
-    {{obj.id}}.setTextFormat({{obj.text_format}}Format);
+    {{obj.id}}->setTextFormat({{obj.text_format}}Format);
     {% endif %}
     {% endfor %}
 
     // Players
     {% if s.player %}
-    {{ s.player.id }}.moveToScene({{ s.name }});
-    {{ s.player.id }}.setPosition({{ parse_vector(s.player.pos, type_hint='') }});
+    {{ s.player.id }}->moveToScene({{ s.name }});
+    {{ s.player.id }}->setPosition({{ parse_vector(s.player.pos, type_hint='') }});
     {% endif %}
 
     {% endfor %}
@@ -145,16 +145,16 @@ void ScriptLoader::loadAndRunGame() {
     // --- Startup configuration ---
     {% if config.main_character %}
     game.setCurrentPlayer({{ config.main_character }});
-    {{ config.main_character }}.setVerb("walk"); // TODO: custom default verb?
+    {{ config.main_character }}->setVerb("walk"); // TODO: custom default verb?
     {% endif %}
-    game.changeScene(*{{ config.main_character }}.getScene());
-    {{ config.main_character }}.moveToScene({{ config.main_scene }});
+    game.changeScene(*(std::dynamic_pointer_cast<GameObject>({{ config.main_character }})->getScene()));
+    {{ config.main_character }}->moveToScene({{ config.main_scene }});
 
 
     // TODO: Custom UI
     int blackColor[] = { 0x00, 0x00, 0x00, 0xff };
 	Texture blackImage = Texture("black", blackColor);
-	GameObject uiBackground = GameObject("uiBackground", Vector2<>(0, 144), Vector2<>(640, 56), &blackImage);
+	auto uiBackground = std::make_shared<GameObject>("uiBackground", Vector2<>(0, 144), Vector2<>(640, 56), &blackImage);
 
 	game.getUI().createLayout("inventory");
 	game.getUI().setLayout("inventory");
@@ -175,11 +175,11 @@ void ScriptLoader::loadAndRunGame() {
 
 	game.getUI().getLayout("inventory").createInventoryMatrix(Vector2<>(150, 154), 4, 2, &verbBackground, emptyEvent);
 
-	GameObject uiCurrentVerbInfo = GameObject("uiCurrentVerbInfo", Vector2<>(160, 148), Vector2<>());
+	auto uiCurrentVerbInfo = std::make_shared<GameObject>("uiCurrentVerbInfo", Vector2<>(160, 148), Vector2<>());
 	int color[4] = { 125, 44, 125, 0xff };
 	Text currentInfoText = Text("Test info", 11, color, false, TEXT_CENTERED);
-	uiCurrentVerbInfo.setTextOver(currentInfoText);
-	uiCurrentVerbInfo.setTextFormat(currentInfoText);
+	uiCurrentVerbInfo->setTextOver(currentInfoText);
+	uiCurrentVerbInfo->setTextFormat(currentInfoText);
 	game.getUI().getLayout("inventory").addUIElement(uiCurrentVerbInfo);
 
     // Custom cursor
@@ -216,7 +216,7 @@ void ScriptLoader::loadAndRunGame() {
     DialogueNode {{ label }}Node = DialogueNode(Event([&stan, &{{ label }}Node](EventInfo e) {
         {# 1) One .say() per line, each nesting an Event #}
         {% for line in dlg.lines if line.text is not none %}
-        {{ ' ' * (4 + 4 * loop.index0) }}{% if line.speaker == 'player' %}e.player{% else %}{{ line.speaker }}{% endif %}.say(
+        {{ ' ' * (4 + 4 * loop.index0) }}{% if line.speaker == 'player' %}e.game.getCurrentPlayer()->{% else %}{{ line.speaker }}->{% endif %}say(
             "{{ cpp_string(line.text) }}",
             {{ line.delay if line.delay is not none else 0 }},
             Event([&{{ label }}Node](EventInfo e) {
@@ -256,14 +256,13 @@ void ScriptLoader::loadAndRunGame() {
 
     {% endfor %}
 
-    // Interactions
     {% for i in interactions %}
     {% if i.other_object_id %}
-    {{ i.object_id }}.addVerbInteraction(*game.getVerb("{{ i.verb }}"), "{{ i.other_object_id }}", Event([{{ i.vars|join(', ') }}](EventInfo e) {
+    {{ i.object_id }}->addVerbInteraction(*game.getVerb("{{ i.verb }}"), "{{ i.other_object_id }}", Event([{{ i.vars|join(', ') }}](EventInfo e) {
 {{ i.script }}
     }));
     {% else %}
-    {{ i.object_id }}.addVerbInteraction(*game.getVerb("{{ i.verb }}"), Event([{{ i.vars|join(', ') }}](EventInfo e) {
+    {{ i.object_id }}->addVerbInteraction(*game.getVerb("{{ i.verb }}"), Event([{{ i.vars|join(', ') }}](EventInfo e) {
 {{ i.script }}
     }));
     {% endif %}

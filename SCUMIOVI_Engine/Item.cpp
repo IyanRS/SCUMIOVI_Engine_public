@@ -10,17 +10,18 @@ Item::Item(std::string name,
 
 	addVerbInteraction(Verb::pickupVerb, Event([this, name, inventoryTexture](EventInfo e) {
 		if (e.player.getCurrentHorizontalDirection() == RIGHT)
-			e.game.getCurrentPlayer().playAnimation("interactRight");
+			e.game.getCurrentPlayer()->playAnimation("interactRight");
 		else
-			e.game.getCurrentPlayer().playAnimation("interactLeft");
-		GameObject& itemInScene = *(GameObject*)&e.interactable;
-		itemInScene.destroy();
-		//Texture* itemInInventoryTexture = new Texture(name, inventoryTexture);
-		GameObject* itemInInventory = new GameObject(name, Vector2<>(), Vector2<>(-1, -1), inventoryTexture);
+			e.game.getCurrentPlayer()->playAnimation("interactLeft");
+		
+		shared_from_this()->destroy();
+		
+		auto itemInInventory = std::make_shared<GameObject>(name, Vector2<>(), Vector2<>(-1, -1), inventoryTexture);
 		itemInInventory->addTag("item");
 		itemInInventory->addVerbInteraction(Verb::giveVerb, Event([](EventInfo e) {
+			auto interactableObj = std::dynamic_pointer_cast<GameObject>(static_cast<GameObject&>(e.interactable).shared_from_this());
 			if (e.player.getSelectedObject() == nullptr) {
-				e.player.setSelectedObject((GameObject*)&e.interactable);
+				e.player.setSelectedObject(interactableObj);
 				e.player.say("Test1");
 			}
 			else {

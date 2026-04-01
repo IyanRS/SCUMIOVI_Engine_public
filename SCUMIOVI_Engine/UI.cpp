@@ -1,6 +1,6 @@
 #include "UI.hpp"
 
-std::vector<GameObject*>& UI::getUIElements() {
+std::vector<std::shared_ptr<GameObject>>& UI::getUIElements() {
 	return currentLayout->getUIElements();
 }
 
@@ -24,7 +24,7 @@ void UI::toggleVisibility() {
 	currentLayout->toggleVisibility();
 }
 
-GameObject* UI::getUIElement(std::string name) {
+std::shared_ptr<GameObject> UI::getUIElement(std::string name) {
 	return currentLayout->getUIElement(name);
 }
 

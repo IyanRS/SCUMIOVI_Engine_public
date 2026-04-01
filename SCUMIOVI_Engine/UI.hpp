@@ -24,7 +24,7 @@ class UI {
 	UILayout* afterDialogueLayout;
 
 public:
-	std::vector<GameObject*>& getUIElements();
+	std::vector<std::shared_ptr<GameObject>>& getUIElements();
 
 	// TODO: add more parameters for customization: spacing, text size, text color, etc.
 	//GameObject& createUIVerbButton(Verb& verb, Vector2<> position, Vector2<> size, Texture* verbBackground, Event& onUIUpdate);
@@ -37,7 +37,7 @@ public:
 
 	//void addUIElement(GameObject& uiElement);
 	void toggleVisibility();
-	GameObject* getUIElement(std::string name);
+	std::shared_ptr<GameObject> getUIElement(std::string name);
 	void setLayout(std::string name);
 	void createLayout(std::string name);
 	UILayout& getLayout(std::string name);

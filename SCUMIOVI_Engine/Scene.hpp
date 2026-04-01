@@ -13,9 +13,9 @@ class Camera;
 #include <vector>
 
 class Scene {
-	std::vector<GameObject*> gameObjects;
+	std::vector<std::shared_ptr<GameObject>> gameObjects;
 	Camera camera;
-	WalkableArea* walkableArea;
+	WalkableArea* walkableArea = nullptr;
 
 	//bool gameObjectsComparator(GameObject& o1, GameObject& o2);
 
@@ -28,15 +28,15 @@ public:
 	Scene();
 	Camera& getCamera();
 	//void moveCameraTo(Vector2<> position, float seconds, Event callback);
-	void addGameObject(GameObject& gameObject);
-	void removeGameObject(GameObject& gameObject);
-	GameObject& addBackground(Scene& scene, std::string source, Vector2<int> size);
-	std::vector<GameObject*> getGameObjects();
+	void addGameObject(std::shared_ptr<GameObject> gameObject);
+	void removeGameObject(const std::shared_ptr<GameObject>& gameObject);
+	std::shared_ptr<GameObject> addBackground(Scene& scene, std::string source, Vector2<int> size);
+	std::vector<std::shared_ptr<GameObject>> getGameObjects();
 	// TODO: maybe a list of walkableAreas is better, it would allow scenarios
 	// with multiple separated areas.
 	WalkableArea* getWalkableArea();
 	void setWalkableArea(WalkableArea* walkableArea);
-	GameObject* getGameObject(std::string);
+	std::shared_ptr<GameObject> getGameObject(std::string);
 	void addDebugPoint(Vector2<>);
 	void addDebugLine(Vector2<>, Vector2<>);
 	std::list<Vector2<>> getDebugPoints();

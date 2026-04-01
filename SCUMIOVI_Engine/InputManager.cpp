@@ -20,9 +20,10 @@ Vector2<> InputManager::getClickPosition(Camera& camera) {
 	return Vector2<>(xMouse, yMouse);
 }
 
-bool InputManager::checkObjectClicked(float xMouse, float yMouse, GameObject* object, Verb* verb) {
+bool InputManager::checkObjectClicked(float xMouse, float yMouse, std::shared_ptr<GameObject> object, Verb* verb) {
 	if (object == nullptr) {
 		SDL_Log("Invalid gameObject.");
+		return false;
 	}
 
 	if (xMouse >= object->getPosition().x && xMouse < object->getPosition().x + object->getSize().x &&
@@ -33,9 +34,10 @@ bool InputManager::checkObjectClicked(float xMouse, float yMouse, GameObject* ob
 	return false;
 }
 
-void InputManager::checkMouseOverObject(float xMouse, float yMouse, GameObject* object) {
+void InputManager::checkMouseOverObject(float xMouse, float yMouse, std::shared_ptr<GameObject> object) {
 	if (object == nullptr) {
 		SDL_Log("Invalid gameObject.");
+		return;
 	}
 
 	if (xMouse >= object->getPosition().x && xMouse < object->getPosition().x + object->getSize().x &&
@@ -76,8 +78,8 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 	xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
 	yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
-	std::vector<GameObject*> uiElements = ui.getUIElements();
-	for (int i = uiElements.size() - 1; i >= 0; i--) {
+	auto uiElements = ui.getUIElements();
+	for (int i = (int)uiElements.size() - 1; i >= 0; i--) {
 		checkMouseOverObject(xMouse, yMouse, uiElements[i]);
 	}
 
@@ -85,8 +87,8 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 	xMouse += camera.getPosition().x;
 	yMouse += camera.getPosition().y;
 
-	std::vector<GameObject*> gameObjects = scene.getGameObjects();
-	for (int i = gameObjects.size() - 1; i >= 0; i--) {
+	auto gameObjects = scene.getGameObjects();
+	for (int i = (int)gameObjects.size() - 1; i >= 0; i--) {
 
 		checkMouseOverObject(xMouse, yMouse, gameObjects[i]);
 	}
@@ -107,8 +109,8 @@ bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
 		xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
 		yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
-		std::vector uiElements = ui.getUIElements();
-		for (int i = uiElements.size() - 1; i >= 0; i--) {
+		auto uiElements = ui.getUIElements();
+		for (int i = (int)uiElements.size() - 1; i >= 0; i--) {
 			if (checkObjectClicked(xMouse, yMouse, uiElements[i], verb)) {
 				return true;
 			}
@@ -119,8 +121,8 @@ bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
 	xMouse += camera.getPosition().x;
 	yMouse += camera.getPosition().y;
 
-	std::vector gameObjects = scene.getGameObjects();
-	for (int i = gameObjects.size() - 1; i >= 0; i--) {
+	auto gameObjects = scene.getGameObjects();
+	for (int i = (int)gameObjects.size() - 1; i >= 0; i--) {
 		if (checkObjectClicked(xMouse, yMouse, gameObjects[i], verb)) {
 			return true;
 		}

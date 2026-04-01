@@ -16,43 +16,37 @@ Scene::Scene() {
 //	return o1.getLayer() > o2.getLayer();
 //}
 
-void Scene::addGameObject(GameObject& gameObject) {
-	gameObjects.push_back(&gameObject);
-	gameObject.setScene(this);
-	std::sort(gameObjects.begin(), gameObjects.end(), [this](GameObject* o1, GameObject* o2) {
+void Scene::addGameObject(std::shared_ptr<GameObject> gameObject) {
+	gameObjects.push_back(gameObject);
+	gameObject->setScene(this);
+	std::sort(gameObjects.begin(), gameObjects.end(), [this](const std::shared_ptr<GameObject>& o1, const std::shared_ptr<GameObject>& o2) {
 		return o1->getLayer() < o2->getLayer();
 	});
 }
 
-GameObject& Scene::addBackground(Scene& scene, std::string source, Vector2<int> size) {
-	// TODO: handle pointers memory
+std::shared_ptr<GameObject> Scene::addBackground(Scene& scene, std::string source, Vector2<int> size) {
+	// TODO: handle pointers memory for textures (deferred to next phase)
 	Texture* backgroundTexture = new Texture("", source, Vector2<int>(), size);
-	GameObject* background = new GameObject("background", Vector2<>(0, 0), Vector2<>(-1, -1), backgroundTexture);
+	auto background = std::make_shared<GameObject>("background", Vector2<>(0, 0), Vector2<>(-1, -1), backgroundTexture);
 	background->setLayer(DEFAULT_BACKGROUND_LAYER);
 
-	//background->setDefaultVerb(&Verb::walkVerb);
-	//background->addVerbInteraction(Verb::walkVerb, Event([this](EventInfo e) {
-	//	WalkableArea* walkableArea = getWalkableArea();
-	//	if (walkableArea != nullptr) {
-	//		Vector2<> walkTo = walkableArea->getClosestPoint(e.clickPos);
-	//		walkableArea->interact(walkTo, &Verb::walkVerb);
-	//	}
-	//}));
-
-	scene.addGameObject(*background);
-	return *background;
+	scene.addGameObject(background);
+	return background;
 }
 
-void Scene::removeGameObject(GameObject& gameObject) {
-	gameObjects.erase(std::find(gameObjects.begin(), gameObjects.end(), &gameObject));
-	gameObject.setScene(nullptr);
+void Scene::removeGameObject(const std::shared_ptr<GameObject>& gameObject) {
+	auto it = std::find(gameObjects.begin(), gameObjects.end(), gameObject);
+	if (it != gameObjects.end()) {
+		(*it)->setScene(nullptr);
+		gameObjects.erase(it);
+	}
 }
 
 Camera& Scene::getCamera() {
 	return camera;
 }
 
-std::vector<GameObject*> Scene::getGameObjects() {
+std::vector<std::shared_ptr<GameObject>> Scene::getGameObjects() {
 	return gameObjects;
 }
 
@@ -64,10 +58,10 @@ void Scene::setWalkableArea(WalkableArea* walkableArea) {
 	this->walkableArea = walkableArea;
 }
 
-GameObject* Scene::getGameObject(std::string gameObjectName) {
+std::shared_ptr<GameObject> Scene::getGameObject(std::string gameObjectName) {
 	if (gameObjectName == "")
 		return nullptr;
-	for (GameObject* gameObject : gameObjects) {
+	for (const auto& gameObject : gameObjects) {
 		if (gameObject->getName() == gameObjectName) {
 			return gameObject;
 		}
@@ -96,8 +90,8 @@ std::list<std::array<Vector2<>, 2>> Scene::getDebugLines() {
 
 void Scene::update(float deltaTime) {
 	// Update all game objects (copy vector to avoid iterator invalidation if destroy() is called)
-	std::vector<GameObject*> objectsCopy = gameObjects;
-	for (GameObject* obj : objectsCopy) {
+	std::vector<std::shared_ptr<GameObject>> objectsCopy = gameObjects;
+	for (const auto& obj : objectsCopy) {
 		if (obj != nullptr)
 			obj->update(deltaTime);
 	}

@@ -71,14 +71,14 @@ void ScriptLoader::loadAndRunGame() {
     );
 
     // --- Players ---
-    Player guybrush = Player("guybrush", Vector2<>(0,0));
+    auto guybrush = std::make_shared<Player>("guybrush", Vector2<>(0,0));
 
     Texture idleTexture = guybrushWalkRight.getFrames()[0];
     idleTexture.setName("idle");
-    guybrush.addTexture(&idleTexture);
-    guybrush.setTexture("idle");
+    guybrush->addTexture(&idleTexture);
+    guybrush->setTexture("idle");
 
-    guybrush.setMovementAnimations(
+    guybrush->setMovementAnimations(
         &guybrushWalkRight,
         &guybrushWalkLeft,
         nullptr,
@@ -88,7 +88,7 @@ void ScriptLoader::loadAndRunGame() {
         nullptr,
         nullptr
     );
-    guybrush.setTextFormat(defaultFormat);
+    guybrush->setTextFormat(defaultFormat);
 
     game.addPlayer(guybrush);
 
@@ -119,12 +119,12 @@ void ScriptLoader::loadAndRunGame() {
     scummbar.setWalkableArea(&scummbarWalk);
 
     // Backgrounds
-    GameObject& scummbarBg = scummbar.addBackground(
+    auto scummbarBg = scummbar.addBackground(
         scummbar, "SCUMM_BAR.png", Vector2<int>(640,144)
     );
 
     // Objects
-    GameObject table(
+    auto table = std::make_shared<GameObject>(
         "table",
         Vector2<>(157,115),
         Vector2<>(-1,-1),
@@ -132,9 +132,9 @@ void ScriptLoader::loadAndRunGame() {
     );
 
     //scummbar.addGameObject(table);
-    table.moveToScene(scummbar);
-    table.setLayer(1);
-    GameObject table2(
+    table->moveToScene(scummbar);
+    table->setLayer(1);
+    auto table2 = std::make_shared<GameObject>(
         "table2",
         Vector2<>(20,118),
         Vector2<>(-1,-1),
@@ -142,9 +142,9 @@ void ScriptLoader::loadAndRunGame() {
     );
 
     //scummbar.addGameObject(table2);
-    table2.moveToScene(scummbar);
-    table2.setLayer(1);
-    GameObject mug = Item(
+    table2->moveToScene(scummbar);
+    table2->setLayer(1);
+    auto mug = std::make_shared<Item>(
         "mug",
         Vector2<>(124,97),
         &mugTexture,
@@ -152,9 +152,9 @@ void ScriptLoader::loadAndRunGame() {
     );
 
     //scummbar.addGameObject(mug);
-    mug.moveToScene(scummbar);
-    mug.setLayer(-1);
-    GameObject stan(
+    mug->moveToScene(scummbar);
+    mug->setLayer(-1);
+    auto stan = std::make_shared<GameObject>(
         "stan",
         Vector2<>(155,68),
         Vector2<>(-1,-1),
@@ -162,27 +162,27 @@ void ScriptLoader::loadAndRunGame() {
     );
 
     //scummbar.addGameObject(stan);
-    stan.moveToScene(scummbar);
-    stan.setLayer(-1);
+    stan->moveToScene(scummbar);
+    stan->setLayer(-1);
 
-    stan.setTextFormat(stan_text_formatFormat);
+    stan->setTextFormat(stan_text_formatFormat);
 
     // Players
-    guybrush.moveToScene(scummbar);
-    guybrush.setPosition(Vector2<>(80,80));
+    guybrush->moveToScene(scummbar);
+    guybrush->setPosition(Vector2<>(80,80));
 
 
     // --- Startup configuration ---
     game.setCurrentPlayer(guybrush);
-    guybrush.setVerb("walk"); // TODO: custom default verb?
-    game.changeScene(*guybrush.getScene());
-    guybrush.moveToScene(scummbar);
+    guybrush->setVerb("walk"); // TODO: custom default verb?
+    game.changeScene(*(std::dynamic_pointer_cast<GameObject>(guybrush)->getScene()));
+    guybrush->moveToScene(scummbar);
 
 
     // TODO: Custom UI
     int blackColor[] = { 0x00, 0x00, 0x00, 0xff };
 	Texture blackImage = Texture("black", blackColor);
-	GameObject uiBackground = GameObject("uiBackground", Vector2<>(0, 144), Vector2<>(640, 56), &blackImage);
+	auto uiBackground = std::make_shared<GameObject>("uiBackground", Vector2<>(0, 144), Vector2<>(640, 56), &blackImage);
 
 	game.getUI().createLayout("inventory");
 	game.getUI().setLayout("inventory");
@@ -203,11 +203,11 @@ void ScriptLoader::loadAndRunGame() {
 
 	game.getUI().getLayout("inventory").createInventoryMatrix(Vector2<>(150, 154), 4, 2, &verbBackground, emptyEvent);
 
-	GameObject uiCurrentVerbInfo = GameObject("uiCurrentVerbInfo", Vector2<>(160, 148), Vector2<>());
+	auto uiCurrentVerbInfo = std::make_shared<GameObject>("uiCurrentVerbInfo", Vector2<>(160, 148), Vector2<>());
 	int color[4] = { 125, 44, 125, 0xff };
 	Text currentInfoText = Text("Test info", 11, color, false, TEXT_CENTERED);
-	uiCurrentVerbInfo.setTextOver(currentInfoText);
-	uiCurrentVerbInfo.setTextFormat(currentInfoText);
+	uiCurrentVerbInfo->setTextOver(currentInfoText);
+	uiCurrentVerbInfo->setTextFormat(currentInfoText);
 	game.getUI().getLayout("inventory").addUIElement(uiCurrentVerbInfo);
 
     // Custom cursor
@@ -229,11 +229,11 @@ void ScriptLoader::loadAndRunGame() {
         // --- DialogueNode for "main" ---
 
     DialogueNode mainNode = DialogueNode(Event([&stan, &mainNode](EventInfo e) {
-            stan.say(
+            stan->say(
             "Hello Guybrush",
             0.6,
             Event([&mainNode](EventInfo e) {
-                e.player.say(
+                e.game.getCurrentPlayer()->say(
             "Hi",
             0.2,
             Event([&mainNode](EventInfo e) {
@@ -245,11 +245,11 @@ void ScriptLoader::loadAndRunGame() {
         // --- DialogueNode for "label2" ---
 
     DialogueNode label2Node = DialogueNode(Event([&stan, &label2Node](EventInfo e) {
-            stan.say(
+            stan->say(
             "I'm fine,\nwhat about you?",
             0,
             Event([&label2Node](EventInfo e) {
-                e.player.say(
+                e.game.getCurrentPlayer()->say(
             "I'm fine too",
             0,
             Event([&label2Node](EventInfo e) {
@@ -261,7 +261,7 @@ void ScriptLoader::loadAndRunGame() {
         // --- DialogueNode for "label3" ---
 
     DialogueNode label3Node = DialogueNode(Event([&stan, &label3Node](EventInfo e) {
-            stan.say(
+            stan->say(
             "Are you ok?",
             0,
             Event([&label3Node](EventInfo e) {
@@ -272,7 +272,7 @@ void ScriptLoader::loadAndRunGame() {
         // --- DialogueNode for "label4" ---
 
     DialogueNode label4Node = DialogueNode(Event([&stan, &label4Node](EventInfo e) {
-            stan.say(
+            stan->say(
             "...",
             0,
             Event([&label4Node](EventInfo e) {
@@ -283,7 +283,7 @@ void ScriptLoader::loadAndRunGame() {
         // --- DialogueNode for "byelabel" ---
 
     DialogueNode byelabelNode = DialogueNode(Event([&stan, &byelabelNode](EventInfo e) {
-            stan.say(
+            stan->say(
             "See you",
             0,
             Event([&byelabelNode](EventInfo e) {
@@ -294,7 +294,7 @@ void ScriptLoader::loadAndRunGame() {
         // --- DialogueNode for "scripttest" ---
 
     DialogueNode scripttestNode = DialogueNode(Event([&stan, &scripttestNode](EventInfo e) {
-            stan.say(
+            stan->say(
             "What do you want to try?",
             0,
             Event([&scripttestNode](EventInfo e) {
@@ -333,15 +333,14 @@ void ScriptLoader::loadAndRunGame() {
     label3Node.setOptions({ label3NodeOption1 });
 
 
-    // Interactions
-    stan.addVerbInteraction(*game.getVerb("give"), "mug", Event([](EventInfo e) {
+    stan->addVerbInteraction(*game.getVerb("give"), "mug", Event([](EventInfo e) {
 		if (e.player.getCurrentHorizontalDirection() == RIGHT)
 		    e.player.playAnimation("interactRight");
 		else
 		    e.player.playAnimation("interactLeft");
 		e.player.getScene()->getGameObject("stan")->say("Gracias");
     }));
-    stan.addVerbInteraction(*game.getVerb("talk"), Event([&mainNode](EventInfo e) {
+    stan->addVerbInteraction(*game.getVerb("talk"), Event([&mainNode](EventInfo e) {
 		e.player.disableMovement();
 		e.game.getUI().setLayout(e.game.getUI().getDialogueLayout()->getName());
 		mainNode.enterNode();

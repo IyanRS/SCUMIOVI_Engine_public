@@ -9,18 +9,17 @@ Camera::Camera() {
 }
 
 void Camera::followObject() {
-	if (objectToFollow == nullptr) {
-		return;
+	if (auto target = objectToFollow.lock()) {
+		position = target->getPosition();
 	}
-	position = objectToFollow->getPosition();
 }
 
-void Camera::setObjectToFollow(GameObject& object) {
-	objectToFollow = &object;
+void Camera::setObjectToFollow(std::shared_ptr<GameObject> object) {
+	objectToFollow = object;
 }
 
 void Camera::stopFollowingObject() {
-	objectToFollow = nullptr;
+	objectToFollow.reset();
 }
 
 Vector2<> Camera::getPosition() {
@@ -61,7 +60,7 @@ void Camera::moveTo(Vector2<> pos, float seconds, Event callback) {
 // -------------------------------------------------------------------------
 void Camera::update(float deltaTime) {
 	// If a follow target is set, snap to it (overrides any moveTo)
-	if (objectToFollow != nullptr) {
+	if (auto target = objectToFollow.lock()) {
 		followObject();
 		return;
 	}

@@ -6,12 +6,12 @@ Game::Game() {}
 
 Game* Game::game_ = nullptr;
 
-Player& Game::getCurrentPlayer() {
-	return *currentPlayer;
+std::shared_ptr<Player> Game::getCurrentPlayer() {
+	return currentPlayer;
 }
 
-void Game::setCurrentPlayer(Player& player) {
-	currentPlayer = &player;
+void Game::setCurrentPlayer(std::shared_ptr<Player> player) {
+	currentPlayer = player;
 }
 
 Game& Game::getInstance() {
@@ -20,20 +20,20 @@ Game& Game::getInstance() {
 	return *game_;
 }
 
-void Game::addPlayer(Player& player) {
-	Game::players.push_back(&player);
+void Game::addPlayer(std::shared_ptr<Player> player) {
+	Game::players.push_back(player);
 }
 
-void Game::removePlayer(Player& player) {
-	Game::players.remove(&player);
+void Game::removePlayer(std::shared_ptr<Player> player) {
+	Game::players.remove(player);
 }
 
-std::list<Player*> Game::getPlayers() {
+std::list<std::shared_ptr<Player>> Game::getPlayers() {
 	return Game::players;
 }
 
-Player* Game::getPlayerByName(std::string name) {
-	for (Player* p : Game::players) {
+std::shared_ptr<Player> Game::getPlayerByName(std::string name) {
+	for (auto p : Game::players) {
 		if (p->getName() == name) {
 			return p;
 		}

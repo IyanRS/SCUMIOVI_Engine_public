@@ -157,11 +157,11 @@ void GameObject::say(std::string textToSay, float seconds, Event callback) {
 	text.say(textToSay, seconds, callback);
 }
 
-void GameObject::addOverlapEvent(GameObject* object, Event event) {
+void GameObject::addOverlapEvent(std::shared_ptr<GameObject> object, Event event) {
 	overlapEvents[object] = event;
 }
 
-std::map<GameObject*, Event>& GameObject::getOverlapEvents() {
+std::map<std::shared_ptr<GameObject>, Event>& GameObject::getOverlapEvents() {
 	return overlapEvents;
 }
 
@@ -179,8 +179,8 @@ void GameObject::update(float deltaTime) {
 
 void GameObject::moveToScene(Scene& scene) {
 	if (currentScene != nullptr)
-		currentScene->removeGameObject(*this);
-	scene.addGameObject(*this);
+		currentScene->removeGameObject(shared_from_this());
+	scene.addGameObject(shared_from_this());
 }
 
 void GameObject::setScene(Scene* scene) {
@@ -197,7 +197,7 @@ void GameObject::toggleVisibility() {
 
 void GameObject::destroy() {
 	if (currentScene != nullptr)
-		currentScene->removeGameObject(*this);
+		currentScene->removeGameObject(shared_from_this());
 }
 
 bool GameObject::isVisible() {

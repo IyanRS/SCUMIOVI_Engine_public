@@ -25,7 +25,7 @@ UIVerbButton::UIVerbButton(Verb& verb, Vector2<> position, Vector2<> size, Textu
 	Game& game = Game::getInstance();
 	addVerbInteraction(Verb::anyVerb, Event([verbName] {
 		Game& game = Game::getInstance();
-		Player& player = game.getCurrentPlayer();
+		Player& player = *game.getCurrentPlayer();
 		player.setVerb(verbName);
 		game.getUI().updateUI();
 		}));

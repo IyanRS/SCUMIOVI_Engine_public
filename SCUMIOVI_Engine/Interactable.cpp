@@ -5,7 +5,7 @@
 bool Interactable::onClick(Vector2<> clickPos, Verb* verb) {
 	Game& game = Game::getInstance();
 	if (verb->getName() == Verb::selectedVerb.getName())
-		return interact(clickPos, game.getCurrentPlayer().getVerb());
+		return interact(clickPos, game.getCurrentPlayer()->getVerb());
 	if (verb->getName() == Verb::defaultVerb.getName())
 		if (defaultVerb == nullptr)
 			return interact(clickPos, game.getDefaultVerb());
@@ -16,13 +16,13 @@ bool Interactable::onClick(Vector2<> clickPos, Verb* verb) {
 
 void Interactable::onMouseOver(Vector2<> mousePos) {
 	Game& game = Game::getInstance();
-	EventInfo e = EventInfo(mousePos, game.getCurrentPlayer(), *this);
+	EventInfo e = EventInfo(mousePos, *game.getCurrentPlayer(), *this);
 	getMouseOverEvent().execute(e);
 }
 
 void Interactable::onMouseNotOver(Vector2<> mousePos) {
 	Game& game = Game::getInstance();
-	EventInfo e = EventInfo(mousePos, game.getCurrentPlayer(), *this);
+	EventInfo e = EventInfo(mousePos, *game.getCurrentPlayer(), *this);
 	getMouseNotOverEvent().execute(e);
 }
 
@@ -35,7 +35,7 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 	}
 
 	Game& game = Game::getInstance();
-	EventInfo e = EventInfo(clickPos, game.getCurrentPlayer(), *this);
+	EventInfo e = EventInfo(clickPos, *game.getCurrentPlayer(), *this);
 
 	std::map<std::string, Event>::iterator it = interactions.find(verb->getName());
 	if (it != interactions.end()) {
@@ -43,12 +43,15 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 		Event* afterActualEvent = verb->getAfterActualEvent();
 
 		if (verb->RequiresSelectedObject()) {
-			if (game.getCurrentPlayer().getSelectedObject() == nullptr)
-				game.getCurrentPlayer().setSelectedObject((GameObject*)this);
+			if (game.getCurrentPlayer()->getSelectedObject() == nullptr) {
+				GameObject* go = dynamic_cast<GameObject*>(this);
+				if (go)
+					game.getCurrentPlayer()->setSelectedObject(go->shared_from_this());
+			}
 			else {
 				std::map<std::string, std::string>::iterator it1 = interactionsSelectedObjects.find(verb->getName());
 				if (it1 != interactionsSelectedObjects.end()) {
-					if (game.getCurrentPlayer().getSelectedObject()->getName() == it1->second) {
+					if (game.getCurrentPlayer()->getSelectedObject()->getName() == it1->second) {
 						if (beforeActualEvent != nullptr) {
 							beforeActualEvent->execute(e);
 						}
@@ -57,7 +60,7 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 							afterActualEvent->execute(e);
 						}
 						game.changeToDefaultVerb();
-						game.getCurrentPlayer().setSelectedObject(nullptr);
+						game.getCurrentPlayer()->setSelectedObject(nullptr);
 					}
 				}
 			}
@@ -72,7 +75,7 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 			}
 			// TODO: default before and after Events? (game.changeToDefaultVerb(); could be inside the event after)
 			game.changeToDefaultVerb();
-			game.getCurrentPlayer().setSelectedObject(nullptr);
+			game.getCurrentPlayer()->setSelectedObject(nullptr);
 		}
 		
 		
@@ -88,7 +91,7 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 		it = interactions.find(Verb::anyVerb.getName());
 		if (it != interactions.end()) {
 			Game& game = Game::getInstance();
-			EventInfo e = EventInfo(clickPos, game.getCurrentPlayer(), *this);
+			EventInfo e = EventInfo(clickPos, *game.getCurrentPlayer(), *this);
 			it->second.execute(e);
 			return true;
 		}
@@ -101,7 +104,7 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 	}
 
 	game.changeToDefaultVerb();
-	game.getCurrentPlayer().setSelectedObject(nullptr);
+	game.getCurrentPlayer()->setSelectedObject(nullptr);
 	return false;
 }
 
@@ -141,8 +144,10 @@ Event& Interactable::getMouseOverEvent() {
 	if (defaultVerb && defaultVerb->getName() != Verb::anyVerb.getName()) {
 		Event highlightDefaultVerbEvent = Event([this](EventInfo e) {
 			e.game.getUI().setHighlightedVerb(getDefaultVerb());
-			if (e.interactable.hasVerbInteraction(*e.player.getVerb()))
-				e.player.setTargetObject((GameObject*)&e.interactable);
+			if (e.player.getVerb() && e.interactable.hasVerbInteraction(*e.player.getVerb())) {
+				GameObject* go = dynamic_cast<GameObject*>(&e.interactable);
+				if (go) e.player.setTargetObject(go->shared_from_this());
+			}
 			e.game.getUI().updateUI();
 		});
 

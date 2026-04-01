@@ -35,10 +35,12 @@ static std::vector<PendingEvent>& pendingQueue() {
 // -------------------------------------------------------------------------
 void Event::execute() {
 	Game& game = Game::getInstance();
-	Player& p = game.getCurrentPlayer();
+	auto p = game.getCurrentPlayer();
 	Interactable i; // No interactable
-	EventInfo eventInfo = EventInfo(Vector2<>(EVENT_NOT_TRIGGERED_BY_CLICK, EVENT_NOT_TRIGGERED_BY_CLICK), p, i);
-	execute(eventInfo);
+	if (p) {
+		EventInfo eventInfo = EventInfo(Vector2<>(EVENT_NOT_TRIGGERED_BY_CLICK, EVENT_NOT_TRIGGERED_BY_CLICK), *p, i);
+		execute(eventInfo);
+	}
 }
 
 // -------------------------------------------------------------------------

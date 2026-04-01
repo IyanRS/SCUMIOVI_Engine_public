@@ -19,7 +19,7 @@ Event createMoveToEvent(Vector2<> pos, Event callback) {
 		//}
 		e.player.moveToAtSpeed(pos - (Vector2<>(e.player.getSize().x / 2, e.player.getSize().y * 0.85)), 100.0f, Event([] {
 			Game& game = Game::getInstance();
-			Player& player = game.getCurrentPlayer();
+			auto player = game.getCurrentPlayer();
 			//player.setAnimation("");
 		}) + callback);
 	});
@@ -132,7 +132,7 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 	Verb::walkVerb.setDefaultEvent(walkEvent);
 
 	Event* afterGiveEvent = new Event([this](EventInfo e) {
-		GameObject* selected = e.player.getSelectedObject();
+		std::shared_ptr<GameObject> selected = e.player.getSelectedObject();
 		if (selected != nullptr) {
 			e.player.getInventory().removeItem(*selected);
 			e.game.changeToDefaultVerb();
@@ -151,26 +151,32 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 	Verb::setDefaultDefaultEvent(noInteractionEvent);
 }
 
-GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::string sceneTextureSource, std::string inventoryTextureSource, Vector2<> pos) {
-	// TODO: handle pointers memory
+std::shared_ptr<GameObject> ScriptLoader::addItemObject(std::string name, Scene& scene, std::string sceneTextureSource, std::string inventoryTextureSource, Vector2<> pos) {
+	// TODO: handle pointers memory for textures (deferred to next phase)
 	Texture* sceneTexture = new Texture("", sceneTextureSource, Vector2<int>());
-	GameObject* itemInScene= new GameObject(name, pos, Vector2<>(-1, -1), sceneTexture);
+	auto itemInScene = std::make_shared<GameObject>(name, pos, Vector2<>(-1, -1), sceneTexture);
 
 	itemInScene->setLayer(-1);
 
 	itemInScene->addVerbInteraction(Verb::pickupVerb, Event([this, name, inventoryTextureSource](EventInfo e) {
 		if (e.player.getCurrentHorizontalDirection() == RIGHT)
-			game.getCurrentPlayer().playAnimation("interactRight");
+			game.getCurrentPlayer()->playAnimation("interactRight");
 		else
-			game.getCurrentPlayer().playAnimation("interactLeft");
-		GameObject& itemInScene = *(GameObject*)&e.interactable;
-		itemInScene.destroy();
+			game.getCurrentPlayer()->playAnimation("interactLeft");
+		
+		// Get shared_ptr from interactable (which we know is a GameObject)
+		auto itemInScenePtr = std::dynamic_pointer_cast<GameObject>(static_cast<GameObject&>(e.interactable).shared_from_this());
+		if (itemInScenePtr) {
+			itemInScenePtr->destroy();
+		}
+
 		Texture* itemInInventoryTexture = new Texture(name, inventoryTextureSource);
-		GameObject* itemInInventory = new GameObject(name, Vector2<>(), Vector2<>(-1, -1), itemInInventoryTexture);
+		auto itemInInventory = std::make_shared<GameObject>(name, Vector2<>(), Vector2<>(-1, -1), itemInInventoryTexture);
 		itemInInventory->addTag("item");
 		itemInInventory->addVerbInteraction(Verb::giveVerb, Event([](EventInfo e) {
+			auto interactableObj = std::dynamic_pointer_cast<GameObject>(static_cast<GameObject&>(e.interactable).shared_from_this());
 			if (e.player.getSelectedObject() == nullptr) {
-				e.player.setSelectedObject((GameObject*) & e.interactable);
+				e.player.setSelectedObject(interactableObj);
 				e.player.say("Test1");
 			}
 			else {
@@ -184,8 +190,8 @@ GameObject& ScriptLoader::addItemObject(std::string name, Scene& scene, std::str
 		}) + dontHighlightDefaultVerbEvent);
 	itemInScene->setDefaultVerb(&Verb::pickupVerb);
 
-	scene.addGameObject(*itemInScene);
-	return *itemInScene;
+	scene.addGameObject(itemInScene);
+	return itemInScene;
 }
 //
 //void ScriptLoader::loadAndRunGame() {

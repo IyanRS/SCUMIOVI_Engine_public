@@ -7,9 +7,9 @@
 class Player : public GameObject {
 	std::string name;
 	bool canPlayerMove = true;
-	Verb* selectedVerb;
-	GameObject* selectedObject;
-	GameObject* targetObject;
+	Verb* selectedVerb = nullptr;
+	std::weak_ptr<GameObject> selectedObject;
+	std::weak_ptr<GameObject> targetObject;
 	Inventory inventory;
 public:
 	using GameObject::GameObject;
@@ -20,9 +20,9 @@ public:
 	void setVerb(Verb* verb);
 	Verb* getVerb();
 	Inventory& getInventory();
-	GameObject* getSelectedObject();
-	void setSelectedObject(GameObject* gameObject);
-	void setTargetObject(GameObject* gameObject);
-	GameObject* getTargetObject();
+	std::shared_ptr<GameObject> getSelectedObject();
+	void setSelectedObject(std::shared_ptr<GameObject> gameObject);
+	void setTargetObject(std::shared_ptr<GameObject> gameObject);
+	std::shared_ptr<GameObject> getTargetObject();
 	//void moveTo(Vector2<> pos, float seconds, Event callback);
 };

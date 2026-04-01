@@ -14,6 +14,7 @@ class Scene;
 
 #include <list>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -27,7 +28,7 @@ class Scene;
 enum VerticalDirection { UP, DOWN };
 enum HorizontalDirection { LEFT, RIGHT };
 
-class GameObject : public Interactable {
+class GameObject : public Interactable, public std::enable_shared_from_this<GameObject> {
 	friend class MovementComponent;
 	friend class TextComponent;
 	friend class AnimationComponent;
@@ -39,7 +40,7 @@ class GameObject : public Interactable {
 	bool interactable = true;
 	//Event clickEvent;
 	Scene* currentScene = nullptr;
-	std::map<GameObject*, Event> overlapEvents;
+	std::map<std::shared_ptr<GameObject>, Event> overlapEvents;
 	MovementComponent movement;
 	TextComponent text;
 	AnimationComponent animator;
@@ -83,8 +84,8 @@ public:
 	Animation* getAnimationByName(std::string name);
 	//void setAnimation(Animation& animation);
 	//Event& getClickEvent();
-	void addOverlapEvent(GameObject* object, Event event);
-	std::map<GameObject*, Event>& getOverlapEvents();
+	void addOverlapEvent(std::shared_ptr<GameObject> object, Event event);
+	std::map<std::shared_ptr<GameObject>, Event>& getOverlapEvents();
 	Vector2<> getDirectionVector();
 	void moveToScene(Scene& scene);
 	Scene* getScene();

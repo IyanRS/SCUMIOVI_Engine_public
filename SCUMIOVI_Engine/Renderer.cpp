@@ -66,7 +66,7 @@ void Renderer::renderUI(UI& ui) {
 	if (ui.getLayout() == nullptr)
 		return;
 	auto elements = ui.getUIElements();
-	for (GameObject* uiElement : elements) {
+	for (const auto& uiElement : elements) {
 		renderUIElement(*uiElement);
 	}
 }
@@ -256,34 +256,34 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 	}
 }
 
-void Renderer::checkOverlaps(GameObject& gameObject1, GameObject& gameObject2) {
-	std::map<GameObject*, Event>::iterator it = gameObject1.getOverlapEvents().find(&gameObject2);
-	if (it == gameObject1.getOverlapEvents().end()) {
+void Renderer::checkOverlaps(std::shared_ptr<GameObject> gameObject1, std::shared_ptr<GameObject> gameObject2) {
+	std::map<std::shared_ptr<GameObject>, Event>::iterator it = gameObject1->getOverlapEvents().find(gameObject2);
+	if (it == gameObject1->getOverlapEvents().end()) {
 		return;
 	}
 
-	SDL_Rect rectObj1 = { gameObject1.getPosition().x, gameObject1.getPosition().y, gameObject1.getSize().x, gameObject1.getSize().y };
-	SDL_Rect rectObj2 = { gameObject2.getPosition().x, gameObject2.getPosition().y, gameObject2.getSize().x, gameObject2.getSize().y };
-	int currentOverlapping = -1;
+	SDL_Rect rectObj1 = { (int)gameObject1->getPosition().x, (int)gameObject1->getPosition().y, (int)gameObject1->getSize().x, (int)gameObject1->getSize().y };
+	SDL_Rect rectObj2 = { (int)gameObject2->getPosition().x, (int)gameObject2->getPosition().y, (int)gameObject2->getSize().x, (int)gameObject2->getSize().y };
+	int currentOverlappingIndex = -1;
 	for (int i = 0; i < currentlyOverlapping.size(); i++) {
 		auto overlap = currentlyOverlapping[i];
-		if (overlap[0] == &gameObject1 && overlap[1] == &gameObject2) {
-			currentOverlapping = i;
+		if (overlap[0] == gameObject1 && overlap[1] == gameObject2) {
+			currentOverlappingIndex = i;
 		}
 	}
 
 	if (SDL_HasRectIntersection(&rectObj1, &rectObj2)) {
-		if (currentOverlapping == -1) {
+		if (currentOverlappingIndex == -1) {
 			it->second.execute();
-			std::array<GameObject*, 2> overlapping;
-			overlapping[0] = &gameObject1;
-			overlapping[1] = &gameObject2;
+			std::array<std::shared_ptr<GameObject>, 2> overlapping;
+			overlapping[0] = gameObject1;
+			overlapping[1] = gameObject2;
 			currentlyOverlapping.push_back(overlapping);
 		}
 	}
 	else {
-		if (currentOverlapping != -1) {
-			currentlyOverlapping.erase(currentlyOverlapping.begin() + currentOverlapping);
+		if (currentOverlappingIndex != -1) {
+			currentlyOverlapping.erase(currentlyOverlapping.begin() + currentOverlappingIndex);
 		}
 	}
 }
@@ -354,20 +354,21 @@ void Renderer::render(Scene& scene, UI& ui) {
 	SDL_SetRenderTarget(sdlRenderer, lowResScreen);
 #endif
 
-	for (GameObject* object : scene.getGameObjects()) {
+	auto gameObjects = scene.getGameObjects();
+	for (const auto& object : gameObjects) {
 		if (object == nullptr) {
 			SDL_Log("Invalid gameObject.");
 			continue;
 		}
 
-		for (GameObject* object2 : scene.getGameObjects()) {
+		for (const auto& object2 : gameObjects) {
 			if (object2 == nullptr) {
 				SDL_Log("Invalid gameObject.");
 				continue;
 			}
 			// Check overlaps to call events
 
-			checkOverlaps(*object, *object2);
+			checkOverlaps(object, object2);
 		}
 
 		// Render the object
