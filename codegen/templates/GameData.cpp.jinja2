@@ -6,14 +6,19 @@
 #include "../../SCUMIOVI_Engine/Door.hpp"
 #include "../../SCUMIOVI_Engine/Item.hpp"
 #include "../../SCUMIOVI_Engine/DialogueNode.hpp"
+#include "../../SCUMIOVI_Engine/DialogueOption.hpp"
+#include "../../SCUMIOVI_Engine/UIVerbButton.hpp"
+#include <memory>
 
 void ScriptLoader::loadAndRunGame() {
+    Game& game = Game::getInstance();
+
     // --- Animations ---
     {% for a in animations %}
     {% if a.mirror_of %}
-    Animation {{ a.name }} = {{ a.mirror_of }}.getMirrored("{{ a.name }}");
+    auto {{ a.name }} = {{ a.mirror_of }}->getMirrored("{{ a.name }}");
     {% else %}
-    Animation {{ a.name }} = Animation(
+    auto {{ a.name }} = std::make_shared<Animation>(
         "{{ a.name }}",
         "{{ a.src }}",
         {{ parse_vector(a.pos, type_hint="int") }},
@@ -25,7 +30,7 @@ void ScriptLoader::loadAndRunGame() {
 
     // --- Textures for objects ---
     {% for o in objects %}
-    Texture {{ o.id }}Texture = Texture(
+    auto {{ o.id }}Texture = std::make_shared<Texture>(
         "{{ o.id }}",
         "{{ o.image }}"{{ ',\n' + 
            ('\t\t' + parse_vector(o.offset, type_hint="int") + ',\n'
@@ -33,7 +38,7 @@ void ScriptLoader::loadAndRunGame() {
             if o.offset else ''}}
     );
     {% if o.type == 'item' %}
-    Texture {{ o.id }}ItemTexture = Texture(
+    auto {{ o.id }}ItemTexture = std::make_shared<Texture>(
         "{{ o.id }}_item",
         "{{ o.itemImage }}"
     );
@@ -55,25 +60,25 @@ void ScriptLoader::loadAndRunGame() {
 
     // --- Players ---
     {% for p in players %}
-    auto {{ p.id }} = std::make_shared<Player>("{{ p.id }}", Vector2<>(0,0));
+    auto {{ p.id }} = std::make_shared<Player>("{{ p.id }}", Vector2<>(0.0f, 0.0f));
     {% for anim in p.anims %}
-    {{ p.id }}->addAnimation(&{{ anim }});
+    {{ p.id }}->addAnimation({{ anim }});
     {% endfor %}
 
-    Texture idleTexture = {{p.animationMoveRight}}.getFrames()[0];
-    idleTexture.setName("idle");
-    {{ p.id }}->addTexture(&idleTexture);
+    auto idleTexture = std::make_shared<Texture>({{p.animationMoveRight}}->getFrames()[0]);
+    idleTexture->setName("idle");
+    {{ p.id }}->addTexture(idleTexture);
     {{ p.id }}->setTexture("idle");
 
     {{ p.id }}->setMovementAnimations(
-        {{ '&' + p.animationMoveRight if p.animationMoveRight else 'nullptr' }},
-        {{ '&' + p.animationMoveLeft if p.animationMoveLeft else 'nullptr' }},
-        {{ '&' + p.animationMoveUp if p.animationMoveUp else 'nullptr' }},
-        {{ '&' + p.animationMoveDown if p.animationMoveDown else 'nullptr' }},
-        {{ '&' + p.animationIdleRight if p.animationIdleRight else 'nullptr' }},
-        {{ '&' + p.animationIdleLeft if p.animationIdleLeft else 'nullptr' }},
-        {{ '&' + p.animationIdleUp if p.animationIdleUp else 'nullptr' }},
-        {{ '&' + p.animationIdleDown if p.animationIdleDown else 'nullptr' }}
+        {{ p.animationMoveRight if p.animationMoveRight else 'nullptr' }},
+        {{ p.animationMoveLeft if p.animationMoveLeft else 'nullptr' }},
+        {{ p.animationMoveUp if p.animationMoveUp else 'nullptr' }},
+        {{ p.animationMoveDown if p.animationMoveDown else 'nullptr' }},
+        {{ p.animationIdleRight if p.animationIdleRight else 'nullptr' }},
+        {{ p.animationIdleLeft if p.animationIdleLeft else 'nullptr' }},
+        {{ p.animationIdleUp if p.animationIdleUp else 'nullptr' }},
+        {{ p.animationIdleDown if p.animationIdleDown else 'nullptr' }}
     );
     {{ p.id }}->setTextFormat({{ p.text_format }}Format);
 
@@ -82,19 +87,19 @@ void ScriptLoader::loadAndRunGame() {
 
     // --- Scenes ---
     {% for s in scenes %}
-    Scene {{ s.name }};
+    auto {{ s.name }} = std::make_shared<Scene>();
     // Walkable area
-    WalkableArea {{ s.name }}Walk = WalkableArea({
+    auto {{ s.name }}Walk = std::make_unique<WalkableArea>(std::initializer_list<Vector2<>>{
         {% for pt in s.walk %}
         {{ parse_vector(pt, type_hint='') }}, 
         {% endfor %}
     });
-    {{ s.name }}.setWalkableArea(&{{ s.name }}Walk);
+    {{ s.name }}->setWalkableArea(std::move({{ s.name }}Walk));
 
     // Backgrounds
     {% for bg in s.bg %}
-    auto {{ s.name }}Bg = {{ s.name }}.addBackground(
-        {{ s.name }}, "{{ bg.tex }}", {{ parse_vector(bg.pos, type_hint='int') }}
+    auto {{ s.name }}Bg = {{ s.name }}->addBackground(
+        "{{ bg.tex }}", {{ parse_vector(bg.pos, type_hint='int') }}
     );
     {% endfor %}
 
@@ -110,20 +115,19 @@ void ScriptLoader::loadAndRunGame() {
     auto {{ o.id }} = std::make_shared<Item>(
         "{{ o.id }}",
         {{ parse_vector(o.pos, type_hint='') }},
-        &{{ o.id }}Texture,
-        &{{ o.id }}ItemTexture
+        {{ o.id }}Texture,
+        {{ o.id }}ItemTexture
     );
     {% set ns.isItem = False %}
     {% else %}
     auto {{ o.id }} = std::make_shared<GameObject>(
         "{{ o.id }}",
         {{ parse_vector(o.pos,type_hint='') }},
-        Vector2<>(-1,-1),
-        &{{ o.id }}Texture
+        Vector2<>(-1.0f, -1.0f),
+        {{ o.id }}Texture
     );
     {% endif %}
 
-    //{{ s.name }}.addGameObject({{ o.id }});
     {{ o.id }}->moveToScene({{ s.name }});
     {{ o.id }}->setLayer({{ o.layer }});
     {% endfor %}
@@ -145,47 +149,49 @@ void ScriptLoader::loadAndRunGame() {
     // --- Startup configuration ---
     {% if config.main_character %}
     game.setCurrentPlayer({{ config.main_character }});
-    {{ config.main_character }}->setVerb("walk"); // TODO: custom default verb?
+    {{ config.main_character }}->setVerb("walk");
     {% endif %}
-    game.changeScene(*(std::dynamic_pointer_cast<GameObject>({{ config.main_character }})->getScene()));
+    
+    if (game.getCurrentPlayer() && game.getCurrentPlayer()->getScene()) {
+        game.changeScene(game.getCurrentPlayer()->getScene());
+    }
+    
+    {% if config.main_character and config.main_scene %}
     {{ config.main_character }}->moveToScene({{ config.main_scene }});
+    {% endif %}
 
-
-    // TODO: Custom UI
+    // --- UI Setup ---
     int blackColor[] = { 0x00, 0x00, 0x00, 0xff };
-	Texture blackImage = Texture("black", blackColor);
-	auto uiBackground = std::make_shared<GameObject>("uiBackground", Vector2<>(0, 144), Vector2<>(640, 56), &blackImage);
+	auto blackImage = std::make_shared<Texture>("black", blackColor);
+	auto uiBackground = std::make_shared<GameObject>("uiBackground", Vector2<>(0.0f, 144.0f), Vector2<>(640.0f, 56.0f), blackImage);
 
 	game.getUI().createLayout("inventory");
 	game.getUI().setLayout("inventory");
 
 	game.getUI().getLayout("inventory").addUIElement(uiBackground);
     int verbBackgroundColor[] = { 20, 0, 20, 0xff };
-	Texture verbBackground = Texture("white", verbBackgroundColor);
+	auto verbBackground = std::make_shared<Texture>("white", verbBackgroundColor);
 
-	game.getUI().getLayout("inventory").createVerbsMatrix(Vector2<>(2, 154), {
-
-		{&Verb::giveVerb, &Verb::pickupVerb, &Verb::useVerb},
-		{&Verb::openVerb, &Verb::lookAtVerb, &Verb::pushVerb},
-		{&Verb::closeVerb, &Verb::talkVerb, &Verb::pullVerb} },
-		
-		&verbBackground);
+	game.getUI().getLayout("inventory").createVerbsMatrix(Vector2<>(2.0f, 154.0f), {
+		{game.giveVerb, game.pickupVerb, game.useVerb},
+		{game.openVerb, game.lookAtVerb, game.pushVerb},
+		{game.closeVerb, game.talkVerb, game.pullVerb} },
+		verbBackground);
 
 	Event emptyEvent = Event();
+	game.getUI().getLayout("inventory").createInventoryMatrix(Vector2<>(150.0f, 154.0f), 4, 2, verbBackground, emptyEvent);
 
-	game.getUI().getLayout("inventory").createInventoryMatrix(Vector2<>(150, 154), 4, 2, &verbBackground, emptyEvent);
-
-	auto uiCurrentVerbInfo = std::make_shared<GameObject>("uiCurrentVerbInfo", Vector2<>(160, 148), Vector2<>());
-	int color[4] = { 125, 44, 125, 0xff };
-	Text currentInfoText = Text("Test info", 11, color, false, TEXT_CENTERED);
+	auto uiCurrentVerbInfo = std::make_shared<GameObject>("uiCurrentVerbInfo", Vector2<>(160.0f, 148.0f), Vector2<>(0.0f, 0.0f));
+	int textColorUI[4] = { 125, 44, 125, 0xff };
+	Text currentInfoText = Text("Test info", 11, textColorUI, false, TEXT_CENTERED);
 	uiCurrentVerbInfo->setTextOver(currentInfoText);
 	uiCurrentVerbInfo->setTextFormat(currentInfoText);
 	game.getUI().getLayout("inventory").addUIElement(uiCurrentVerbInfo);
 
     // Custom cursor
     {% if config.cursor %}
-    Texture customCursorTexture = Texture("", "{{ config.cursor }}");
-	game.setCustomCursor(customCursorTexture, Vector2<>(-1, -1));
+    auto customCursorTexture = std::make_shared<Texture>("", "{{ config.cursor }}");
+	game.setCustomCursor(*customCursorTexture, Vector2<>(-1.0f, -1.0f));
     {% endif %}
 
     {% if config.default_verb %}
@@ -213,44 +219,39 @@ void ScriptLoader::loadAndRunGame() {
     {% for label, dlg in dialogue_map.items() %}
         // --- DialogueNode for "{{ label }}" ---
 
-    DialogueNode {{ label }}Node = DialogueNode(Event([&stan, &{{ label }}Node](EventInfo e) {
-        {# 1) One .say() per line, each nesting an Event #}
+    std::shared_ptr<DialogueNode> {{ label }}Node;
+    {{ label }}Node = std::make_shared<DialogueNode>(Event(std::function<void(EventInfo)>([&](EventInfo e) {
         {% for line in dlg.lines if line.text is not none %}
         {{ ' ' * (4 + 4 * loop.index0) }}{% if line.speaker == 'player' %}e.game.getCurrentPlayer()->{% else %}{{ line.speaker }}->{% endif %}say(
             "{{ cpp_string(line.text) }}",
-            {{ line.delay if line.delay is not none else 0 }},
-            Event([&{{ label }}Node](EventInfo e) {
+            {{ line.delay if line.delay is not none else 0.0 }},
+            Event(std::function<void(EventInfo)>([&](EventInfo e) {
         {% endfor %}
-        {# 2) After last line: either injected script or showOptions() #}
         {% if dlg.lines[-1].action %}
-        {{ ' ' * (4 + 4 * dlg.lines|length) }}// Content of script imported from {{ dlg.lines[-1].action }}
+        {{ ' ' * (4 + 4 * dlg.lines|length) }}// Action: {{ dlg.lines[-1].action }}
         {% else %}
-        {{ ' ' * (4 + 4 * dlg.lines|length) }}{{ label }}Node.showOptions();
+        {{ ' ' * (4 + 4 * dlg.lines|length) }}{{ label }}Node->showOptions();
         {% endif %}
-        {# 3) Close each inner say/Event, innermost first #}
         {% set n = dlg.lines|selectattr("text")|list|length %}
         {% for i in range(n-1, -1, -1) %}
-        {{ ' ' * (4 + 4 * i) }}}));  
+        {{ ' ' * (4 + 4 * i) }} })));  
         {% endfor %}
-    }));  {# closes outer Event and DialogueNode ctor #}
-
+    })));
 
     {% endfor %}
 
-    {# 4) Now define DialogueOption objects #}
     {% for label, dlg in dialogue_map.items() %}
         {% for opt in dlg.options %}
-    DialogueOption {{ label }}NodeOption{{ loop.index }} = DialogueOption(
+    auto {{ label }}NodeOption{{ loop.index }} = std::make_shared<DialogueOption>(
         "{{ cpp_string(opt.text) }}",
-        &{{ opt.target }}Node
+        {{ opt.target }}Node
     );
         {% endfor %}
     {% endfor %}
 
-    {# 5) Finally wire up setOptions() calls #}
     {% for label, dlg in dialogue_map.items() %}
         {% if dlg.options %}
-    {{ label }}Node.setOptions({ {% for opt in dlg.options %}{{ label }}NodeOption{{ loop.index }}{{ ", " if not loop.last }}{% endfor %} });
+    {{ label }}Node->setOptions({ {% for opt in dlg.options %}{{ label }}NodeOption{{ loop.index }}{{ ", " if not loop.last }}{% endfor %} });
         {% endif %}
     {% endfor %}
 
@@ -258,19 +259,18 @@ void ScriptLoader::loadAndRunGame() {
 
     {% for i in interactions %}
     {% if i.other_object_id %}
-    {{ i.object_id }}->addVerbInteraction(*game.getVerb("{{ i.verb }}"), "{{ i.other_object_id }}", Event([{{ i.vars|join(', ') }}](EventInfo e) {
+    {{ i.object_id }}->addVerbInteraction(game.getVerb("{{ i.verb }}"), "{{ i.other_object_id }}", Event([&](EventInfo e) {
 {{ i.script }}
     }));
     {% else %}
-    {{ i.object_id }}->addVerbInteraction(*game.getVerb("{{ i.verb }}"), Event([{{ i.vars|join(', ') }}](EventInfo e) {
+    {{ i.object_id }}->addVerbInteraction(game.getVerb("{{ i.verb }}"), Event([&](EventInfo e) {
 {{ i.script }}
     }));
     {% endif %}
     {% endfor %}
 
-    game.bindLeftClickToVerb(&Verb::selectedVerb);
-    game.bindRightClickToVerb(&Verb::defaultVerb);
+    game.bindLeftClickToVerb(game.selectedVerb);
+    game.bindRightClickToVerb(game.getDefaultVerb());
 
     game.startGame();
-
 }

@@ -12,10 +12,10 @@ class Camera;
 #include <array>
 #include <vector>
 
-class Scene {
+class Scene : public std::enable_shared_from_this<Scene> {
 	std::vector<std::shared_ptr<GameObject>> gameObjects;
 	Camera camera;
-	WalkableArea* walkableArea = nullptr;
+	std::unique_ptr<WalkableArea> walkableArea = nullptr;
 
 	//bool gameObjectsComparator(GameObject& o1, GameObject& o2);
 
@@ -30,12 +30,12 @@ public:
 	//void moveCameraTo(Vector2<> position, float seconds, Event callback);
 	void addGameObject(std::shared_ptr<GameObject> gameObject);
 	void removeGameObject(const std::shared_ptr<GameObject>& gameObject);
-	std::shared_ptr<GameObject> addBackground(Scene& scene, std::string source, Vector2<int> size);
+	std::shared_ptr<GameObject> addBackground(std::string source, Vector2<int> size);
 	std::vector<std::shared_ptr<GameObject>> getGameObjects();
 	// TODO: maybe a list of walkableAreas is better, it would allow scenarios
 	// with multiple separated areas.
 	WalkableArea* getWalkableArea();
-	void setWalkableArea(WalkableArea* walkableArea);
+	void setWalkableArea(std::unique_ptr<WalkableArea> walkableArea);
 	std::shared_ptr<GameObject> getGameObject(std::string);
 	void addDebugPoint(Vector2<>);
 	void addDebugLine(Vector2<>, Vector2<>);

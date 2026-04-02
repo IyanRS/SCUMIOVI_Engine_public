@@ -1,10 +1,9 @@
 #include "GameObject.hpp"
-
 #include "Scene.hpp"
-
 #include "Vector2.hpp"
-
 #include "Common.hpp"
+#include <memory>
+#include <cmath>
 
 #define EPSILON 0.001f
 #define TEXT_SPEED 10.0f
@@ -23,7 +22,7 @@ GameObject::GameObject(
 	std::string name,
 	Vector2<> position,
 	Vector2<> size,
-	Texture* texture) : movement(this), text(this), animator(this), graphics(this) {
+	std::shared_ptr<Texture> texture) : movement(this), text(this), animator(this), graphics(this) {
 
 	this->name = name;
 	this->position = position;
@@ -37,7 +36,7 @@ GameObject::GameObject(
 	std::string name,
 	Vector2<> position,
 	Vector2<> size,
-	Animation* animation) : movement(this), text(this), animator(this), graphics(this) {
+	std::shared_ptr<Animation> animation) : movement(this), text(this), animator(this), graphics(this) {
 	this->name = name;
 	this->position = position;
 	this->size = size;
@@ -58,9 +57,9 @@ Vector2<> GameObject::getSize() {
 	float sizeX = size.x;
 	float sizeY = size.y;
 	if (sizeX == -1 && graphics.texture != nullptr)
-		sizeX = graphics.texture->getSize().x;
+		sizeX = (float)graphics.texture->getSize().x;
 	if (sizeY == -1 && graphics.texture != nullptr)
-		sizeY = graphics.texture->getSize().y;
+		sizeY = (float)graphics.texture->getSize().y;
 	return Vector2<>(sizeX, sizeY);
 }
 
@@ -68,11 +67,11 @@ void GameObject::setSize(Vector2<> newSize) {
 	this->size = newSize;
 }
 
-Texture* GameObject::getTexture() {
+std::shared_ptr<Texture> GameObject::getTexture() {
 	return graphics.getTexture();
 }
 
-void GameObject::addTexture(Texture* texture) {
+void GameObject::addTexture(std::shared_ptr<Texture> texture) {
 	graphics.addTexture(texture);
 }
 
@@ -80,15 +79,15 @@ void GameObject::setTexture(std::string textureName) {
 	graphics.setTexture(textureName);
 }
 
-Animation* GameObject::getAnimation() {
+std::shared_ptr<Animation> GameObject::getAnimation() {
 	return animator.getAnimation();
 }
 
-void GameObject::addAnimation(Animation* animation) {
+void GameObject::addAnimation(std::shared_ptr<Animation> animation) {
 	animator.addAnimation(animation);
 }
 
-Animation* GameObject::getAnimationByName(std::string name) {
+std::shared_ptr<Animation> GameObject::getAnimationByName(std::string name) {
 	return animator.getAnimationByName(name);
 }
 
@@ -96,10 +95,6 @@ void GameObject::setAnimation(std::string animationName) {
 	animator.setAnimation(animationName);
 }
 
-// Records what to return to after the
-// animation finishes. The Renderer already increments currentFrame each
-// render call, so we just need to know the total frame count and fire the
-// callback whenever that count is reached (checked in update())
 void GameObject::playAnimation(std::string animationName, Event callback) {
 	animator.playAnimation(animationName, callback);
 }
@@ -125,10 +120,10 @@ void GameObject::setIdleAnimation(Vector2<> lastDir) {
 }
 
 void GameObject::setMovementAnimations(
-	Animation* moveRight, Animation* moveLeft,
-	Animation* moveUp,    Animation* moveDown,
-	Animation* idleRight, Animation* idleLeft,
-	Animation* idleUp,    Animation* idleDown)
+	std::shared_ptr<Animation> moveRight, std::shared_ptr<Animation> moveLeft,
+	std::shared_ptr<Animation> moveUp,    std::shared_ptr<Animation> moveDown,
+	std::shared_ptr<Animation> idleRight, std::shared_ptr<Animation> idleLeft,
+	std::shared_ptr<Animation> idleUp,    std::shared_ptr<Animation> idleDown)
 {
 	animator.setMovementAnimations(moveRight, moveLeft, moveUp, moveDown, idleRight, idleLeft, idleUp, idleDown);
 }
@@ -169,25 +164,23 @@ Vector2<> GameObject::getDirectionVector() {
 	return movement.getDirectionVector();
 }
 
-// Called every frame by Scene::update(dt). Advances movement,
-// say timer, and animation.
 void GameObject::update(float deltaTime) {
 	movement.update(deltaTime);
 	text.update(deltaTime);
 	animator.update(deltaTime);
 }
 
-void GameObject::moveToScene(Scene& scene) {
+void GameObject::moveToScene(std::shared_ptr<Scene> scene) {
 	if (currentScene != nullptr)
 		currentScene->removeGameObject(shared_from_this());
-	scene.addGameObject(shared_from_this());
+	scene->addGameObject(shared_from_this());
 }
 
-void GameObject::setScene(Scene* scene) {
+void GameObject::setScene(std::shared_ptr<Scene> scene) {
 	currentScene = scene;
 }
 
-Scene* GameObject::getScene() {
+std::shared_ptr<Scene> GameObject::getScene() {
 	return currentScene;
 }
 

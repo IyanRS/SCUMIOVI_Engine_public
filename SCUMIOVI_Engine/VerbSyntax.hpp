@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 //#include "GameObject.hpp"
 class GameObject;
@@ -14,14 +15,14 @@ public:
 	VerbSyntax(const VerbSyntax& obj); // Copy constructor
 
 	VerbSyntax(std::vector<std::string> syntaxStrings = {});
-	std::string getInfo(std::vector<GameObject*> objects);
+	std::string getInfo(std::vector<std::shared_ptr<GameObject>> objects);
 
 	/// <summary>
 	/// Returns the current verb syntax by replacing the best fitting syntax string with the selected and target names.
 	/// </summary>
 	/// <param name="selected"></param>
 	/// <param name="target"></param>
-	std::string getInfo(GameObject* selected, GameObject* target);
+	std::string getInfo(std::shared_ptr<GameObject> selected, std::shared_ptr<GameObject> target);
 
 	//std::string getInfo(std::vector<std::string> objects);
 	int getStringsCount();

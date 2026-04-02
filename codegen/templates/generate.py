@@ -8,9 +8,10 @@ import re
 from jinja2 import Environment, FileSystemLoader
 
 # --- Paths and settings ---
-GAME_FILES_FOLDER = '../../game'
-TEMPLATES_FOLDER = os.path.join(os.path.dirname(__file__), 'templates')
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), '..', 'src', 'generated')
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+GAME_FILES_FOLDER = os.path.join(SCRIPT_DIR, '..', '..', 'game')
+TEMPLATES_FOLDER = SCRIPT_DIR
+OUTPUT_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, '..', 'src', 'generated'))
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 CSV_SEPARATOR = ','
@@ -161,8 +162,7 @@ def change_indentation(code_str, indent_with='\t\t'):
     return '\n'.join(indented)
 
 def get_dialogue_script(filename):
-    dialogue = filename.replace('.txt', '')
-    return 	f'vars:&mainNode\ne.player.disableMovement();\ne.game.getUI().setLayout(e.game.getUI().getDialogueLayout()->getName());\nmainNode.enterNode();'
+    return 	f'vars:mainNode\ne.player.disableMovement();\ne.game.getUI().setLayout(e.game.getUI().getDialogueLayout()->getName());\nmainNode->enterNode();'
 
 def separate_script_vars(script):
     vars = []
@@ -347,7 +347,7 @@ def main():
     out_file = os.path.join(OUTPUT_DIR, 'GameData.cpp')
     with open(out_file, 'w') as f:
         f.write(rendered)
-    print(f'✓ Generated -> {out_file}')
+    print(f'Generated -> {out_file}')
 
     # # Optionally compile via MSBuild
     # sln_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'MyGame.sln'))

@@ -1,14 +1,15 @@
 #include "GraphicsComponent.hpp"
 #include "GameObject.hpp"
 #include "Texture.hpp"
+#include <memory>
 
 GraphicsComponent::GraphicsComponent(GameObject* owner) : owner(owner) {}
 
-Texture* GraphicsComponent::getTexture() {
+std::shared_ptr<Texture> GraphicsComponent::getTexture() {
 	return texture;
 }
 
-void GraphicsComponent::addTexture(Texture* t) {
+void GraphicsComponent::addTexture(std::shared_ptr<Texture> t) {
 	textures.push_back(t);
 }
 
@@ -17,7 +18,7 @@ void GraphicsComponent::setTexture(std::string textureName) {
 		texture = nullptr;
 		return;
 	}
-	for (Texture* t : textures) {
+	for (auto t : textures) {
 		if (t->getName() == textureName) {
 			this->texture = t;
 			return;

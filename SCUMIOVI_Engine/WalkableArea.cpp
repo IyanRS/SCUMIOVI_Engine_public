@@ -108,11 +108,11 @@ Vector2<> WalkableArea::getClosestPoint(Vector2<> initialPoint) {
 
 void WalkableArea::showDebug() {
     Game& game = Game::getInstance();
-    Scene& scene = game.getScene();
+    std::shared_ptr<Scene> scene = game.getScene();
     for (int i = 1; i < walkablePolygon.size(); i++) {
-        scene.addDebugLine(walkablePolygon[i-1], walkablePolygon[i]);
+        scene->addDebugLine(walkablePolygon[i-1], walkablePolygon[i]);
     }
-    scene.addDebugLine(walkablePolygon[0], walkablePolygon[walkablePolygon.size() - 1]);
+    scene->addDebugLine(walkablePolygon[0], walkablePolygon[walkablePolygon.size() - 1]);
 }
 
 WalkableArea::WalkableArea(std::vector<Vector2<>> verteces) {

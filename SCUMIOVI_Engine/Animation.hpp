@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include "Texture.hpp"
+#include <memory>
 
 class Animation {
 	std::vector<Texture> frames;
@@ -19,5 +20,5 @@ public:
 	int getFrameRate();
 	bool doesLoop();
 	std::string getName();
-	Animation getMirrored(std::string newAnimationName);
+	std::shared_ptr<Animation> getMirrored(std::string newAnimationName);
 };

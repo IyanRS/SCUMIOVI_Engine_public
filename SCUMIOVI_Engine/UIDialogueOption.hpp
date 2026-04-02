@@ -6,9 +6,9 @@
 #include "DialogueOption.hpp"
 
 class UIDialogueOption : public GameObject {
-	DialogueOption& option;
+	std::shared_ptr<DialogueOption> option;
 public:
-	UIDialogueOption(DialogueOption& option, Vector2<> position, Texture* optionBackground);
+	UIDialogueOption(std::shared_ptr<DialogueOption> option, Vector2<> position, std::shared_ptr<Texture> optionBackground);
 	void highlight();
 	void stopHighlight();
 };

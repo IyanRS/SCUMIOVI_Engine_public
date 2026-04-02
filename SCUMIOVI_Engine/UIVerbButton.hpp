@@ -3,10 +3,10 @@
 
 class UIVerbButton : public GameObject {
 private:
-	Verb& verb;
+	std::shared_ptr<Verb> verb;
 public:
 	void highlight();
 	void stopHighlight();
-	UIVerbButton(Verb& verb, Vector2<> position, Vector2<> size, Texture* verbBackground);
-	Verb& getVerb();
+	UIVerbButton(std::shared_ptr<Verb> verb, Vector2<> position, Vector2<> size, std::shared_ptr<Texture> verbBackground);
+	std::shared_ptr<Verb> getVerb();
 };

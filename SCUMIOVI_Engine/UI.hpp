@@ -8,7 +8,7 @@
 #include "UILayout.hpp"
 
 class UI {
-	UILayout* currentLayout;
+	UILayout* currentLayout = nullptr;
 
 	std::vector<UILayout*> layouts;
 
@@ -17,11 +17,11 @@ class UI {
 //	bool visible = true;
 //
 
-	void highlightVerb(Verb& verb);
+	void highlightVerb(std::shared_ptr<Verb> verb);
 	void removeHightlightVerb();
 
-	UILayout* dialogueLayout;
-	UILayout* afterDialogueLayout;
+	UILayout* dialogueLayout = nullptr;
+	UILayout* afterDialogueLayout = nullptr;
 
 public:
 	std::vector<std::shared_ptr<GameObject>>& getUIElements();
@@ -33,7 +33,7 @@ public:
 	void updateUI();
 	//void createInventoryMatrix(Vector2<> position, int columns, int rows, Texture* background, Event& onUIUpdate);
 
-	void setHighlightedVerb(Verb* verb);
+	void setHighlightedVerb(std::shared_ptr<Verb> verb);
 
 	//void addUIElement(GameObject& uiElement);
 	void toggleVisibility();

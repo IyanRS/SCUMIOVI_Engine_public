@@ -1,11 +1,13 @@
 #include "AnimationComponent.hpp"
 #include "GameObject.hpp"
 #include "Animation.hpp"
+#include <memory>
+#include <cmath>
 
 AnimationComponent::AnimationComponent(GameObject* owner) : owner(owner) {}
 
 void AnimationComponent::update(float deltaTime) {
-	if (animReturnFrame >= 0 && animation != nullptr) {
+	if (animation != nullptr && animReturnTo != nullptr && animReturnFrame >= 0) {
 		if (animation->currentFrame >= animReturnFrame - 1) {
 			animation       = animReturnTo;
 			animReturnTo    = nullptr;
@@ -16,18 +18,18 @@ void AnimationComponent::update(float deltaTime) {
 	}
 }
 
-Animation* AnimationComponent::getAnimation() {
+std::shared_ptr<Animation> AnimationComponent::getAnimation() {
 	return animation;
 }
 
-void AnimationComponent::addAnimation(Animation* anim) {
+void AnimationComponent::addAnimation(std::shared_ptr<Animation> anim) {
 	animations.push_back(anim);
 }
 
-Animation* AnimationComponent::getAnimationByName(std::string name) {
+std::shared_ptr<Animation> AnimationComponent::getAnimationByName(std::string name) {
 	if (name == "")
 		return nullptr;
-	for (Animation* anim : animations) {
+	for (auto anim : animations) {
 		if (anim->getName() == name) {
 			return anim;
 		}
@@ -40,7 +42,7 @@ void AnimationComponent::setAnimation(std::string animationName) {
 		animation = nullptr;
 		return;
 	}
-	for (Animation* anim : animations) {
+	for (auto anim : animations) {
 		if (anim->getName() == animationName) {
 			animation = anim;
 		}
@@ -52,7 +54,7 @@ void AnimationComponent::playAnimation(std::string animationName, Event callback
 		animation = nullptr;
 		return;
 	}
-	for (Animation* anim : animations) {
+	for (auto anim : animations) {
 		if (anim->getName() == animationName) {
 			if (!anim->doesLoop()) {
 				animReturnTo    = animation;
@@ -93,10 +95,10 @@ void AnimationComponent::setIdleAnimation(Vector2<> lastDir) {
 }
 
 void AnimationComponent::setMovementAnimations(
-	Animation* moveRight, Animation* moveLeft,
-	Animation* moveUp,    Animation* moveDown,
-	Animation* idleRight, Animation* idleLeft,
-	Animation* idleUp,    Animation* idleDown)
+	std::shared_ptr<Animation> moveRight, std::shared_ptr<Animation> moveLeft,
+	std::shared_ptr<Animation> moveUp,    std::shared_ptr<Animation> moveDown,
+	std::shared_ptr<Animation> idleRight, std::shared_ptr<Animation> idleLeft,
+	std::shared_ptr<Animation> idleUp,    std::shared_ptr<Animation> idleDown)
 {
 	moveRightAnimation = moveRight;
 	moveLeftAnimation  = moveLeft;
@@ -116,7 +118,7 @@ void AnimationComponent::setMovementAnimation(Vector2<> movementDirection) {
 
 	owner->movement.setLastMovementDirection(movementDirection);
 
-	if ((abs(movementDirection.x) > abs(movementDirection.y)
+	if ((std::abs(movementDirection.x) > std::abs(movementDirection.y)
 		|| !verticalAnimationsDefined()) && horizontalAnimationsDefined()) {
 		animation = (movementDirection.x > 0) ? moveRightAnimation : moveLeftAnimation;
 	} else if (verticalAnimationsDefined()) {

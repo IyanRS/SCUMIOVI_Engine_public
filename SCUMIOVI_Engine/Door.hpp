@@ -2,6 +2,7 @@
 
 #include "GameObject.hpp"
 #include "SceneTransitionObject.hpp"
+#include <memory>
 
 class Door : public GameObject {
 private:
@@ -13,7 +14,7 @@ public:
 
 	Door(std::string name,
 		Vector2<> position,
-		Texture& closedTexture,
-		Texture& openTexture,
-		Scene& scene);
+		std::shared_ptr<Texture> closedTexture,
+		std::shared_ptr<Texture> openTexture,
+		std::shared_ptr<Scene> scene);
 };

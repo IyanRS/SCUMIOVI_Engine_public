@@ -1,8 +1,9 @@
 #include "Renderer.hpp"
-
 #include "Common.hpp"
-
 #include <SDL3_ttf/SDL_ttf.h>
+#include <memory>
+#include <unordered_map>
+#include <string>
 
 Renderer::Renderer() : resourceManager(ResourceManager::getInstance()) {
 	int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
@@ -24,10 +25,7 @@ Renderer::Renderer() : resourceManager(ResourceManager::getInstance()) {
 	if (textEngine == NULL) {
 		SDL_Log("TTF_CreateRendererTextEngine error %s", SDL_GetError());
 	}
-
 }
-
-
 
 Renderer::~Renderer() {
 	SDL_DestroyRenderer(sdlRenderer);
@@ -58,7 +56,6 @@ void Renderer::applyScreenTransform(SDL_FRect& rect, Vector2<> renderFrameSize) 
 }
 
 void Renderer::renderUIElement(GameObject& uiElement) {
-	// UI does not depend on camera position, so I use the dummy zeroCamera here
 	renderGameObject(uiElement, zeroCamera);
 }
 
@@ -70,7 +67,6 @@ void Renderer::renderUI(UI& ui) {
 		renderUIElement(*uiElement);
 	}
 }
-
 
 std::string Renderer::generateTextureKey(TTF_Font* font, const std::string& textString, const int color[3], bool hasOutline) {
 	return std::to_string(reinterpret_cast<uintptr_t>(font)) + ":" + textString + ":" +
@@ -114,8 +110,6 @@ void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, cons
 void Renderer::renderText(Vector2<> position, Text& text, Camera& camera, bool hasOutline) {
 	TTF_Font* font = resourceManager.loadFont("arial.ttf", text.getSize());
 
-	// TODO: outline and shadow custom color
-
 	if (text.hasShadow()) {
 		int color[] = { 0x40, 0x0, 0x40 };
 		Text shadowText = Text(text.toString(), text.getSize(), color, false, text.getTextOverMode(), false);
@@ -129,7 +123,7 @@ void Renderer::renderText(Vector2<> position, Text& text, Camera& camera, bool h
 	}
 
 	Vector2<> positionRounded = Vector2<>((int)position.x, (int)position.y);
-	TTF_Text* ttfText = TTF_CreateText(textEngine, font, text.toString().c_str(), text.toString().size());
+	TTF_Text* ttfText = TTF_CreateText(textEngine, font, text.toString().c_str(), (size_t)text.toString().size());
 	int w, h;
 	TTF_GetTextSize(ttfText, &w, &h);
 	if (hasOutline) {
@@ -137,49 +131,48 @@ void Renderer::renderText(Vector2<> position, Text& text, Camera& camera, bool h
 		h += OUTLINE_SIZE*2;
 	}
 #ifndef PIXEL_PERFECT
-	Vector2<> textSize = Vector2<>(w, h);
+	Vector2<> textSize = Vector2<>((float)w, (float)h);
 	applyScreenTransform(textSize, camera.getSize());
-	w = textSize.x;
-	h = textSize.y;
+	w = (int)textSize.x;
+	h = (int)textSize.y;
 #endif
 	if (text.getTextOverMode() != TEXT_TO_LEFT)
 		positionRounded.x -= w / 2;
 	if (text.getTextOverMode() == TEXT_ON_TOP)
-		positionRounded.y -= h;
+		positionRounded.y -= (float)h;
 	else if (text.getTextOverMode() == TEXT_CENTERED || text.getTextOverMode() == TEXT_TO_LEFT)
-		positionRounded.y -= h / 2;
+		positionRounded.y -= (float)h / 2;
 	int color[4];
 	text.getColor(color);
 
-	renderTTFText(positionRounded, Vector2<>(w,h), font, text.toString(), color, hasOutline);
-
+	renderTTFText(positionRounded, Vector2<>((float)w,(float)h), font, text.toString(), color, hasOutline);
 
 	TTF_DestroyText(ttfText);
 }
 
-void Renderer::renderTexture(Vector2<> position, Vector2<> size, Texture* textureToRender, Camera& camera) {
+void Renderer::renderTexture(Vector2<> position, Vector2<> size, std::shared_ptr<Texture> textureToRender, Camera& camera) {
+	if (textureToRender == nullptr) return;
+	
 	SDL_FRect srcRect;
 	SDL_Texture* texture = resourceManager.loadTexture(sdlRenderer, *textureToRender, &srcRect);
 	if (textureToRender->getSource() == "" || texture == nullptr) {
-		// If there is no texture source file, it might be a solid color texture
 		int color[4];
 		textureToRender->getColor(color);
 		if (color[0] == -1 || color[1] == -1 || color[2] == -1 || color[3] == -1) {
-			//SDL_Log("Invalid texture without source file");
 			return;
 		}
 
 		SDL_FRect colorRect = { position.x, position.y, size.x, size.y };
-
 		applyCameraTransform(camera, colorRect);
 #ifndef PIXEL_PERFECT
 		applyScreenTransform(colorRect, camera.getSize());
 #endif
 
-		SDL_SetRenderDrawColor(sdlRenderer, color[0], color[1], color[2], color[3]);
+		SDL_SetRenderDrawColor(sdlRenderer, (Uint8)color[0], (Uint8)color[1], (Uint8)color[2], (Uint8)color[3]);
 		SDL_RenderFillRect(sdlRenderer, &colorRect);
 		return;
 	}
+	
 	SDL_FRect dstRect;
 	dstRect.x = position.x;
 	dstRect.y = position.y;
@@ -189,9 +182,10 @@ void Renderer::renderTexture(Vector2<> position, Vector2<> size, Texture* textur
 #ifndef PIXEL_PERFECT
 	applyScreenTransform(dstRect, camera.getSize());
 #endif
+	
 	bool renderTextureSuccess = false;
 	if (textureToRender->isMirrored()) {
-		SDL_FPoint spriteCenter = { textureToRender->getSize().x / 2, textureToRender->getSize().y / 2 };
+		SDL_FPoint spriteCenter = { (float)textureToRender->getSize().x / 2, (float)textureToRender->getSize().y / 2 };
 		renderTextureSuccess = SDL_RenderTextureRotated(sdlRenderer, texture, &srcRect, &dstRect, 0, &spriteCenter, SDL_FLIP_HORIZONTAL);
 	}
 	else {
@@ -200,8 +194,6 @@ void Renderer::renderTexture(Vector2<> position, Vector2<> size, Texture* textur
 	if (!renderTextureSuccess) {
 		SDL_Log("Failed to render texture: %s.\nPath: %s%s", SDL_GetError(), TEXTURES_DIRECTORY, textureToRender->getSource().c_str());
 	}
-	//SDL_SetRenderDrawColor(sdlRenderer, 0xff * object->getPosition().x, 0xff * object->getPosition().x, 0xff * object->getPosition().x, 0xff);
-	//SDL_RenderFillRect(sdlRenderer, &dstRect);
 }
 
 void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
@@ -209,15 +201,25 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 		return;
 	}
 
-	Texture* textureToRender;
-	if (gameObject.getAnimation() != nullptr) {
-		// We prioritize animation over static texture
-		Animation* animation = gameObject.getAnimation();
-
+	std::shared_ptr<Texture> textureToRender = nullptr;
+	auto animation = gameObject.getAnimation();
+	
+	if (animation != nullptr) {
 		int textureIndex = animation->currentFrame / animation->getFrameRate();
-		textureToRender = &animation->getFrames()[textureIndex];
+		auto& frames = animation->getFrames();
+		if (textureIndex < frames.size()) {
+			// Frames are currently stored as vector<Texture> in Animation.
+			// Animation.hpp: std::vector<Texture> frames;
+			// I should probably update Animation to hold shared_ptr<Texture> too?
+			// For now, I'll take a pointer to the frame if it's value-based, but 
+			// wait, our renderTexture takes shared_ptr.
+			
+			// Let's create a temporary shared_ptr for the frame if needed, 
+			// though it's better to update Animation class too.
+			textureToRender = std::make_shared<Texture>(frames[textureIndex]);
+		}
 
-		if (animation->currentFrame < animation->getFrames().size() * animation->getFrameRate() - 1) {
+		if (animation->currentFrame < frames.size() * animation->getFrameRate() - 1) {
 			animation->currentFrame++;
 		}
 		else if (animation->doesLoop()) {
@@ -225,9 +227,9 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 		}
 	}
 	else {
-		// There is no animation, we render the static texture
 		textureToRender = gameObject.getTexture();
 	}
+	
 	if (textureToRender != nullptr) {
 		renderTexture(gameObject.getPosition(), gameObject.getSize(), textureToRender, camera);
 	}
@@ -246,7 +248,6 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 			textPosition = gameObject.getPosition() + Vector2<>(0, gameObject.getSize().y / 2);
 		}
 		
-		//Vector2<> textPosition = gameObject.getPosition() + Vector2<>(gameObject.getSize().x / 2, 0);
 		applyCameraTransform(camera, textPosition);
 #ifndef PIXEL_PERFECT
 		applyScreenTransform(textPosition, camera.getSize());
@@ -257,18 +258,21 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 }
 
 void Renderer::checkOverlaps(std::shared_ptr<GameObject> gameObject1, std::shared_ptr<GameObject> gameObject2) {
-	std::map<std::shared_ptr<GameObject>, Event>::iterator it = gameObject1->getOverlapEvents().find(gameObject2);
-	if (it == gameObject1->getOverlapEvents().end()) {
+	auto& overlapEvents = gameObject1->getOverlapEvents();
+	auto it = overlapEvents.find(gameObject2);
+	if (it == overlapEvents.end()) {
 		return;
 	}
 
 	SDL_Rect rectObj1 = { (int)gameObject1->getPosition().x, (int)gameObject1->getPosition().y, (int)gameObject1->getSize().x, (int)gameObject1->getSize().y };
 	SDL_Rect rectObj2 = { (int)gameObject2->getPosition().x, (int)gameObject2->getPosition().y, (int)gameObject2->getSize().x, (int)gameObject2->getSize().y };
+	
 	int currentOverlappingIndex = -1;
-	for (int i = 0; i < currentlyOverlapping.size(); i++) {
-		auto overlap = currentlyOverlapping[i];
+	for (int i = 0; i < (int)currentlyOverlapping.size(); i++) {
+		auto& overlap = currentlyOverlapping[i];
 		if (overlap[0] == gameObject1 && overlap[1] == gameObject2) {
 			currentOverlappingIndex = i;
+			break;
 		}
 	}
 
@@ -288,7 +292,6 @@ void Renderer::checkOverlaps(std::shared_ptr<GameObject> gameObject1, std::share
 	}
 }
 
-
 void Renderer::renderDebugElements(Scene& scene) {
 	SDL_SetRenderDrawColor(sdlRenderer, 0xff, 0, 0, 0xff);
 
@@ -300,78 +303,70 @@ void Renderer::renderDebugElements(Scene& scene) {
 		SDL_RenderPoint(sdlRenderer, point.x, point.y);
 	}
 
-	for (auto line : scene.getDebugLines()) {
-		applyCameraTransform(scene.getCamera(), line[0]);
-		applyCameraTransform(scene.getCamera(), line[1]);
+	for (auto& line : scene.getDebugLines()) {
+		Vector2<> p1 = line[0];
+		Vector2<> p2 = line[1];
+		applyCameraTransform(scene.getCamera(), p1);
+		applyCameraTransform(scene.getCamera(), p2);
 #ifndef PIXEL_PERFECT
-		applyScreenTransform(line[0], scene.getCamera().getSize());
-		applyScreenTransform(line[1], scene.getCamera().getSize());
+		applyScreenTransform(p1, scene.getCamera().getSize());
+		applyScreenTransform(p2, scene.getCamera().getSize());
 #endif
-		SDL_RenderLine(sdlRenderer, line[0].x, line[0].y, line[1].x, line[1].y);
+		SDL_RenderLine(sdlRenderer, p1.x, p1.y, p2.x, p2.y);
 	}
 }
 
-void Renderer::setCustomMouse(Texture& mouseTexture, Vector2<> mouseHotspot) {
+void Renderer::setCustomMouse(std::shared_ptr<Texture> mouseTexture, Vector2<> mouseHotspot) {
 	if (customCursor != nullptr) {
 		SDL_DestroyCursor(customCursor);
+		customCursor = nullptr;
 	}
 
-	SDL_Surface* cursorSurface = resourceManager.loadSurface(mouseTexture); // Change to your cursor image path
-	if (!cursorSurface) {
-		SDL_Log("SDL_LoadBMP error %s", SDL_GetError());
-	}
+	if (mouseTexture) {
+		SDL_Surface* cursorSurface = resourceManager.loadSurface(*mouseTexture);
+		if (!cursorSurface) {
+			SDL_Log("SDL_LoadBMP error %s", SDL_GetError());
+		}
 
-	// Vector2<>(-1,-1) is used to represent that the hotspot is in the center
-	if (mouseHotspot.x == -1) {
-		mouseHotspot.x = mouseTexture.getSize().x / 2;
-	}
-	if (mouseHotspot.y == -1) {
-		mouseHotspot.y = mouseTexture.getSize().y / 2;
-	}
+		if (mouseHotspot.x == -1) {
+			mouseHotspot.x = (float)mouseTexture->getSize().x / 2;
+		}
+		if (mouseHotspot.y == -1) {
+			mouseHotspot.y = (float)mouseTexture->getSize().y / 2;
+		}
 
-	this->mouseTexture = &mouseTexture;
-	this->mouseHotspot = mouseHotspot;
+		this->mouseTexture = mouseTexture;
+		this->mouseHotspot = mouseHotspot;
 
 #ifndef PIXEL_PERFECT_CURSOR
-	// Create a custom cursor from the surface
-	SDL_Cursor* customCursor = SDL_CreateColorCursor(cursorSurface, mouseHotspot.x, mouseHotspot.y); // (0, 0) is the hotspot
-	if (!customCursor) {
-		SDL_Log("SDL_CreateColorCursor error %s", SDL_GetError());
-	}
-
-	// Set the custom cursor
-	SDL_SetCursor(customCursor);
+		customCursor = SDL_CreateColorCursor(cursorSurface, (int)mouseHotspot.x, (int)mouseHotspot.y);
+		if (!customCursor) {
+			SDL_Log("SDL_CreateColorCursor error %s", SDL_GetError());
+		}
+		SDL_SetCursor(customCursor);
 #else
-	SDL_HideCursor();
+		SDL_HideCursor();
 #endif
+	}
 }
 
 void Renderer::render(Scene& scene, UI& ui) {
 #ifdef PIXEL_PERFECT
 	SDL_Texture* lowResScreen = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_RGBA8888,
-		SDL_TEXTUREACCESS_TARGET, scene.getCamera().getSize().x, scene.getCamera().getSize().y);
+		SDL_TEXTUREACCESS_TARGET, (int)scene.getCamera().getSize().x, (int)scene.getCamera().getSize().y);
 	SDL_SetTextureScaleMode(lowResScreen, SDL_SCALEMODE_NEAREST);
 	SDL_SetRenderTarget(sdlRenderer, lowResScreen);
 #endif
 
 	auto gameObjects = scene.getGameObjects();
 	for (const auto& object : gameObjects) {
-		if (object == nullptr) {
-			SDL_Log("Invalid gameObject.");
-			continue;
-		}
+		if (object == nullptr) continue;
 
 		for (const auto& object2 : gameObjects) {
-			if (object2 == nullptr) {
-				SDL_Log("Invalid gameObject.");
-				continue;
-			}
-			// Check overlaps to call events
-
+			if (object2 == nullptr || object == object2) continue;
 			checkOverlaps(object, object2);
 		}
 
-		// Render the object
 		renderGameObject(*object, scene.getCamera());
 	}
 
@@ -393,24 +388,19 @@ void Renderer::render(Scene& scene, UI& ui) {
 		xMouse -= mouseHotspot.x;
 		yMouse -= mouseHotspot.y;
 
-		// Round position
-		xMouse = (int)xMouse;
-		yMouse = (int)yMouse;
+		xMouse = (float)((int)xMouse);
+		yMouse = (float)((int)yMouse);
 
-		Camera c; // Camera at 0,0 (Cursor does not depend on camera position)
-		renderTexture(Vector2<>(xMouse, yMouse), Vector2<float>(mouseTexture->getSize().x, mouseTexture->getSize().y), mouseTexture, c);
+		Camera c; 
+		renderTexture(Vector2<>(xMouse, yMouse), Vector2<float>((float)mouseTexture->getSize().x, (float)mouseTexture->getSize().y), mouseTexture, c);
 	}
 #endif
-
 
 #ifdef PIXEL_PERFECT
 	SDL_SetRenderTarget(sdlRenderer, NULL);
 	SDL_RenderTexture(sdlRenderer, lowResScreen, NULL, NULL);
+	SDL_DestroyTexture(lowResScreen);
 #endif
 
 	SDL_RenderPresent(sdlRenderer);
-
-#ifdef PIXEL_PERFECT
-	SDL_DestroyTexture(lowResScreen);
-#endif
-}
+}

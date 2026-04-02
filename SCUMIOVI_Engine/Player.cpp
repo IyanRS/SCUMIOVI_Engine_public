@@ -1,6 +1,6 @@
 #include "Player.hpp"
-
 #include "Game.hpp"
+#include <memory>
 
 void Player::disableMovement() {
     canPlayerMove = false;
@@ -19,13 +19,15 @@ bool Player::canMove() {
 void Player::setVerb(std::string verbName) {
 	Game& game = Game::getInstance();
 	selectedVerb = game.getVerb(verbName);
+	game.getUI().updateUI();
 }
 
-void Player::setVerb(Verb* verb) {
+void Player::setVerb(std::shared_ptr<Verb> verb) {
 	selectedVerb = verb;
+	Game::getInstance().getUI().updateUI();
 }
 
-Verb* Player::getVerb() {
+std::shared_ptr<Verb> Player::getVerb() {
 	return selectedVerb;
 }
 
@@ -39,10 +41,12 @@ std::shared_ptr<GameObject> Player::getSelectedObject() {
 
 void Player::setSelectedObject(std::shared_ptr<GameObject> gameObject) {
 	this->selectedObject = gameObject;
+	Game::getInstance().getUI().updateUI();
 }
 
 void Player::setTargetObject(std::shared_ptr<GameObject> gameObject) {
 	this->targetObject = gameObject;
+	Game::getInstance().getUI().updateUI();
 }
 
 std::shared_ptr<GameObject> Player::getTargetObject() {

@@ -17,24 +17,35 @@ protected:
 	bool gameIsRunning = true;
 	Renderer renderer;
 	InputManager inputManager;
-	Scene* currentScene = nullptr;
+	std::vector<std::shared_ptr<Verb>> verbs;
+	std::shared_ptr<Scene> currentScene = nullptr;
 	SDL_Event event;
 	std::shared_ptr<Player> currentPlayer;
 	Event startEvent;
 	Event endEvent;
-	std::list<Verb*> verbs;
 	UI ui;
-
-	Texture* customCursorTexture;
-	Vector2<> customCursorHotspot;
 
 	Event defaultClickEvent; // When the player clicks but no object interaction is found
 
-	Verb* rightClickVerb = nullptr;
-	Verb* leftClickVerb = nullptr;
-	Verb* defaultVerb = nullptr;
+	std::shared_ptr<Verb> rightClickVerb = nullptr;
+	std::shared_ptr<Verb> leftClickVerb = nullptr;
+	std::shared_ptr<Verb> defaultVerb = nullptr;
 
 public:
+	// Standard Engine Verbs
+	std::shared_ptr<Verb> walkVerb;
+	std::shared_ptr<Verb> pushVerb;
+	std::shared_ptr<Verb> closeVerb;
+	std::shared_ptr<Verb> openVerb;
+	std::shared_ptr<Verb> talkVerb;
+	std::shared_ptr<Verb> giveVerb;
+	std::shared_ptr<Verb> pickupVerb;
+	std::shared_ptr<Verb> useVerb;
+	std::shared_ptr<Verb> lookAtVerb;
+	std::shared_ptr<Verb> pullVerb;
+	std::shared_ptr<Verb> anyVerb;
+	std::shared_ptr<Verb> selectedVerb;
+
 	Game(Game& other) = delete;
 	void operator=(const Game&) = delete;
 	static Game& getInstance();
@@ -45,21 +56,23 @@ public:
 	std::list<std::shared_ptr<Player>> getPlayers();
 	std::shared_ptr<Player> getPlayerByName(std::string name);
 	void startGame();
-	Scene& getScene();
-	void changeScene(Scene& newScene);
+	std::shared_ptr<Scene> getScene();
+	void changeScene(std::shared_ptr<Scene> newScene);
 	void setStartEvent(Event);
 	void setEndEvent(Event);
 	void setDefaultClickEvent(Event);
 	UI& getUI();
-	Verb* getVerb(std::string verbName);
-	void addVerb(Verb* verb);
-	void setCustomCursor(Texture& customCursorTexture, Vector2<> hotspot);
-	void bindRightClickToVerb(Verb* verb);
+	std::shared_ptr<Verb> getVerb(std::string verbName);
+	void addVerb(std::shared_ptr<Verb> verb);
+	void setCustomCursor(std::shared_ptr<Texture> customCursorTexture, Vector2<> hotspot);
+	void bindRightClickToVerb(std::shared_ptr<Verb> verb);
 	void bindRightClickToVerb(std::string verbName);
-	void bindLeftClickToVerb(Verb* verb);
+	void bindLeftClickToVerb(std::shared_ptr<Verb> verb);
 	void bindLeftClickToVerb(std::string verbName);
-	Verb* getDefaultVerb();
-	void setDefaultVerb(Verb* verb);
+	std::shared_ptr<Verb> getLeftClickVerb();
+	std::shared_ptr<Verb> getRightClickVerb();
+	std::shared_ptr<Verb> getDefaultVerb();
+	void setDefaultVerb(std::shared_ptr<Verb> verb);
 	void setDefaultVerb(std::string verbName);
 	void changeToDefaultVerb();
 	void clearClicksPool();

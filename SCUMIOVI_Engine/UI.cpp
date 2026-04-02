@@ -1,30 +1,38 @@
 #include "UI.hpp"
 
 std::vector<std::shared_ptr<GameObject>>& UI::getUIElements() {
+	static std::vector<std::shared_ptr<GameObject>> empty;
+	if (!currentLayout) return empty;
 	return currentLayout->getUIElements();
 }
 
 void UI::updateUI() {
+	if (!currentLayout) return;
 	currentLayout->updateUI();
 }
 
-void UI::highlightVerb(Verb& verb) {
+void UI::highlightVerb(std::shared_ptr<Verb> verb) {
+	if (!currentLayout) return;
 	currentLayout->highlightVerb(verb);
 }
 
 void UI::removeHightlightVerb() {
+	if (!currentLayout) return;
 	currentLayout->removeHightlightVerb();
 }
 
-void UI::setHighlightedVerb(Verb* verb) {
+void UI::setHighlightedVerb(std::shared_ptr<Verb> verb) {
+	if (!currentLayout) return;
 	currentLayout->setHighlightedVerb(verb);
 }
 
 void UI::toggleVisibility() {
+	if (!currentLayout) return;
 	currentLayout->toggleVisibility();
 }
 
 std::shared_ptr<GameObject> UI::getUIElement(std::string name) {
+	if (!currentLayout) return nullptr;
 	return currentLayout->getUIElement(name);
 }
 
@@ -55,18 +63,22 @@ UILayout& UI::getLayout(std::string name) {
 }
 
 void UI::createDialogueOptions(DialogueNode& dialogueNode) {
+	if (!currentLayout) return;
 	currentLayout->createDialogueOptions(dialogueNode);
 }
 
 void UI::clearDialogueOptions() {
+	if (!currentLayout) return;
 	currentLayout->clearDialogueOptions();
 }
 
 void UI::incrementInventoryIndex(int increment) {
+	if (!currentLayout) return;
 	currentLayout->incrementInventoryIndex(increment);
 }
 
 int UI::getInventoryIndex() {
+	if (!currentLayout) return 0;
 	return currentLayout->getInventoryIndex();
 }
 

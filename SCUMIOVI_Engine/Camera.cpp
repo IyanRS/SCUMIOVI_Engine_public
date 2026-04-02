@@ -54,10 +54,8 @@ void Camera::moveTo(Vector2<> pos, float seconds, Event callback) {
 	moveCallback = callback;
 }
 
-// -------------------------------------------------------------------------
-// update() — called once per frame by Scene::update(dt).
-// Advances the camera's lerp-based movement without any sleeping.
-// -------------------------------------------------------------------------
+// Called once per frame by Scene::update(dt).
+// Advances the camera's lerp-based movement.
 void Camera::update(float deltaTime) {
 	// If a follow target is set, snap to it (overrides any moveTo)
 	if (auto target = objectToFollow.lock()) {

@@ -1,9 +1,9 @@
 #include "InputManager.hpp"
-
 #include <SDL3/SDL.h>
-
 #include "Common.hpp"
 #include <thread>
+#include <memory>
+#include "Game.hpp"
 
 Vector2<> InputManager::getClickPosition(Camera& camera) {
 	float xMouse;
@@ -20,7 +20,7 @@ Vector2<> InputManager::getClickPosition(Camera& camera) {
 	return Vector2<>(xMouse, yMouse);
 }
 
-bool InputManager::checkObjectClicked(float xMouse, float yMouse, std::shared_ptr<GameObject> object, Verb* verb) {
+bool InputManager::checkObjectClicked(float xMouse, float yMouse, std::shared_ptr<GameObject> object, std::shared_ptr<Verb> verb) {
 	if (object == nullptr) {
 		SDL_Log("Invalid gameObject.");
 		return false;
@@ -28,7 +28,6 @@ bool InputManager::checkObjectClicked(float xMouse, float yMouse, std::shared_pt
 
 	if (xMouse >= object->getPosition().x && xMouse < object->getPosition().x + object->getSize().x &&
 		yMouse >= object->getPosition().y && yMouse < object->getPosition().y + object->getSize().y) {
-		//SDL_Log("Object clicked");
 		return object->onClick(Vector2<>(xMouse, yMouse), verb);
 	}
 	return false;
@@ -74,7 +73,6 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 
 	SDL_GetMouseState(&xMouse, &yMouse);
 
-	// Transform click screen position to game position
 	xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
 	yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
@@ -89,23 +87,19 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 
 	auto gameObjects = scene.getGameObjects();
 	for (int i = (int)gameObjects.size() - 1; i >= 0; i--) {
-
 		checkMouseOverObject(xMouse, yMouse, gameObjects[i]);
 	}
 
 	lastCheckTime = now;
 }
 
-bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
-	//SDL_Log("Click");
-
+bool InputManager::click(UI& ui, Scene& scene, std::shared_ptr<Verb> verb) {
 	float xMouse;
 	float yMouse;
 
 	SDL_GetMouseState(&xMouse, &yMouse);
 
 	if (ui.getLayout() != nullptr) {
-		// Transform click screen position to game position
 		xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
 		yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
@@ -128,4 +122,35 @@ bool InputManager::click(UI& ui, Scene& scene, Verb* verb) {
 		}
 	}
 	return false;
+}
+
+void InputManager::handleInput(SDL_Event& event, UI& ui, Scene& scene) {
+	Game& game = Game::getInstance();
+	auto currentPlayer = game.getCurrentPlayer();
+	if (!currentPlayer) return;
+
+	switch (event.type) {
+	case SDL_EVENT_MOUSE_BUTTON_DOWN:
+		SDL_MouseButtonFlags mouseButtonFlags = SDL_GetMouseState(nullptr, nullptr);
+		switch (mouseButtonFlags) {
+		case 0:
+		case SDL_BUTTON_LEFT:
+			if (game.getLeftClickVerb() == nullptr)
+				click(ui, scene, currentPlayer->getVerb());
+			else
+				click(ui, scene, game.getLeftClickVerb());
+			break;
+		case 4: // SDL_BUTTON_RIGHT bitmask
+			if (game.getRightClickVerb() == nullptr)
+				click(ui, scene, currentPlayer->getVerb());
+			else
+				click(ui, scene, game.getRightClickVerb());
+			break;
+		}
+		break;
+	}
+}
+
+void InputManager::clearClicksPool() {
+	// Currently a stub as part of the refactoring
 }

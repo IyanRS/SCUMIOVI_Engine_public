@@ -10,9 +10,9 @@ class ScriptLoader {
 	Event pathEvent;
 
 	//GameObject& addBackground(Scene& scene, std::string source, Vector2<int> size = Vector2<int>());
-	std::shared_ptr<GameObject> createUIVerbButton(Verb& verb,
-		Vector2<> position, Vector2<> size, Texture* verbBackground, Event& onUIUpdate);
-	std::shared_ptr<GameObject> createUIItemSlot(Vector2<> position, Vector2<> size, Texture* background, Event& onUIUpdate);
+	std::shared_ptr<GameObject> createUIVerbButton(std::shared_ptr<Verb> verb,
+		Vector2<> position, Vector2<> size, std::shared_ptr<Texture> verbBackground, Event& onUIUpdate);
+	std::shared_ptr<GameObject> createUIItemSlot(Vector2<> position, Vector2<> size, std::shared_ptr<Texture> background, Event& onUIUpdate);
 	//void createUIVerbButtonMatrix(Vector2<> position, std::vector<std::vector<Verb>> verbs, Texture* verbBackground);
 	//void createUIItemSlotsMatrix(Vector2<> position, int columns, int rows, Texture* background, Event& onUIUpdate);
 	//void highlightUIVerb(std::string verbName);

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 class Texture;
 class GameObject;
@@ -11,16 +12,16 @@ class GraphicsComponent {
 private:
 	GameObject* owner;
 
-	std::vector<Texture*> textures;
-	Texture* texture = nullptr;
+	std::vector<std::shared_ptr<Texture>> textures;
+	std::shared_ptr<Texture> texture = nullptr;
 	int layer = 0;
 	bool visibility = true;
 
 public:
 	GraphicsComponent(GameObject* owner);
 
-	Texture* getTexture();
-	void addTexture(Texture* texture);
+	std::shared_ptr<Texture> getTexture();
+	void addTexture(std::shared_ptr<Texture> texture);
 	void setTexture(std::string textureName);
 
 	void toggleVisibility();

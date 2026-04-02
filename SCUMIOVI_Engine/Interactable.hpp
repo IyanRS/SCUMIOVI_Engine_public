@@ -4,6 +4,7 @@
 #include "Event.hpp"
 #include "Verb.hpp"
 #include <string>
+#include <memory>
 
 #include "Vector2.hpp"
 
@@ -11,7 +12,7 @@
 class Interactable {
 	std::map<std::string, Event> interactions;
 	std::map<std::string, std::string> interactionsSelectedObjects;
-	Verb* defaultVerb = nullptr;
+	std::shared_ptr<Verb> defaultVerb = nullptr;
 	Event mouseOverEvent;
 	Event mouseNotOverEvent;
 
@@ -20,21 +21,21 @@ class Interactable {
 
 	bool shouldHighlightDefaultVerb;
 public:
-	bool onClick(Vector2<> clickPos, Verb* verb);
+	bool onClick(Vector2<> clickPos, std::shared_ptr<Verb> verb);
 	void onMouseOver(Vector2<> mousePos);
 	void onMouseNotOver(Vector2<> mousePos);
-	bool interact(Vector2<> clickPos, Verb* verb);
-	Verb* getDefaultVerb();
-	void setDefaultVerb(Verb* verb);
+	bool interact(Vector2<> clickPos, std::shared_ptr<Verb> verb);
+	std::shared_ptr<Verb> getDefaultVerb();
+	void setDefaultVerb(std::shared_ptr<Verb> verb);
 	void setDefaultVerb(std::string verbName);
-	void addVerbInteraction(Verb& verb, Event event);
-	void addVerbInteraction(Verb& verb, std::string selectedObjectName, Event event);
-	void removeInteraction(Verb& verb);
+	void addVerbInteraction(std::shared_ptr<Verb> verb, Event event);
+	void addVerbInteraction(std::shared_ptr<Verb> verb, std::string selectedObjectName, Event event);
+	void removeInteraction(std::shared_ptr<Verb> verb);
 	void removeInteraction(std::string verbName);
 	Event& getMouseOverEvent();
 	void setMouseOverEvent(Event event);
 	Event& getMouseNotOverEvent();
 	void setMouseNotOverEvent(Event event);
-	bool hasVerbInteraction(Verb& verb);
+	bool hasVerbInteraction(std::shared_ptr<Verb> verb);
 	virtual ~Interactable() = default;
 };

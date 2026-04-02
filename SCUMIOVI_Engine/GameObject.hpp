@@ -39,7 +39,7 @@ class GameObject : public Interactable, public std::enable_shared_from_this<Game
 	Vector2<> size;
 	bool interactable = true;
 	//Event clickEvent;
-	Scene* currentScene = nullptr;
+	std::shared_ptr<Scene> currentScene = nullptr;
 	std::map<std::shared_ptr<GameObject>, Event> overlapEvents;
 	MovementComponent movement;
 	TextComponent text;
@@ -65,31 +65,31 @@ public:
 	GameObject(std::string name,
 		Vector2<> position,
 		Vector2<> size, 
-		Texture* texture);
+		std::shared_ptr<Texture> texture);
 	GameObject(std::string name,
 		Vector2<> position,
 		Vector2<> size,
-		Animation* animation);
+		std::shared_ptr<Animation> animation);
 	Vector2<> getPosition();
 	void setPosition(Vector2<> position);
 	Vector2<> getSize();
 	void setSize(Vector2<> size);
-	Texture* getTexture();
+	std::shared_ptr<Texture> getTexture();
 	void setTexture(std::string textureName);
-	void addTexture(Texture* texture);
-	Animation* getAnimation();
-	void addAnimation(Animation* animation);
+	void addTexture(std::shared_ptr<Texture> texture);
+	std::shared_ptr<Animation> getAnimation();
+	void addAnimation(std::shared_ptr<Animation> animation);
 	void setAnimation(std::string animatioName);
 	void playAnimation(std::string animatioName, Event event = Event());
-	Animation* getAnimationByName(std::string name);
+	std::shared_ptr<Animation> getAnimationByName(std::string name);
 	//void setAnimation(Animation& animation);
 	//Event& getClickEvent();
 	void addOverlapEvent(std::shared_ptr<GameObject> object, Event event);
 	std::map<std::shared_ptr<GameObject>, Event>& getOverlapEvents();
 	Vector2<> getDirectionVector();
-	void moveToScene(Scene& scene);
-	Scene* getScene();
-	void setScene(Scene* scene);
+	void moveToScene(std::shared_ptr<Scene> scene);
+	std::shared_ptr<Scene> getScene();
+	void setScene(std::shared_ptr<Scene> scene);
 	void moveTo(Vector2<> pos, float seconds = 0, Event callback = Event());
 	void moveToAtSpeed(Vector2<> pos, float speed, Event callback = Event());
 	void moveToAtSpeed(std::vector<Vector2<>> positions, float speed, std::vector<Event> = std::vector<Event>());
@@ -116,10 +116,10 @@ public:
 	bool hasTag(std::string tag);
 	VerticalDirection getCurrentVerticalDirection();
 	HorizontalDirection getCurrentHorizontalDirection();
-	void setMovementAnimations(Animation* moveRightAnimation, Animation* moveLeftAnimation,
-		Animation* moveUpAnimation, Animation* moveDownAnimation,
-		Animation* idleRightAnimation, Animation* idleLeftAnimation,
-		Animation* idleUpAnimation, Animation* idleDownAnimation);
+	void setMovementAnimations(std::shared_ptr<Animation> moveRightAnimation, std::shared_ptr<Animation> moveLeftAnimation,
+		std::shared_ptr<Animation> moveUpAnimation, std::shared_ptr<Animation> moveDownAnimation,
+		std::shared_ptr<Animation> idleRightAnimation, std::shared_ptr<Animation> idleLeftAnimation,
+		std::shared_ptr<Animation> idleUpAnimation, std::shared_ptr<Animation> idleDownAnimation);
 	// Called once per frame by Scene::update()
 	void update(float deltaTime);
 };

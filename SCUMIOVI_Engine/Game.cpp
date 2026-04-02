@@ -1,8 +1,27 @@
 #include "Game.hpp"
 
 #include <SDL3/SDL.h>
+#include <memory>
+#include <algorithm>
 
-Game::Game() {}
+Game::Game() {
+	// Initialize standard verbs
+	walkVerb = std::make_shared<Verb>("walk", "Walk to");
+	pushVerb = std::make_shared<Verb>("push", "Push", VerbSyntax({ "Push", "Push $target"}));
+	closeVerb = std::make_shared<Verb>("close", "Close", VerbSyntax({ "Close", "Close $target" }));
+	openVerb = std::make_shared<Verb>("open", "Open", VerbSyntax({ "Open", "Open $target" }));
+	talkVerb = std::make_shared<Verb>("talk", "Talk to", VerbSyntax({ "Talk to", "Talk to $target" }));
+	giveVerb = std::make_shared<Verb>("give", "Give", VerbSyntax({ "Give", "Give $target", "Give $selected to", "Give $selected to $target" }), true);
+	pickupVerb = std::make_shared<Verb>("pickup", "Pick up", VerbSyntax({ "Pick up", "Pick up $target" }));
+	useVerb = std::make_shared<Verb>("use", "Use", VerbSyntax({ "Use", "Use $target", "Use $selected on $target" }), true);
+	lookAtVerb = std::make_shared<Verb>("lookat", "Look at", VerbSyntax({ "Look at", "Look at $target" }));
+	pullVerb = std::make_shared<Verb>("pull", "Pull", VerbSyntax({ "Pull", "Pull $target" }));
+	anyVerb = std::make_shared<Verb>("any", "Any");
+	selectedVerb = std::make_shared<Verb>("selected", "Selected");
+
+	// Add standard verbs to the verbs vector
+	verbs = { walkVerb, pushVerb, closeVerb, openVerb, talkVerb, giveVerb, pickupVerb, useVerb, lookAtVerb, pullVerb };
+}
 
 Game* Game::game_ = nullptr;
 
@@ -21,19 +40,19 @@ Game& Game::getInstance() {
 }
 
 void Game::addPlayer(std::shared_ptr<Player> player) {
-	Game::players.push_back(player);
+	players.push_back(player);
 }
 
 void Game::removePlayer(std::shared_ptr<Player> player) {
-	Game::players.remove(player);
+	players.remove(player);
 }
 
 std::list<std::shared_ptr<Player>> Game::getPlayers() {
-	return Game::players;
+	return players;
 }
 
 std::shared_ptr<Player> Game::getPlayerByName(std::string name) {
-	for (auto p : Game::players) {
+	for (auto p : players) {
 		if (p->getName() == name) {
 			return p;
 		}
@@ -41,92 +60,46 @@ std::shared_ptr<Player> Game::getPlayerByName(std::string name) {
 	return nullptr;
 }
 
-Scene& Game::getScene() {
-	return *currentScene;
+std::shared_ptr<Verb> Game::getVerb(std::string verbName) {
+	for (auto v : verbs) {
+		if (v->getName() == verbName) {
+			return v;
+		}
+	}
+	return nullptr;
 }
 
-void Game::changeScene(Scene& newScene) {
-	currentScene = &newScene;
+void Game::addVerb(std::shared_ptr<Verb> verb) {
+	verbs.push_back(verb);
 }
 
-// ---------------------------------------------------------------------------
-// startGame() — the main game loop. Delta time is computed here and
-// distributed to the scene (which propagates to all GameObjects and the
-// Camera) and to the Event pending queue. Frame capping is also done here
-// so that Renderer::render() no longer needs to sleep.
-// ---------------------------------------------------------------------------
 void Game::startGame() {
 	if (currentScene == nullptr) {
-		SDL_Log("An initial scene is required.");
 		return;
 	}
-	if (currentPlayer == nullptr) {
-		SDL_Log("An initial player is required.");
-		return;
-	}
+
 	startEvent.execute();
 
-	// High-precision frame timing
-	Uint64 perfFreq    = SDL_GetPerformanceFrequency();
+	Uint64 perfFreq = SDL_GetPerformanceFrequency();
 	Uint64 lastCounter = SDL_GetPerformanceCounter();
-	const float targetFrameTime = 1.0f / FPS;
+	float targetFrameTime = 1.0f / 60.0f;
 
 	while (gameIsRunning) {
-		// -----------------------------------------------------------------
-		// Input handling
-		// -----------------------------------------------------------------
-		while (SDL_PollEvent(&event)) {
-			switch (event.type) {
-			case SDL_EVENT_QUIT:
-				gameIsRunning = false;
-				SDL_Log("SDL3 event quit");
-				break;
-			case SDL_EVENT_MOUSE_BUTTON_DOWN:
-				// TODO: maybe move this click handling to inputManager
-				SDL_MouseButtonFlags mouseButtonFlags = SDL_GetMouseState(nullptr, nullptr);
-				switch (mouseButtonFlags) {
-				case 0:
-				case SDL_BUTTON_LEFT:
-					if (leftClickVerb == nullptr)
-						inputManager.click(ui, *currentScene, currentPlayer->getVerb());
-					else
-						inputManager.click(ui, *currentScene, leftClickVerb);
-					break;
-				case 4: // TODO: should be SDL_BUTTON_RIGHT (3) SDL bug?
-					if (rightClickVerb == nullptr)
-						inputManager.click(ui, *currentScene, currentPlayer->getVerb());
-					else
-						inputManager.click(ui, *currentScene, rightClickVerb);
-					break;
-				}
-				break;
-			}
-		}
-
-		// -----------------------------------------------------------------
-		// Compute delta time from last frame
-		// -----------------------------------------------------------------
 		Uint64 currentCounter = SDL_GetPerformanceCounter();
 		float deltaTime = (float)(currentCounter - lastCounter) / (float)perfFreq;
-		// Clamp to avoid huge spikes (e.g. after a breakpoint / system sleep)
-		if (deltaTime > 0.1f) deltaTime = 0.1f;
 		lastCounter = currentCounter;
 
-		// -----------------------------------------------------------------
-		// Update step — drives all GameObjects, Camera, and delayed Events
-		// -----------------------------------------------------------------
+		while (SDL_PollEvent(&event)) {
+			if (event.type == SDL_EVENT_QUIT) {
+				gameIsRunning = false;
+			}
+			inputManager.handleInput(event, ui, *currentScene);
+		}
 		inputManager.mouseOver(ui, *currentScene);
-		currentScene->update(deltaTime);
-		Event::tick(deltaTime);
 
-		// -----------------------------------------------------------------
-		// Render
-		// -----------------------------------------------------------------
+		currentScene->update(deltaTime);
 		renderer.render(*currentScene, ui);
 
-		// -----------------------------------------------------------------
-		// Frame cap — sleep only the remaining time in this frame budget
-		// -----------------------------------------------------------------
 		Uint64 afterRenderCounter = SDL_GetPerformanceCounter();
 		float frameTime = (float)(afterRenderCounter - lastCounter) / (float)perfFreq;
 		float sleepTime = targetFrameTime - frameTime;
@@ -136,6 +109,18 @@ void Game::startGame() {
 	}
 
 	endEvent.execute();
+}
+
+std::shared_ptr<Scene> Game::getScene() {
+	return currentScene;
+}
+
+void Game::changeScene(std::shared_ptr<Scene> newScene) {
+	currentScene = newScene;
+}
+
+UI& Game::getUI() {
+	return ui;
 }
 
 void Game::setStartEvent(Event event) {
@@ -150,29 +135,11 @@ void Game::setDefaultClickEvent(Event event) {
 	defaultClickEvent = event;
 }
 
-UI& Game::getUI() {
-	return ui;
-}
-
-Verb* Game::getVerb(std::string verbName) {
-	for (Verb* v : verbs) {
-		if (v->getName() == verbName) {
-			return v;
-		}
-	}
-	return nullptr;
-}
-
-void Game::addVerb(Verb* verb) {
-	verbs.push_back(verb);
-}
-
-void Game::setCustomCursor(Texture& customCursorTexture, Vector2<> hotspot) {
+void Game::setCustomCursor(std::shared_ptr<Texture> customCursorTexture, Vector2<> hotspot) {
 	renderer.setCustomMouse(customCursorTexture, hotspot);
 }
 
-// nullptr binds the click to the selected verb
-void Game::bindRightClickToVerb(Verb* verb) {
+void Game::bindRightClickToVerb(std::shared_ptr<Verb> verb) {
 	rightClickVerb = verb;
 }
 
@@ -180,7 +147,7 @@ void Game::bindRightClickToVerb(std::string verbName) {
 	rightClickVerb = getVerb(verbName);
 }
 
-void Game::bindLeftClickToVerb(Verb* verb) {
+void Game::bindLeftClickToVerb(std::shared_ptr<Verb> verb) {
 	leftClickVerb = verb;
 }
 
@@ -188,12 +155,20 @@ void Game::bindLeftClickToVerb(std::string verbName) {
 	leftClickVerb = getVerb(verbName);
 }
 
-void Game::setDefaultVerb(Verb* verb) {
-	defaultVerb = verb;
+std::shared_ptr<Verb> Game::getLeftClickVerb() {
+	return leftClickVerb;
 }
 
-Verb* Game::getDefaultVerb() {
+std::shared_ptr<Verb> Game::getRightClickVerb() {
+	return rightClickVerb;
+}
+
+std::shared_ptr<Verb> Game::getDefaultVerb() {
 	return defaultVerb;
+}
+
+void Game::setDefaultVerb(std::shared_ptr<Verb> verb) {
+	defaultVerb = verb;
 }
 
 void Game::setDefaultVerb(std::string verbName) {
@@ -201,11 +176,11 @@ void Game::setDefaultVerb(std::string verbName) {
 }
 
 void Game::changeToDefaultVerb() {
-	if (defaultVerb != nullptr) {
+	if (currentPlayer) {
 		currentPlayer->setVerb(defaultVerb);
 	}
 }
 
 void Game::clearClicksPool() {
-	SDL_FlushEvent(SDL_EVENT_MOUSE_BUTTON_DOWN);
+	inputManager.clearClicksPool();
 }

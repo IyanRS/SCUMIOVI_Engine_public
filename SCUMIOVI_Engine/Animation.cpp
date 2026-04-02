@@ -35,18 +35,18 @@ std::string Animation::getName() {
 	return name;
 }
 
-Animation Animation::getMirrored(std::string newAnimationName) {
+std::shared_ptr<Animation> Animation::getMirrored(std::string newAnimationName) {
 	//std::vector<Texture&> newAnimationFrames;
 	//for (Texture frame : frames) {
 	//	frame.toggleMirrored();
 	//	newAnimationFrames.push_back(frame);
 	//}
-	Animation newAnimation = Animation(newAnimationName, frames);
-	for (Texture& frame : newAnimation.getFrames()) {
+	std::shared_ptr<Animation> newAnimation = std::make_shared<Animation>(newAnimationName, frames);
+	for (Texture& frame : newAnimation->getFrames()) {
 		frame.toggleMirrored();
 	}
-	newAnimation.loop = loop;
-	newAnimation.frameRate = frameRate;
+	newAnimation->loop = loop;
+	newAnimation->frameRate = frameRate;
 	return newAnimation;
 }
 

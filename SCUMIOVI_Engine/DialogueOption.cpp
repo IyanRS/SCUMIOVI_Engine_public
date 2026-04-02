@@ -1,8 +1,9 @@
 #include "DialogueOption.hpp"
-
+#include "DialogueNode.hpp"
 #include "Game.hpp"
+#include <memory>
 
-DialogueOption::DialogueOption(std::string text, DialogueNode* nextNode) {
+DialogueOption::DialogueOption(std::string text, std::shared_ptr<DialogueNode> nextNode) {
 	this->text = text;
 	this->nextNode = nextNode;
 }
@@ -14,9 +15,11 @@ std::string DialogueOption::getText() {
 void DialogueOption::select() {
 	Game& game = Game::getInstance();
 	game.getUI().clearDialogueOptions();
-	nextNode->enterNode();
+	if (nextNode) {
+		nextNode->enterNode();
+	}
 }
 
-void DialogueOption::setNextNode(DialogueNode& node) {
-	nextNode = &node;
+void DialogueOption::setNextNode(std::shared_ptr<DialogueNode> node) {
+	nextNode = node;
 }

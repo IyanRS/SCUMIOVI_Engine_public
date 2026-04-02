@@ -1,4 +1,7 @@
 #include "UILayout.hpp"
+#include <algorithm>
+#include "DialogueOption.hpp"
+#include "UIDialogueOption.hpp"
 #include "Game.hpp"
 
 #include "DialogueOption.hpp"
@@ -9,16 +12,17 @@ std::vector<std::shared_ptr<GameObject>>& UILayout::getUIElements() {
 
 void UILayout::updateUI() {
 	Game& game = Game::getInstance();
-	Verb* currentVerb = game.getCurrentPlayer()->getVerb();
+	std::shared_ptr<Verb> currentVerb = game.getCurrentPlayer()->getVerb();
 	if (currentVerb != nullptr) {
 		// TODO: uiCurrentVerbInfo reference in UI class
 		auto infoElement = getUIElement("uiCurrentVerbInfo");
-		if (infoElement)
-			infoElement->setTextOver(currentVerb->getInfo( game.getCurrentPlayer()->getSelectedObject().get(), game.getCurrentPlayer()->getTargetObject().get() ));
+		if (infoElement) {
+			infoElement->setTextOver(currentVerb->getInfo(game.getCurrentPlayer()->getSelectedObject(), game.getCurrentPlayer()->getTargetObject()));
+		}
 	}
 	removeHightlightVerb();
 	if (highlightedVerb != nullptr)
-		highlightVerb(*highlightedVerb);
+		highlightVerb(highlightedVerb);
 	//auto currentItemIndex = currentInventoryIndex;
 	//for (auto inventorySlot : itemSlots) {
 
@@ -83,7 +87,7 @@ int UILayout::getInventoryIndex() {
 void UILayout::createDialogueOptions(DialogueNode& dialogueNode) {
 	clearDialogueOptions();
 	int currentY = 152;
-	for (DialogueOption& dialogueOption : dialogueNode.getOptions()) {
+	for (std::shared_ptr<DialogueOption>& dialogueOption : dialogueNode.getOptions()) {
 		auto uiDialogueOption = std::make_shared<UIDialogueOption>(dialogueOption, Vector2<>(4, currentY), nullptr);
 		dialogueOptions.push_back(uiDialogueOption);
 		addUIElement(uiDialogueOption);
@@ -97,7 +101,7 @@ void UILayout::removeHightlightVerb() {
 	}
 }
 
-void UILayout::highlightVerb(Verb& verb) {
+void UILayout::highlightVerb(std::shared_ptr<Verb> verb) {
 	removeHightlightVerb();
 	for (auto& button : uiVerbButtons) {
 		if (button->getVerb() == verb) {
@@ -106,7 +110,7 @@ void UILayout::highlightVerb(Verb& verb) {
 	}
 }
 
-std::vector<std::shared_ptr<UIVerbButton>> UILayout::createVerbsMatrix(Vector2<> position, std::vector<std::vector<Verb*>> verbs, Texture* verbBackground) {
+std::vector<std::shared_ptr<UIVerbButton>> UILayout::createVerbsMatrix(Vector2<> position, std::vector<std::vector<std::shared_ptr<Verb>>> verbs, std::shared_ptr<Texture> verbBackground) {
 	int height = 14;
 	std::vector<int> columnLengths;
 
@@ -131,7 +135,7 @@ std::vector<std::shared_ptr<UIVerbButton>> UILayout::createVerbsMatrix(Vector2<>
 				buttonPos.x += columnLengths[k] * 7;
 				buttonPos.x += 2;
 			}
-			auto button = std::make_shared<UIVerbButton>(*verbs[j][i], buttonPos, Vector2<>(columnLengths[i] * 7, height), verbBackground);
+			auto button = std::make_shared<UIVerbButton>(verbs[j][i], buttonPos, Vector2<>(columnLengths[i] * 7, height), verbBackground);
 			addUIElement(button);
 			uiVerbButtons.push_back(button);
 			buttons.push_back(button);
@@ -140,7 +144,7 @@ std::vector<std::shared_ptr<UIVerbButton>> UILayout::createVerbsMatrix(Vector2<>
 	return buttons;
 }
 
-std::shared_ptr<GameObject> UILayout::createUIItemSlot(int index, Vector2<> position, Vector2<> size, Texture* background, Event& onUIUpdate) {
+std::shared_ptr<GameObject> UILayout::createUIItemSlot(int index, Vector2<> position, Vector2<> size, std::shared_ptr<Texture> background, Event& onUIUpdate) {
 	auto itemSlot = std::make_shared<UIItemSlot>(position, size, background, index);
 
 	addUIElement(itemSlot);
@@ -149,7 +153,7 @@ std::shared_ptr<GameObject> UILayout::createUIItemSlot(int index, Vector2<> posi
 	return itemSlot;
 }
 
-void UILayout::createInventoryMatrix(Vector2<> position, int columns, int rows, Texture* background, Event& onUIUpdate) {
+void UILayout::createInventoryMatrix(Vector2<> position, int columns, int rows, std::shared_ptr<Texture> background, Event& onUIUpdate) {
 	int width = 40;
 	int height = 22;
 
@@ -175,7 +179,7 @@ void UILayout::toggleVisibility() {
 	visible = !visible;
 }
 
-void UILayout::setHighlightedVerb(Verb* verb) {
+void UILayout::setHighlightedVerb(std::shared_ptr<Verb> verb) {
 	highlightedVerb = verb;
 }
 
@@ -195,3 +199,29 @@ std::string UILayout::getName() {
 UILayout::UILayout(std::string name) {
 	this->name = name;
 }
+
+//void UILayout::createDialogueOptions(DialogueNode& dialogueNode) {
+//	clearDialogueOptions();
+//	int i = 0;
+//	for (auto& option : dialogueNode.getOptions()) {
+//		auto uiOption = std::make_shared<UIDialogueOption>(option, Vector2<>(10.0f, 10.0f + 20 * i), nullptr);
+//		addUIElement(uiOption);
+//		dialogueOptions.push_back(uiOption);
+//		i++;
+//	}
+//}
+
+//void UILayout::clearDialogueOptions() {
+//	for (auto& option : dialogueOptions) {
+//		removeUIElement(option);
+//	}
+//	dialogueOptions.clear();
+//}
+//
+//void UILayout::incrementInventoryIndex(int increment) {
+//	currentInventoryIndex += increment;
+//}
+//
+//int UILayout::getInventoryIndex() {
+//	return currentInventoryIndex;
+//}

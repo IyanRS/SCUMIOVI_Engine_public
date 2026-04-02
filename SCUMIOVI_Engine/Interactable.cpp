@@ -2,11 +2,11 @@
 
 #include "Game.hpp"
 
-bool Interactable::onClick(Vector2<> clickPos, Verb* verb) {
+bool Interactable::onClick(Vector2<> clickPos, std::shared_ptr<Verb> verb) {
 	Game& game = Game::getInstance();
-	if (verb->getName() == Verb::selectedVerb.getName())
+	if (verb->getName() == "selected")
 		return interact(clickPos, game.getCurrentPlayer()->getVerb());
-	if (verb->getName() == Verb::defaultVerb.getName())
+	if (verb->getName() == "default")
 		if (defaultVerb == nullptr)
 			return interact(clickPos, game.getDefaultVerb());
 		else
@@ -26,7 +26,7 @@ void Interactable::onMouseNotOver(Vector2<> mousePos) {
 	getMouseNotOverEvent().execute(e);
 }
 
-bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
+bool Interactable::interact(Vector2<> clickPos, std::shared_ptr<Verb> verb) {
 	if (verb == nullptr) {
 		if (defaultVerb == nullptr) {
 			return false;
@@ -37,11 +37,8 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 	Game& game = Game::getInstance();
 	EventInfo e = EventInfo(clickPos, *game.getCurrentPlayer(), *this);
 
-	std::map<std::string, Event>::iterator it = interactions.find(verb->getName());
+	auto it = interactions.find(verb->getName());
 	if (it != interactions.end()) {
-		Event* beforeActualEvent = verb->getBeforeActualEvent();
-		Event* afterActualEvent = verb->getAfterActualEvent();
-
 		if (verb->RequiresSelectedObject()) {
 			if (game.getCurrentPlayer()->getSelectedObject() == nullptr) {
 				GameObject* go = dynamic_cast<GameObject*>(this);
@@ -49,16 +46,12 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 					game.getCurrentPlayer()->setSelectedObject(go->shared_from_this());
 			}
 			else {
-				std::map<std::string, std::string>::iterator it1 = interactionsSelectedObjects.find(verb->getName());
+				auto it1 = interactionsSelectedObjects.find(verb->getName());
 				if (it1 != interactionsSelectedObjects.end()) {
 					if (game.getCurrentPlayer()->getSelectedObject()->getName() == it1->second) {
-						if (beforeActualEvent != nullptr) {
-							beforeActualEvent->execute(e);
-						}
-						it->second.execute();
-						if (afterActualEvent != nullptr) {
-							afterActualEvent->execute(e);
-						}
+						verb->getBeforeActualEvent().execute(e);
+						it->second.execute(e);
+						verb->getAfterActualEvent().execute(e);
 						game.changeToDefaultVerb();
 						game.getCurrentPlayer()->setSelectedObject(nullptr);
 					}
@@ -66,74 +59,53 @@ bool Interactable::interact(Vector2<> clickPos, Verb* verb) {
 			}
 		}
 		else {
-			if (beforeActualEvent != nullptr) {
-				beforeActualEvent->execute(e);
-			}
+			verb->getBeforeActualEvent().execute(e);
 			it->second.execute(e);
-			if (afterActualEvent != nullptr) {
-				afterActualEvent->execute(e);
-			}
-			// TODO: default before and after Events? (game.changeToDefaultVerb(); could be inside the event after)
+			verb->getAfterActualEvent().execute(e);
 			game.changeToDefaultVerb();
 			game.getCurrentPlayer()->setSelectedObject(nullptr);
 		}
 		
-		
-		//game.getUI().updateUI();
 		return true;
 	}
-	// TODO: handle invalid verbs, allow characters to say predefined lines such as "I can't do that".
 	else {
-		//if (verb)
-		//if (defaultVerb == nullptr) {
-		//	return false;
-		//}
-		it = interactions.find(Verb::anyVerb.getName());
+		it = interactions.find("any");
 		if (it != interactions.end()) {
-			Game& game = Game::getInstance();
-			EventInfo e = EventInfo(clickPos, *game.getCurrentPlayer(), *this);
 			it->second.execute(e);
 			return true;
 		}
 	}
 
-	Event* defaultEvent = verb->getDefaultEvent();
-	if (defaultEvent != nullptr) {
-		defaultEvent->execute(e);
-		return true;
-	}
-
+	verb->getDefaultEvent().execute(e);
 	game.changeToDefaultVerb();
 	game.getCurrentPlayer()->setSelectedObject(nullptr);
 	return false;
 }
 
-void Interactable::setDefaultVerb(Verb* verb) {
+void Interactable::setDefaultVerb(std::shared_ptr<Verb> verb) {
 	defaultVerb = verb;
-	//shouldHighlightDefaultVerb = highlight;
 }
 
-Verb* Interactable::getDefaultVerb() {
+std::shared_ptr<Verb> Interactable::getDefaultVerb() {
 	return defaultVerb;
 }
 
 void Interactable::setDefaultVerb(std::string verbName) {
 	Game& game = Game::getInstance();
 	defaultVerb = game.getVerb(verbName);
-	//shouldHighlightDefaultVerb = highlight;
 }
 
-void Interactable::addVerbInteraction(Verb& verb, Event event) {
-	interactions[verb.getName()] = event;
+void Interactable::addVerbInteraction(std::shared_ptr<Verb> verb, Event event) {
+	interactions[verb->getName()] = event;
 }
 
-void Interactable::addVerbInteraction(Verb& verb, std::string selectedObjectName, Event event) {
+void Interactable::addVerbInteraction(std::shared_ptr<Verb> verb, std::string selectedObjectName, Event event) {
 	addVerbInteraction(verb, event);
-	interactionsSelectedObjects[verb.getName()] = selectedObjectName;
+	interactionsSelectedObjects[verb->getName()] = selectedObjectName;
 }
 
-void Interactable::removeInteraction(Verb& verb) {
-	interactions.erase(verb.getName());
+void Interactable::removeInteraction(std::shared_ptr<Verb> verb) {
+	interactions.erase(verb->getName());
 }
 
 void Interactable::removeInteraction(std::string verbName) {
@@ -141,10 +113,10 @@ void Interactable::removeInteraction(std::string verbName) {
 }
 
 Event& Interactable::getMouseOverEvent() {
-	if (defaultVerb && defaultVerb->getName() != Verb::anyVerb.getName()) {
+	if (defaultVerb && defaultVerb->getName() != "any") {
 		Event highlightDefaultVerbEvent = Event([this](EventInfo e) {
 			e.game.getUI().setHighlightedVerb(getDefaultVerb());
-			if (e.player.getVerb() && e.interactable.hasVerbInteraction(*e.player.getVerb())) {
+			if (e.player.getVerb() && e.interactable.hasVerbInteraction(e.player.getVerb())) {
 				GameObject* go = dynamic_cast<GameObject*>(&e.interactable);
 				if (go) e.player.setTargetObject(go->shared_from_this());
 			}
@@ -162,7 +134,7 @@ void Interactable::setMouseOverEvent(Event event) {
 }
 
 Event& Interactable::getMouseNotOverEvent() {
-	if (defaultVerb && defaultVerb->getName() != Verb::anyVerb.getName()) {
+	if (defaultVerb && defaultVerb->getName() != "any") {
 		Event dontHighlightDefaultVerbEvent = Event([this](EventInfo e) {
 			e.game.getUI().setHighlightedVerb(nullptr);
 			e.player.setTargetObject(nullptr);
@@ -179,6 +151,6 @@ void Interactable::setMouseNotOverEvent(Event event) {
 	mouseNotOverEvent = event;
 }
 
-bool Interactable::hasVerbInteraction(Verb& verb) {
-	return interactions.find(verb.getName()) != interactions.end();
+bool Interactable::hasVerbInteraction(std::shared_ptr<Verb> verb) {
+	return interactions.find(verb->getName()) != interactions.end();
 }

@@ -30,16 +30,16 @@ class Renderer {
 	void renderUI(UI& ui);
 	void renderUIElement(GameObject& uiElement);
 	void renderDebugElements(Scene& scene);
-	void renderTexture(Vector2<> position, Vector2<> size, Texture* texture, Camera& camera);
+	void renderTexture(Vector2<> position, Vector2<> size, std::shared_ptr<Texture> texture, Camera& camera);
 	TTF_TextEngine* textEngine;
 	SDL_Cursor* customCursor;
 
-	Texture* mouseTexture;
+	std::shared_ptr<Texture> mouseTexture;
 	Vector2<> mouseHotspot;
 public:
 	Renderer();
 	~Renderer();
 	void render(Scene& scene, UI& ui);
-	void setCustomMouse(Texture& mouseTexture, Vector2<> mouseHotspot);
+	void setCustomMouse(std::shared_ptr<Texture> mouseTexture, Vector2<> mouseHotspot);
 	//void render(UI ui);
 };
