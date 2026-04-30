@@ -2,6 +2,29 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Build SCUMIOVI Engine",
+      "type": "shell",
+      "command": "msbuild SCUMIOVI_Engine.sln /p:Configuration=Debug /p:Platform=x64 /p:OutDir=x64\\Debug\\ /m",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Run SCUMIOVI Engine",
+      "type": "shell",
+      "command": "Start-Process -FilePath \"${workspaceFolder}\\x64\\Debug\\SCUMIOVI_Engine.exe\" -WorkingDirectory \"${workspaceFolder}\\SCUMIOVI_Engine\"",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
       "label": "Run Catch2 Unit Tests",
       "type": "shell",
       "command": ".\\build_tests.bat",

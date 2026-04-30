@@ -3,11 +3,17 @@
     "configurations": [
         {
             "name": "Launch SCUMIOVI Engine (Debug x64)",
-            "type": "lldb",
+            "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/x64/Debug/SCUMIOVI_Engine.exe",
             "args": [],
-            "cwd": "${workspaceFolder}/SCUMIOVI_Engine"
+            "cwd": "${workspaceFolder}/SCUMIOVI_Engine",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${workspaceFolder}/SDL3/lib/x64;${workspaceFolder}/SDL3_image/lib/x64;${workspaceFolder}/SDL3_ttf/lib/x64;${env:PATH}"
+                }
+            ]
         }
     ]
 }
