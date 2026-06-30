@@ -1,26 +1,10 @@
 #include "ScriptLoader.hpp"
-#include "Door.hpp"
-#include "Item.hpp"
-#include "DialogueNode.hpp"
-#include "UIVerbButton.hpp"
+
+#include "EngineAPI.hpp"
 #include <memory>
 
-Event createMoveToEvent(Vector2<> pos, Event callback) {
-	return Event([pos, callback](EventInfo e) {
-		auto currentPlayer = e.game.getCurrentPlayer();
-		if (!currentPlayer || !currentPlayer->canMove()) {
-			return;
-		}
-		
-		currentPlayer->moveToAtSpeed(pos - (Vector2<>(currentPlayer->getSize().x / 2.0f, currentPlayer->getSize().y * 0.85f)), 100.0f, Event([] {
-			Game& game = Game::getInstance();
-			auto player = game.getCurrentPlayer();
-		}) + callback);
-	});
-}
-
 ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
-	moveToEvent = Event([](EventInfo e) {
+	Event walkEvent([](EventInfo e) {
 		auto currentPlayer = e.game.getCurrentPlayer();
 		if (!currentPlayer) return;
 
@@ -67,7 +51,10 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 		currentPlayer->moveToAtSpeed(pathAtFeetHeight, 100.0f, {Event()});
 	});
 
-	highlightDefaultVerbEvent = Event([](EventInfo e) {
+	game.walkVerb->setDefaultEvent(walkEvent);
+	moveToEvent = walkEvent;
+
+	Event highlightDefaultVerbEvent([](EventInfo e) {
 		auto defaultVerb = e.interactable.getDefaultVerb();
 		if (defaultVerb) {
 			e.game.getUI().setHighlightedVerb(defaultVerb);
@@ -84,21 +71,10 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 		}
 	});
 
-	// Setup Global Verb Events
-	Event walkEvent([this](EventInfo e) {
-		auto scene = game.getScene();
-		if (scene && scene->getWalkableArea() != nullptr) {
-			moveToEvent.execute(e);
-		}
-	});
-	game.walkVerb->setDefaultEvent(walkEvent);
-
-	Event afterGiveEvent([this](EventInfo e) {
-		auto currentPlayer = e.player.shared_from_this(); // Safe since we know Player is shared_ptr
+	Event afterGiveEvent([](EventInfo e) {
+		auto currentPlayer = e.player.shared_from_this();
 		auto selected = e.player.getSelectedObject();
 		if (selected != nullptr) {
-			// Player& interface currently uses removeItem(*shared_ptr) which dereferences.
-			// Let's assume Inventory::removeItem takes shared_ptr or reference.
 			e.player.getInventory().removeItem(selected);
 			e.game.changeToDefaultVerb();
 			e.player.setSelectedObject(nullptr);
@@ -122,7 +98,7 @@ std::shared_ptr<GameObject> ScriptLoader::addItemObject(std::string name, Scene&
 	itemInScene->setLayer(-1);
 
 	itemInScene->addVerbInteraction(game.pickupVerb, Event([this, name, inventoryTextureSource](EventInfo e) {
-		auto currentPlayer = game.getCurrentPlayer();
+		auto currentPlayer = e.game.getCurrentPlayer();
 		if (currentPlayer) {
 			if (currentPlayer->getCurrentHorizontalDirection() == RIGHT)
 				currentPlayer->playAnimation("interactRight");
@@ -138,8 +114,7 @@ std::shared_ptr<GameObject> ScriptLoader::addItemObject(std::string name, Scene&
 			auto itemInInventory = std::make_shared<GameObject>(name, Vector2<>(), Vector2<>(-1.0f, -1.0f), itemInInventoryTexture);
 			itemInInventory->addTag("item");
 			
-			Game& internalGame = Game::getInstance();
-			itemInInventory->addVerbInteraction(internalGame.giveVerb, Event([](EventInfo e) {
+			itemInInventory->addVerbInteraction(game.giveVerb, Event([](EventInfo e) {
 				auto interactableObj = std::dynamic_pointer_cast<GameObject>(static_cast<GameObject&>(e.interactable).shared_from_this());
 				if (e.player.getSelectedObject() == nullptr) {
 					e.player.setSelectedObject(interactableObj);
@@ -164,12 +139,10 @@ std::shared_ptr<GameObject> ScriptLoader::addItemObject(std::string name, Scene&
 
 std::shared_ptr<GameObject> ScriptLoader::createUIVerbButton(std::shared_ptr<Verb> verb, Vector2<> position, Vector2<> size, std::shared_ptr<Texture> verbBackground, Event& onUIUpdate) {
 	auto button = std::make_shared<UIVerbButton>(verb, position, size, verbBackground);
-	// Additional logic can be added here
 	return button;
 }
 
 std::shared_ptr<GameObject> ScriptLoader::createUIItemSlot(Vector2<> position, Vector2<> size, std::shared_ptr<Texture> background, Event& onUIUpdate) {
-	// This is just a placeholder slot, implementation depends on inventory UI logic
 	auto slot = std::make_shared<GameObject>("ItemSlot", position, size, background);
 	return slot;
 }

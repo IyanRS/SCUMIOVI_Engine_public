@@ -2,16 +2,11 @@
 //  Auto-generated file. Do not edit by hand.
 // ==========================================
 
-#include "../../SCUMIOVI_Engine/ScriptLoader.hpp"
-#include "../../SCUMIOVI_Engine/Door.hpp"
-#include "../../SCUMIOVI_Engine/Item.hpp"
-#include "../../SCUMIOVI_Engine/DialogueNode.hpp"
-#include "../../SCUMIOVI_Engine/DialogueOption.hpp"
-#include "../../SCUMIOVI_Engine/UIVerbButton.hpp"
+#include "ScriptLoader.hpp"
+#include "EngineAPI.hpp"
 #include <memory>
 
-void ScriptLoader::loadAndRunGame() {
-    Game& game = Game::getInstance();
+void ScriptLoader::loadGame(Game& game) {
 
     // --- Animations ---
     auto guybrushWalkRight = std::make_shared<Animation>(
@@ -356,5 +351,4 @@ void ScriptLoader::loadAndRunGame() {
     game.bindLeftClickToVerb(game.selectedVerb);
     game.bindRightClickToVerb(game.getDefaultVerb());
 
-    game.startGame();
-}
+    }

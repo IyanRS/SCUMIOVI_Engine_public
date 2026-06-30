@@ -1,4 +1,5 @@
 #include "Renderer.hpp"
+#include "ResourceManager.hpp"
 #include "Common.hpp"
 #include <SDL3_ttf/SDL_ttf.h>
 #include <memory>
@@ -192,7 +193,7 @@ void Renderer::renderTexture(Vector2<> position, Vector2<> size, std::shared_ptr
 		renderTextureSuccess = SDL_RenderTexture(sdlRenderer, texture, &srcRect, &dstRect);
 	}
 	if (!renderTextureSuccess) {
-		SDL_Log("Failed to render texture: %s.\nPath: %s%s", SDL_GetError(), TEXTURES_DIRECTORY, textureToRender->getSource().c_str());
+		SDL_Log("Failed to render texture: %s.\nPath: %s%s", SDL_GetError(), ResourceManager::getTexturesDirectory().c_str(), textureToRender->getSource().c_str());
 	}
 }
 

@@ -1,10 +1,11 @@
 #include "ResourceManager.hpp"
 #include <SDL3_image/SDL_image.h>
-
 #include <SDL3/SDL.h>
 
 
 ResourceManager* ResourceManager::resourceManager_ = nullptr;
+std::string ResourceManager::texturesDirectory_;
+std::string ResourceManager::fontsDirectory_;
 
 ResourceManager& ResourceManager::getInstance() {
 	if (resourceManager_ == nullptr)
@@ -16,12 +17,25 @@ ResourceManager::ResourceManager() {
 	TTF_Init();
 }
 
+void ResourceManager::init(const std::string& assetsDirectory) {
+	texturesDirectory_ = assetsDirectory + "/textures/";
+	fontsDirectory_ = assetsDirectory + "/fonts/";
+}
+
+const std::string& ResourceManager::getTexturesDirectory() {
+	return texturesDirectory_;
+}
+
+const std::string& ResourceManager::getFontsDirectory() {
+	return fontsDirectory_;
+}
+
 SDL_Surface* ResourceManager::loadSurface(Texture& texture) {
 	if (texture.getSource() == "") {
 		return nullptr;
 	}
 
-	std::string textureFilePath = TEXTURES_DIRECTORY + texture.getSource();
+	std::string textureFilePath = getTexturesDirectory() + texture.getSource();
 
 	SDL_Surface* surfaceImg;
 
@@ -56,7 +70,7 @@ SDL_Texture* ResourceManager::loadTexture(SDL_Renderer* sdlRenderer, Texture& te
 		return nullptr;
 	}
 
-	std::string textureFilePath = TEXTURES_DIRECTORY + texture.getSource();
+	std::string textureFilePath = getTexturesDirectory() + texture.getSource();
 
 	SDL_Texture* textureImg;
 
@@ -121,7 +135,7 @@ TTF_Font* ResourceManager::loadFont(std::string fontFile, int size) {
 		font = it->second;
 	}
 	else {
-		font = TTF_OpenFont((FONTS_DIRECTORY + fontFile).c_str(), size);
+		font = TTF_OpenFont((getFontsDirectory() + fontFile).c_str(), size);
 		if (font == nullptr) {
 			SDL_Log("TTF_OpenFont() Error: %s", SDL_GetError());
 			return nullptr;
@@ -133,7 +147,7 @@ TTF_Font* ResourceManager::loadFont(std::string fontFile, int size) {
 }
 
 Vector2<int> ResourceManager::getImageSize(std::string filename) {
-	std::string filePath = TEXTURES_DIRECTORY + filename;
+	std::string filePath = getTexturesDirectory() + filename;
 	// Open the image file with SDL_RWops
 	SDL_IOStream* rw = SDL_IOFromFile(filePath.c_str(), "rb");
 	if (rw == nullptr) {

@@ -2,10 +2,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch SCUMIOVI Engine (Debug x64)",
+            "name": "Launch SCUMIOVI Game (Debug x64)",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/x64/Debug/SCUMIOVI_Engine.exe",
+            "program": "${workspaceFolder}/x64/Debug/SCUMIOVI_Game.exe",
             "args": [],
             "cwd": "${workspaceFolder}/SCUMIOVI_Engine",
             "environment": [

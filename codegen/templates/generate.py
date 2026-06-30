@@ -11,7 +11,7 @@ from jinja2 import Environment, FileSystemLoader
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 GAME_FILES_FOLDER = os.path.join(SCRIPT_DIR, '..', '..', 'game')
 TEMPLATES_FOLDER = SCRIPT_DIR
-OUTPUT_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, '..', 'src', 'generated'))
+OUTPUT_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, '..', '..', 'SCUMIOVI_Game'))
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 CSV_SEPARATOR = ','

@@ -17,16 +17,16 @@ if not exist tests\build mkdir tests\build
 
 cd tests\build
 
-:: Gather all engine source files except Main.cpp
+:: Gather all engine source files except Main.cpp and ScriptLoader.cpp
 set "ENGINE_SRC="
 for %%f in (..\..\SCUMIOVI_Engine\*.cpp) do (
-    if /I not "%%~nxf"=="Main.cpp" (
+    if /I not "%%~nxf"=="Main.cpp" if /I not "%%~nxf"=="ScriptLoader.cpp" (
         set "ENGINE_SRC=!ENGINE_SRC! "%%f""
     )
 )
 
 :: Compiling Catch2 tests...
-cl.exe /nologo /EHsc /std:c++20 /I..\..\SCUMIOVI_Engine /I..\..\SDL3\include /I..\..\SDL3_image\include /I..\..\SDL3_ttf\include ..\test_main.cpp ..\test_vector2.cpp ..\test_delay.cpp ..\test_walkable_area.cpp !ENGINE_SRC! /Fe:run_tests.exe /link /LIBPATH:..\..\SDL3\lib\x64 /LIBPATH:..\..\SDL3_image\lib\x64 /LIBPATH:..\..\SDL3_ttf\lib\x64 SDL3.lib SDL3_image.lib SDL3_ttf.lib
+cl.exe /nologo /EHsc /std:c++20 /I..\..\SCUMIOVI_Engine /I..\..\SCUMIOVI_Game /I..\..\SDL3\include /I..\..\SDL3_image\include /I..\..\SDL3_ttf\include ..\test_main.cpp ..\test_vector2.cpp ..\test_delay.cpp ..\test_walkable_area.cpp !ENGINE_SRC! /Fe:run_tests.exe /link /LIBPATH:..\..\SDL3\lib\x64 /LIBPATH:..\..\SDL3_image\lib\x64 /LIBPATH:..\..\SDL3_ttf\lib\x64 SDL3.lib SDL3_image.lib SDL3_ttf.lib
 
 copy /Y ..\..\SCUMIOVI_Engine\SDL3*.dll . >nul
 

@@ -4,6 +4,8 @@
       "name": "windows-msvc-x64",
       "includePath": [
         "${workspaceFolder}/**",
+        "${workspaceFolder}/SCUMIOVI_Engine",
+        "${workspaceFolder}/SCUMIOVI_Game",
         "${workspaceFolder}/SDL3/include",
         "${workspaceFolder}/SDL3_image/include",
         "${workspaceFolder}/SDL3_ttf/include"

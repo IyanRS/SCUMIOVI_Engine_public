@@ -7,7 +7,5 @@
 
 #define FPS 60
 
-#define ASSETS_DIRECTORY "../assets/"
-
 #define PIXEL_PERFECT
 #define PIXEL_PERFECT_CURSOR
