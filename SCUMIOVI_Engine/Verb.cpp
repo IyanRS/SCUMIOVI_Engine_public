@@ -6,17 +6,17 @@ void Verb::setDefaultDefaultEvent(const Event& event) {
 	defaultDefaultEvent = event;
 }
 
-Verb::Verb() {
+Verb::Verb() : requiresSelectedObject(false) {
 	defaultEvent = defaultDefaultEvent;
 }
 
-Verb::Verb(std::string name) {
+Verb::Verb(std::string name) : requiresSelectedObject(false) {
 	this->name = name;
 	this->displayName = name;
 	defaultEvent = defaultDefaultEvent;
 }
 
-Verb::Verb(std::string name, std::string displayName) {
+Verb::Verb(std::string name, std::string displayName) : requiresSelectedObject(false) {
 	this->name = name;
 	this->displayName = displayName;
 	defaultEvent = defaultDefaultEvent;

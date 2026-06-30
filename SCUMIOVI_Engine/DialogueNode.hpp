@@ -12,6 +12,8 @@ class DialogueNode {
 
 public:
 	DialogueNode(Event event) : dialogueEvent(event) {};
+	DialogueNode() {};
+	void setDialogueEvent(Event event);
 	std::vector<std::shared_ptr<DialogueOption>>& getOptions();
 	void setOptions(std::vector<std::shared_ptr<DialogueOption>> options);
 	void showOptions();

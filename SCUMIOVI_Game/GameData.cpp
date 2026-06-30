@@ -224,16 +224,16 @@ void ScriptLoader::loadGame(Game& game) {
 
         // --- DialogueNode for "main" ---
 
-    std::shared_ptr<DialogueNode> mainNode;
-    mainNode = std::make_shared<DialogueNode>(Event(std::function<void(EventInfo)>([&](EventInfo e) {
+    auto mainNode = std::make_shared<DialogueNode>();
+    mainNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
             "Hello Guybrush",
             0.6,
-            Event(std::function<void(EventInfo)>([&](EventInfo e) {
+            Event(std::function<void(EventInfo)>([=](EventInfo e) {
                 e.game.getCurrentPlayer()->say(
             "Hi",
             0.2,
-            Event(std::function<void(EventInfo)>([&](EventInfo e) {
+            Event(std::function<void(EventInfo)>([=](EventInfo e) {
                     mainNode->showOptions();
                  })));  
              })));  
@@ -241,16 +241,16 @@ void ScriptLoader::loadGame(Game& game) {
 
         // --- DialogueNode for "label2" ---
 
-    std::shared_ptr<DialogueNode> label2Node;
-    label2Node = std::make_shared<DialogueNode>(Event(std::function<void(EventInfo)>([&](EventInfo e) {
+    auto label2Node = std::make_shared<DialogueNode>();
+    label2Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
             "I'm fine,\nwhat about you?",
             0.0,
-            Event(std::function<void(EventInfo)>([&](EventInfo e) {
+            Event(std::function<void(EventInfo)>([=](EventInfo e) {
                 e.game.getCurrentPlayer()->say(
             "I'm fine too",
             0.0,
-            Event(std::function<void(EventInfo)>([&](EventInfo e) {
+            Event(std::function<void(EventInfo)>([=](EventInfo e) {
                     label2Node->showOptions();
                  })));  
              })));  
@@ -258,48 +258,48 @@ void ScriptLoader::loadGame(Game& game) {
 
         // --- DialogueNode for "label3" ---
 
-    std::shared_ptr<DialogueNode> label3Node;
-    label3Node = std::make_shared<DialogueNode>(Event(std::function<void(EventInfo)>([&](EventInfo e) {
+    auto label3Node = std::make_shared<DialogueNode>();
+    label3Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
             "Are you ok?",
             0.0,
-            Event(std::function<void(EventInfo)>([&](EventInfo e) {
+            Event(std::function<void(EventInfo)>([=](EventInfo e) {
                 label3Node->showOptions();
              })));  
     })));
 
         // --- DialogueNode for "label4" ---
 
-    std::shared_ptr<DialogueNode> label4Node;
-    label4Node = std::make_shared<DialogueNode>(Event(std::function<void(EventInfo)>([&](EventInfo e) {
+    auto label4Node = std::make_shared<DialogueNode>();
+    label4Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
             "...",
             0.0,
-            Event(std::function<void(EventInfo)>([&](EventInfo e) {
+            Event(std::function<void(EventInfo)>([=](EventInfo e) {
                 label4Node->showOptions();
              })));  
     })));
 
         // --- DialogueNode for "byelabel" ---
 
-    std::shared_ptr<DialogueNode> byelabelNode;
-    byelabelNode = std::make_shared<DialogueNode>(Event(std::function<void(EventInfo)>([&](EventInfo e) {
+    auto byelabelNode = std::make_shared<DialogueNode>();
+    byelabelNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
             "See you",
             0.0,
-            Event(std::function<void(EventInfo)>([&](EventInfo e) {
+            Event(std::function<void(EventInfo)>([=](EventInfo e) {
                 byelabelNode->showOptions();
              })));  
     })));
 
         // --- DialogueNode for "scripttest" ---
 
-    std::shared_ptr<DialogueNode> scripttestNode;
-    scripttestNode = std::make_shared<DialogueNode>(Event(std::function<void(EventInfo)>([&](EventInfo e) {
+    auto scripttestNode = std::make_shared<DialogueNode>();
+    scripttestNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
             "What do you want to try?",
             0.0,
-            Event(std::function<void(EventInfo)>([&](EventInfo e) {
+            Event(std::function<void(EventInfo)>([=](EventInfo e) {
                     // Action: dialogue_script_test.cpp
              })));  
     })));
@@ -335,14 +335,14 @@ void ScriptLoader::loadGame(Game& game) {
     label3Node->setOptions({ label3NodeOption1 });
 
 
-    stan->addVerbInteraction(game.getVerb("give"), "mug", Event([&](EventInfo e) {
+    stan->addVerbInteraction(game.getVerb("give"), "mug", Event([=](EventInfo e) {
 		if (e.player.getCurrentHorizontalDirection() == RIGHT)
 		    e.player.playAnimation("interactRight");
 		else
 		    e.player.playAnimation("interactLeft");
 		e.player.getScene()->getGameObject("stan")->say("Gracias");
     }));
-    stan->addVerbInteraction(game.getVerb("talk"), Event([&](EventInfo e) {
+    stan->addVerbInteraction(game.getVerb("talk"), Event([=](EventInfo e) {
 		e.player.disableMovement();
 		e.game.getUI().setLayout(e.game.getUI().getDialogueLayout()->getName());
 		mainNode->enterNode();

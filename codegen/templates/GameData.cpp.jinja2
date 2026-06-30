@@ -214,13 +214,13 @@ void ScriptLoader::loadGame(Game& game) {
     {% for label, dlg in dialogue_map.items() %}
         // --- DialogueNode for "{{ label }}" ---
 
-    std::shared_ptr<DialogueNode> {{ label }}Node;
-    {{ label }}Node = std::make_shared<DialogueNode>(Event(std::function<void(EventInfo)>([&](EventInfo e) {
+    auto {{ label }}Node = std::make_shared<DialogueNode>();
+    {{ label }}Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
         {% for line in dlg.lines if line.text is not none %}
         {{ ' ' * (4 + 4 * loop.index0) }}{% if line.speaker == 'player' %}e.game.getCurrentPlayer()->{% else %}{{ line.speaker }}->{% endif %}say(
             "{{ cpp_string(line.text) }}",
             {{ line.delay if line.delay is not none else 0.0 }},
-            Event(std::function<void(EventInfo)>([&](EventInfo e) {
+            Event(std::function<void(EventInfo)>([=](EventInfo e) {
         {% endfor %}
         {% if dlg.lines[-1].action %}
         {{ ' ' * (4 + 4 * dlg.lines|length) }}// Action: {{ dlg.lines[-1].action }}
@@ -254,11 +254,11 @@ void ScriptLoader::loadGame(Game& game) {
 
     {% for i in interactions %}
     {% if i.other_object_id %}
-    {{ i.object_id }}->addVerbInteraction(game.getVerb("{{ i.verb }}"), "{{ i.other_object_id }}", Event([&](EventInfo e) {
+    {{ i.object_id }}->addVerbInteraction(game.getVerb("{{ i.verb }}"), "{{ i.other_object_id }}", Event([=](EventInfo e) {
 {{ i.script }}
     }));
     {% else %}
-    {{ i.object_id }}->addVerbInteraction(game.getVerb("{{ i.verb }}"), Event([&](EventInfo e) {
+    {{ i.object_id }}->addVerbInteraction(game.getVerb("{{ i.verb }}"), Event([=](EventInfo e) {
 {{ i.script }}
     }));
     {% endif %}

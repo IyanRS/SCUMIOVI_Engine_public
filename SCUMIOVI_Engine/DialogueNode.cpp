@@ -2,6 +2,10 @@
 #include "Game.hpp"
 #include <memory>
 
+void DialogueNode::setDialogueEvent(Event event) {
+	dialogueEvent = event;
+}
+
 std::vector<std::shared_ptr<DialogueOption>>& DialogueNode::getOptions() {
 	return options;
 }

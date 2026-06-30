@@ -1,0 +1,137 @@
+#include "catch.hpp"
+#include "Verb.hpp"
+#include "VerbSyntax.hpp"
+#include "GameObject.hpp"
+
+TEST_CASE("Verb default construction", "[verb]") {
+    Verb v;
+    REQUIRE(v.getName() == "");
+    REQUIRE(v.getDisplayName() == "");
+    REQUIRE(v.RequiresSelectedObject() == false);
+}
+
+TEST_CASE("Verb construction with name", "[verb]") {
+    Verb v("walk");
+    REQUIRE(v.getName() == "walk");
+    REQUIRE(v.getDisplayName() == "walk");
+}
+
+TEST_CASE("Verb construction with name and displayName", "[verb]") {
+    Verb v("walk", "Walk to");
+    REQUIRE(v.getName() == "walk");
+    REQUIRE(v.getDisplayName() == "Walk to");
+}
+
+TEST_CASE("Verb construction with full params", "[verb]") {
+    VerbSyntax syntax({ "Use", "Use $target" });
+    Verb v("use", "Use", syntax, true);
+    REQUIRE(v.getName() == "use");
+    REQUIRE(v.getDisplayName() == "Use");
+    REQUIRE(v.RequiresSelectedObject() == true);
+}
+
+TEST_CASE("Verb equality by name", "[verb]") {
+    Verb a("walk");
+    Verb b("walk");
+    Verb c("push");
+    REQUIRE(a == b);
+    REQUIRE(a != c);
+}
+
+TEST_CASE("Verb default event", "[verb]") {
+    Verb v("test");
+    bool fired = false;
+    Event e([&fired]() { fired = true; });
+    v.setDefaultEvent(e);
+    Event retrieved = v.getDefaultEvent();
+    REQUIRE(&retrieved != &e);
+}
+
+TEST_CASE("Verb before and after actual events", "[verb]") {
+    Verb v("test");
+    bool beforeFired = false;
+    bool afterFired = false;
+    v.setBeforeActualEvent(Event([&beforeFired]() { beforeFired = true; }));
+    v.setAfterActualEvent(Event([&afterFired]() { afterFired = true; }));
+    Event before = v.getBeforeActualEvent();
+    Event after = v.getAfterActualEvent();
+    REQUIRE(&before != &after);
+}
+
+TEST_CASE("Verb static defaultDefaultEvent", "[verb]") {
+    bool fired = false;
+    Verb::setDefaultDefaultEvent(Event([&fired]() { fired = true; }));
+    Verb v;
+    Event defaultEvent = v.getDefaultEvent();
+    Verb::setDefaultDefaultEvent(Event());
+}
+
+TEST_CASE("Verb getInfo with syntax using $object0", "[verb]") {
+    VerbSyntax syntax({ "Push", "Push $object0" });
+    Verb v("push", "Push", syntax, false);
+
+    auto obj = std::make_shared<GameObject>("box", Vector2<>(0, 0));
+    std::string info = v.getInfo({ obj });
+    REQUIRE(info == "Push box");
+}
+
+TEST_CASE("Verb getInfo with selected and target", "[verb]") {
+    VerbSyntax syntax({ "Give", "Give $target", "Give $selected to", "Give $selected to $target" });
+    Verb v("give", "Give", syntax, true);
+
+    auto selected = std::make_shared<GameObject>("key", Vector2<>(0, 0));
+    auto target = std::make_shared<GameObject>("door", Vector2<>(0, 0));
+    std::string info = v.getInfo(selected, target);
+    REQUIRE(info == "Give key to door");
+}
+
+TEST_CASE("Verb getInfo without syntax uses displayName", "[verb]") {
+    Verb v("walk", "Walk to");
+    auto obj = std::make_shared<GameObject>("box", Vector2<>(0, 0));
+    std::string info = v.getInfo({ obj });
+    REQUIRE(info == "Walk to");
+}
+
+TEST_CASE("VerbSyntax default construction", "[verbsyntax]") {
+    VerbSyntax vs;
+    REQUIRE(vs.getStringsCount() == 0);
+}
+
+TEST_CASE("VerbSyntax with strings", "[verbsyntax]") {
+    VerbSyntax vs({ "Push", "Push $target" });
+    REQUIRE(vs.getStringsCount() == 2);
+}
+
+TEST_CASE("VerbSyntax getInfo with $object placeholders", "[verbsyntax]") {
+    VerbSyntax vs({ "Push", "Push $object0" });
+    auto obj = std::make_shared<GameObject>("box", Vector2<>(0, 0));
+    std::string info = vs.getInfo({ obj });
+    REQUIRE(info == "Push box");
+}
+
+TEST_CASE("VerbSyntax getInfo with $selected and $target", "[verbsyntax]") {
+    VerbSyntax vs({ "Give", "Give $selected to $target" });
+    auto selected = std::make_shared<GameObject>("key", Vector2<>(0, 0));
+    auto target = std::make_shared<GameObject>("door", Vector2<>(0, 0));
+    std::string info = vs.getInfo(selected, target);
+    REQUIRE(info == "Give key to door");
+}
+
+TEST_CASE("VerbSyntax getInfo with only selected", "[verbsyntax]") {
+    VerbSyntax vs({ "Give", "Give $selected to $target", "Give $selected" });
+    auto selected = std::make_shared<GameObject>("apple", Vector2<>(0, 0));
+    std::string info = vs.getInfo(selected, nullptr);
+    REQUIRE(info == "Give apple");
+}
+
+TEST_CASE("VerbSyntax getInfo with no matching syntax", "[verbsyntax]") {
+    VerbSyntax vs({ "Push $object0", "Push $object0 $object1" });
+    std::string info = vs.getInfo({});
+    REQUIRE(info == "Couldn't find syntax");
+}
+
+TEST_CASE("VerbSyntax copy construction", "[verbsyntax]") {
+    VerbSyntax original({ "Use", "Use $target" });
+    VerbSyntax copy(original);
+    REQUIRE(copy.getStringsCount() == 2);
+}
