@@ -7,31 +7,37 @@
 #include <string>
 
 Renderer::Renderer() : resourceManager(ResourceManager::getInstance()) {
-	int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-	if (result < 0) {
+	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
 		SDL_Log("SDL_Init error %s", SDL_GetError());
+		validState = false;
+		return;
 	}
 
 	sdlWindow = SDL_CreateWindow("SCUMIOVI", WINDOW_WIDTH, WINDOW_HEIGHT, 0);
 	if (sdlWindow == NULL) {
 		SDL_Log("SDL_CreateWindow error %s", SDL_GetError());
+		validState = false;
+		return;
 	}
 
 	sdlRenderer = SDL_CreateRenderer(sdlWindow, NULL);
 	if (sdlRenderer == NULL) {
 		SDL_Log("SDL_CreateRenderer error %s", SDL_GetError());
+		validState = false;
+		return;
 	}
 
 	textEngine = TTF_CreateRendererTextEngine(sdlRenderer);
 	if (textEngine == NULL) {
 		SDL_Log("TTF_CreateRendererTextEngine error %s", SDL_GetError());
+		validState = false;
 	}
 }
 
 Renderer::~Renderer() {
-	SDL_DestroyRenderer(sdlRenderer);
-	SDL_DestroyWindow(sdlWindow);
-	TTF_DestroyRendererTextEngine(textEngine);
+	if (sdlRenderer) SDL_DestroyRenderer(sdlRenderer);
+	if (sdlWindow) SDL_DestroyWindow(sdlWindow);
+	if (textEngine) TTF_DestroyRendererTextEngine(textEngine);
 }
 
 void Renderer::applyCameraTransform(Camera& camera, SDL_FRect& rect) {
@@ -352,6 +358,7 @@ void Renderer::setCustomMouse(std::shared_ptr<Texture> mouseTexture, Vector2<> m
 }
 
 void Renderer::render(Scene& scene, UI& ui) {
+	if (!validState) return;
 #ifdef PIXEL_PERFECT
 	SDL_Texture* lowResScreen = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_RGBA8888,
 		SDL_TEXTUREACCESS_TARGET, (int)scene.getCamera().getSize().x, (int)scene.getCamera().getSize().y);

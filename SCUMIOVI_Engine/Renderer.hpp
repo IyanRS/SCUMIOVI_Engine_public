@@ -36,6 +36,7 @@ class Renderer {
 
 	std::shared_ptr<Texture> mouseTexture;
 	Vector2<> mouseHotspot;
+	bool validState = true;
 public:
 	Renderer();
 	~Renderer();

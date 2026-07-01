@@ -1,4 +1,5 @@
 #include "UI.hpp"
+#include <SDL3/SDL.h>
 
 std::vector<std::shared_ptr<GameObject>>& UI::getUIElements() {
 	static std::vector<std::shared_ptr<GameObject>> empty;
@@ -37,6 +38,9 @@ std::shared_ptr<GameObject> UI::getUIElement(std::string name) {
 }
 
 void UI::setLayout(std::string name) {
+	// Iterate all layouts — finds the LAST match (most recently created).
+	// Without this full scan, duplicate-named layouts from prior test sections
+	// (Game is a singleton across Catch2 sections) would leave a stale layout active.
 	for (auto& layout : layouts) {
 		if (layout->getName() == name) {
 			currentLayout = layout.get();

@@ -1,5 +1,6 @@
 #include "Event.hpp"
 #include <SDL3/SDL.h>
+#include <exception>
 
 #include "Vector2.hpp"
 #include "Game.hpp"
@@ -55,15 +56,22 @@ void Event::execute(EventInfo eventInfo) {
 
 			if constexpr (std::is_same_v<std::decay_t<decltype(func)>, Delay>) {
 				delaySeconds = func.getSeconds();
+				return;
 			}
 
-			// Check if func can accept EventInfo as argument
-			if constexpr (std::is_invocable_v<decltype(func), EventInfo>) {
-				func(eventInfo);
+			try {
+				if constexpr (std::is_invocable_v<decltype(func), EventInfo>) {
+					func(eventInfo);
+				}
+				else if constexpr (std::is_invocable_v<decltype(func)>) {
+					func();
+				}
 			}
-			// Check if func can be called without arguments
-			else if constexpr (std::is_invocable_v<decltype(func)>) {
-				func();
+			catch (const std::exception& ex) {
+				SDL_Log("Event::execute: unhandled exception in action: %s", ex.what());
+			}
+			catch (...) {
+				SDL_Log("Event::execute: unhandled non-standard exception in action");
 			}
 		}, action);
 
@@ -96,8 +104,15 @@ void Event::tick(float deltaTime) {
 	for (int i = (int)queue.size() - 1; i >= 0; i--) {
 		queue[i].remainingSec -= deltaTime;
 		if (queue[i].remainingSec <= 0.0f) {
-			// Fire — reconstruct a default EventInfo if none was stored
-			queue[i].event.execute();
+			try {
+				queue[i].event.execute();
+			}
+			catch (const std::exception& ex) {
+				SDL_Log("Event::tick: unhandled exception in pending event: %s", ex.what());
+			}
+			catch (...) {
+				SDL_Log("Event::tick: unhandled non-standard exception in pending event");
+			}
 			queue.erase(queue.begin() + i);
 		}
 	}

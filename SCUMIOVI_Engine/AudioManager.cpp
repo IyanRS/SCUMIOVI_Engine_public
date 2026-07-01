@@ -30,6 +30,8 @@ AudioManager::~AudioManager() {
 }
 
 bool AudioManager::init() {
+	if (device != 0) return true;
+
 	if (!SDL_Init(SDL_INIT_AUDIO)) {
 		SDL_Log("AudioManager: SDL_Init(SDL_INIT_AUDIO) failed: %s", SDL_GetError());
 		return false;
@@ -44,6 +46,8 @@ bool AudioManager::init() {
 	musicStream = SDL_CreateAudioStream(NULL, NULL);
 	if (!musicStream) {
 		SDL_Log("AudioManager: SDL_CreateAudioStream failed: %s", SDL_GetError());
+		SDL_CloseAudioDevice(device);
+		device = 0;
 		return false;
 	}
 	SDL_BindAudioStream(device, musicStream);
@@ -52,7 +56,7 @@ bool AudioManager::init() {
 }
 
 void AudioManager::update() {
-	if (currentMusic.data && currentMusic.looping) {
+	if (currentMusic.data && currentMusic.looping && musicStream) {
 		if ((Uint32)SDL_GetAudioStreamQueued(musicStream) < currentMusic.len / 2) {
 			SDL_PutAudioStreamData(musicStream, currentMusic.data, currentMusic.len);
 		}
@@ -92,6 +96,7 @@ void AudioManager::playSound(const std::string& name, float volume) {
 		SDL_BindAudioStream(device, sfxStreams[idx]);
 	}
 
+	SDL_SetAudioStreamFormat(sfxStreams[idx], &sound.spec, NULL);
 	SDL_SetAudioStreamGain(sfxStreams[idx], volume * masterVolume);
 	SDL_PutAudioStreamData(sfxStreams[idx], sound.data, sound.len);
 }
@@ -114,6 +119,8 @@ bool AudioManager::playMusic(const std::string& filepath, bool loop) {
 	currentMusic.spec = spec;
 	currentMusic.looping = loop;
 
+	SDL_SetAudioStreamFormat(musicStream, &spec, NULL);
+	SDL_SetAudioStreamGain(musicStream, masterVolume);
 	SDL_PutAudioStreamData(musicStream, buf, len);
 
 	return true;
