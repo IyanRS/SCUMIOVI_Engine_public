@@ -100,6 +100,7 @@
     <ClCompile Include="UIVerbButton.cpp" />
     <ClCompile Include="Verb.cpp" />
     <ClCompile Include="VerbSyntax.cpp" />
+    <ClCompile Include="AudioManager.cpp" />
     <ClCompile Include="WalkableArea.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -140,6 +141,7 @@
     <ClInclude Include="Vector2.hpp" />
     <ClInclude Include="Verb.hpp" />
     <ClInclude Include="VerbSyntax.hpp" />
+    <ClInclude Include="AudioManager.hpp" />
     <ClInclude Include="WalkableArea.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

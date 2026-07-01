@@ -19,6 +19,8 @@ Game::Game() {
 	anyVerb = std::make_shared<Verb>("any", "Any");
 	selectedVerb = std::make_shared<Verb>("selected", "Selected");
 
+	audio.init();
+
 	lookAtVerb->setDefaultEvent(Event([](EventInfo e) {
 		e.player.say("No veo nada especial.");
 	}));
@@ -109,6 +111,7 @@ void Game::startGame() {
 
 		currentScene->update(deltaTime);
 		Event::tick(deltaTime);
+		audio.update();
 		renderer.render(*currentScene, ui);
 
 		Uint64 afterRenderCounter = SDL_GetPerformanceCounter();
@@ -193,6 +196,10 @@ void Game::changeToDefaultVerb() {
 	if (currentPlayer) {
 		currentPlayer->setVerb(defaultVerb);
 	}
+}
+
+AudioManager& Game::getAudio() {
+	return audio;
 }
 
 void Game::clearClicksPool() {

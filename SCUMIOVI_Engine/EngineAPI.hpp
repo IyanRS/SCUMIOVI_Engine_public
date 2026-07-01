@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Game.hpp"
+#include "AudioManager.hpp"
 #include "GameDataLoader.hpp"
 #include "Scene.hpp"
 #include "GameObject.hpp"

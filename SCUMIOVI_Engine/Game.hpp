@@ -5,6 +5,7 @@
 #include "Player.hpp"
 #include "Renderer.hpp"
 #include "InputManager.hpp"
+#include "AudioManager.hpp"
 #include "UI.hpp"
 
 class Game {
@@ -24,6 +25,7 @@ protected:
 	Event startEvent;
 	Event endEvent;
 	UI ui;
+	AudioManager audio;
 
 	Event defaultClickEvent; // When the player clicks but no object interaction is found
 
@@ -76,4 +78,6 @@ public:
 	void setDefaultVerb(std::string verbName);
 	void changeToDefaultVerb();
 	void clearClicksPool();
+
+	AudioManager& getAudio();
 };
