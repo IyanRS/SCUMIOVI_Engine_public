@@ -158,9 +158,11 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="ScriptLoader.cpp" />
     <ClCompile Include="GameData.cpp" />
+    <ClCompile Include="Interactions\*.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ScriptLoader.hpp" />
+    <ClInclude Include="Interactions\*.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SCUMIOVI_Engine\SCUMIOVI_Engine.vcxproj">

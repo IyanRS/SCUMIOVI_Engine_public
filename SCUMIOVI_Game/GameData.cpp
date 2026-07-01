@@ -4,6 +4,7 @@
 
 #include "ScriptLoader.hpp"
 #include "EngineAPI.hpp"
+#include "Interactions/interactions.h"
 #include <memory>
 
 void ScriptLoader::loadGame(Game& game) {
@@ -336,11 +337,7 @@ void ScriptLoader::loadGame(Game& game) {
 
 
     stan->addVerbInteraction(game.getVerb("give"), "mug", Event([=](EventInfo e) {
-		if (e.player.getCurrentHorizontalDirection() == RIGHT)
-		    e.player.playAnimation("interactRight");
-		else
-		    e.player.playAnimation("interactLeft");
-		e.player.getScene()->getGameObject("stan")->say("Gracias");
+		interaction_give_mug_stan(e);
     }));
     stan->addVerbInteraction(game.getVerb("talk"), Event([=](EventInfo e) {
 		e.player.disableMovement();
