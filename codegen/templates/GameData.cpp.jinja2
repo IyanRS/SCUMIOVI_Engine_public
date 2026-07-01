@@ -224,9 +224,9 @@ void ScriptLoader::loadGame(Game& game) {
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
         {% endfor %}
         {% if dlg.lines[-1].action %}
-        {{ ' ' * (4 + 4 * dlg.lines|length) }}// Action: {{ dlg.lines[-1].action }}
+            {{ ' ' * (4 + 4 * dlg.lines|length) }}{{ dlg.lines[-1].action }}(e);
         {% else %}
-        {{ ' ' * (4 + 4 * dlg.lines|length) }}{{ label }}Node->showOptions();
+            {{ ' ' * (4 + 4 * dlg.lines|length) }}{{ label }}Node->showOptions();
         {% endif %}
         {% set n = dlg.lines|selectattr("text")|list|length %}
         {% for i in range(n-1, -1, -1) %}

@@ -146,8 +146,6 @@ def parse_settings():
                     config[key] = val
     return config
 
-scripts = {}
-
 def change_indentation(code_str, indent_with='\t\t'):
     """
     Prepends 'indent_with' to each non-blank line of the given code string, preserving existing indentation.
@@ -179,8 +177,8 @@ def parse_interaction(row):
     Parses a single interaction row.
     Expected fields: object_id, verb, other_object_id, script
     For dialogue scripts, returns inline code (tightly coupled to generated variables).
-    For custom script files, returns a function call — the actual implementation
-    lives in SCUMIOVI_Game/Interactions/interaction_*.cpp.
+    For custom scripts, returns a function call — the function is defined in
+    SCUMIOVI_Game/Interactions/ by the game developer.
     """
     if 'dialogue(' in row['script']:
         script = change_indentation(get_dialogue_script(row['script'].strip()))
@@ -189,63 +187,45 @@ def parse_interaction(row):
             'object_id': row['object_id'].strip(),
             'verb': row['verb'].strip(),
             'other_object_id': row['other_object_id'].strip(),
-            'script_file': row['script'].strip(),
             'vars': vars,
             'script': script,
             'function_name': ''
         }
     else:
-        filename = row['script'].strip()
-        name = os.path.splitext(filename)[0]
-        function_name = f'interaction_{name}'
+        function_name = row['script'].strip()
         return {
             'object_id': row['object_id'].strip(),
             'verb': row['verb'].strip(),
             'other_object_id': row['other_object_id'].strip(),
-            'script_file': filename,
             'vars': [],
             'script': f'\t\t{function_name}(e);',
             'function_name': function_name
         }
 
 
-def generate_interaction_files(interactions):
+def generate_interaction_files(interactions, dialogue_scripts=None):
     """
-    Generates interaction .cpp files and a shared header under
-    SCUMIOVI_Game/Interactions/.  The .cpp files are only created ONCE
-    (if absent), so the user can freely edit them afterwards with full
-    intellisense and debugging support.
+    Generates the shared header under SCUMIOVI_Game/Interactions/interactions.h
+    with declarations for all referenced interaction functions.
+    The function definitions are written by the game developer in any .cpp file
+    under SCUMIOVI_Game/Interactions/ (the linker catches missing functions).
     """
-    global scripts
     interactions_dir = os.path.join(OUTPUT_DIR, 'Interactions')
     os.makedirs(interactions_dir, exist_ok=True)
 
     declarations = []
 
-    for interaction in interactions:
-        func_name = interaction.get('function_name', '')
+    # Merge dialogue execute scripts into the interaction list
+    all_scripts = list(interactions)
+    if dialogue_scripts:
+        all_scripts.extend(dialogue_scripts)
+
+    for entry in all_scripts:
+        func_name = entry.get('function_name', '')
         if not func_name:
             continue  # dialogue interactions stay inline
 
         declarations.append(f'void {func_name}(EventInfo e);')
-
-        # Only create the .cpp file if it doesn't exist — user edits are preserved
-        cpp_path = os.path.join(interactions_dir, f'{func_name}.cpp')
-        if not os.path.exists(cpp_path):
-            script_path = os.path.join(GAME_FILES_FOLDER, 'Scripts', interaction['script_file'])
-            if os.path.exists(script_path):
-                with open(script_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-            else:
-                content = '// TODO: implement interaction'
-
-            with open(cpp_path, 'w', encoding='utf-8') as f:
-                f.write('#include "EngineAPI.hpp"\n\n')
-                f.write(f'void {func_name}(EventInfo e) {{\n')
-                for line in content.split('\n'):
-                    f.write(f'\t{line}\n')
-                f.write('}\n')
-            print(f'Generated -> {cpp_path}')
 
     # Write / update the shared header
     header_path = os.path.join(interactions_dir, 'interactions.h')
@@ -256,21 +236,6 @@ def generate_interaction_files(interactions):
         for decl in declarations:
             f.write(f'{decl}\n')
     print(f'Generated -> {header_path}')
-
-def parse_scripts(scripts_folder):
-    """
-    Parses all script files in the given folder.
-    Returns a list of script names.
-    """
-    global scripts
-
-    for filename in os.listdir(scripts_folder):
-        # Read the content of the script and append it to the scripts dictionary with the filename as key
-        script_path = os.path.join(scripts_folder, filename)
-        with open(script_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-            scripts[filename] = content
-    return scripts
 
 def parse_text_format(row):
     """
@@ -335,7 +300,8 @@ def parse_dialogue_file(path):
                 continue
             m_exec = exec_re.search(line)
             if m_exec:
-                current.lines.append(DialogueLine(None, None, action=m_exec.group(1)))
+                func_name = m_exec.group(1)
+                current.lines.append(DialogueLine(None, None, action=func_name))
                 continue
             m_opt = option_re.match(line)
             if m_opt:
@@ -373,7 +339,6 @@ def collect_data():
         reader = csv.DictReader(f)
         for row in reader:
             objects.append(parse_object(row))
-    parse_scripts(os.path.join(GAME_FILES_FOLDER, 'Scripts'))
     with open(os.path.join(GAME_FILES_FOLDER, 'Interactions.csv')) as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -386,20 +351,27 @@ def collect_data():
         if os.path.isdir(path):
             scenes.append(parse_scene(path, player_ids))
     # Dialogues
+    dialogue_scripts = []
     dialogues_dir = os.path.join(GAME_FILES_FOLDER, 'Dialogues')
     for dirname in os.listdir(dialogues_dir):
         path = os.path.join(dialogues_dir, dirname)
-        dialogues.append(parse_dialogue_file(path))
+        labels = parse_dialogue_file(path)
+        dialogues.append(labels)
+        # Collect execute function references for header declaration generation
+        for label in labels.values():
+            for line in label.lines:
+                if line.action:
+                    dialogue_scripts.append({'function_name': line.action})
     # Settings
     settings = parse_settings()
-    return {'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'text_formats': text_formats, 'dialogues': dialogues}
+    return {'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'text_formats': text_formats, 'dialogues': dialogues, 'dialogue_scripts': dialogue_scripts}
 
 # --- Main: generate via Jinja2 and compile ---
 def main():
     data = collect_data()
 
     # Generate stand-alone interaction .cpp / .h files (intellisense-friendly)
-    generate_interaction_files(data['interactions'])
+    generate_interaction_files(data['interactions'], data['dialogue_scripts'])
 
     # Setup Jinja2 environment
     script_dir = os.path.dirname(os.path.abspath(__file__))

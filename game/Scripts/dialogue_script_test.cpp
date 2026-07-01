@@ -1,1 +1,0 @@
- e.player.moveTo(Vector2<>(100, 100));

@@ -235,7 +235,7 @@ void ScriptLoader::loadGame(Game& game) {
             "Hi",
             0.2,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
-                    mainNode->showOptions();
+                        mainNode->showOptions();
                  })));  
              })));  
     })));
@@ -252,7 +252,7 @@ void ScriptLoader::loadGame(Game& game) {
             "I'm fine too",
             0.0,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
-                    label2Node->showOptions();
+                        label2Node->showOptions();
                  })));  
              })));  
     })));
@@ -265,7 +265,7 @@ void ScriptLoader::loadGame(Game& game) {
             "Are you ok?",
             0.0,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
-                label3Node->showOptions();
+                    label3Node->showOptions();
              })));  
     })));
 
@@ -277,7 +277,7 @@ void ScriptLoader::loadGame(Game& game) {
             "...",
             0.0,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
-                label4Node->showOptions();
+                    label4Node->showOptions();
              })));  
     })));
 
@@ -289,7 +289,7 @@ void ScriptLoader::loadGame(Game& game) {
             "See you",
             0.0,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
-                byelabelNode->showOptions();
+                    byelabelNode->showOptions();
              })));  
     })));
 
@@ -301,7 +301,7 @@ void ScriptLoader::loadGame(Game& game) {
             "What do you want to try?",
             0.0,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
-                    // Action: dialogue_script_test.cpp
+                        dialogue_script_test(e);
              })));  
     })));
 
@@ -337,7 +337,7 @@ void ScriptLoader::loadGame(Game& game) {
 
 
     stan->addVerbInteraction(game.getVerb("give"), "mug", Event([=](EventInfo e) {
-		interaction_give_mug_stan(e);
+		give_mug_stan(e);
     }));
     stan->addVerbInteraction(game.getVerb("talk"), Event([=](EventInfo e) {
 		e.player.disableMovement();

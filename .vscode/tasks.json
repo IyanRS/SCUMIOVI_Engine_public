@@ -2,9 +2,32 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build SCUMIOVI Engine",
+      "label": "Compile Engine",
       "type": "shell",
-      "command": "python codegen/templates/generate.py ; msbuild SCUMIOVI_Engine.sln /p:Configuration=Debug /p:Platform=x64 /m",
+      "command": "msbuild SCUMIOVI_Engine\\SCUMIOVI_Engine.vcxproj /p:Configuration=Debug /p:Platform=x64 /m",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Compile Game",
+      "type": "shell",
+      "command": "msbuild SCUMIOVI_Game\\SCUMIOVI_Game.vcxproj /p:Configuration=Debug /p:Platform=x64 /m",
+      "group": "build",
+      "dependsOn": ["Compile Engine"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Compile All",
+      "type": "shell",
+      "command": "msbuild SCUMIOVI_Engine.sln /p:Configuration=Debug /p:Platform=x64 /m",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -16,16 +39,17 @@
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "Run SCUMIOVI Game",
+      "label": "Run Game",
       "type": "shell",
       "command": "Start-Process -FilePath \"${workspaceFolder}\\x64\\Debug\\SCUMIOVI_Game.exe\" -WorkingDirectory \"${workspaceFolder}\\SCUMIOVI_Engine\"",
+      "dependsOn": ["Compile All"],
       "presentation": {
         "reveal": "always",
         "panel": "new"
       }
     },
     {
-      "label": "Run Catch2 Unit Tests",
+      "label": "Run Tests",
       "type": "shell",
       "command": ".\\build_tests.bat",
       "group": {

@@ -1,6 +1,6 @@
 #include "EngineAPI.hpp"
 
-void interaction_give_mug_stan(EventInfo e) {
+void give_mug_stan(EventInfo e) {
 	if (e.player.getCurrentHorizontalDirection() == RIGHT)
 		e.player.playAnimation("interactRight");
 	else

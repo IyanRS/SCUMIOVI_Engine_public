@@ -18,4 +18,4 @@ byelabel:
 	stan: "See you"
 scripttest:
 	stan: "What do you want to try?"
-	execute(dialogue_script_test.cpp)
+	execute(dialogue_script_test)
