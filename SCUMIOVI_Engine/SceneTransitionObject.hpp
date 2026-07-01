@@ -13,4 +13,5 @@ public:
 		Vector2<> size,
 		std::shared_ptr<Scene> scene
 	);
+	std::shared_ptr<Scene> getTargetScene();
 };

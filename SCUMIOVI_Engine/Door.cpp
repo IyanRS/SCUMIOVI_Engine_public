@@ -46,7 +46,7 @@ Door::Door(std::string name,
 		pos.y -= e.player.getSize().y * 0.8f;
 		e.player.moveToAtSpeed(pos, 100, Event([this](EventInfo e) {
 			if (getState() == OPEN) {
-				e.player.say("Saliendo...");
+				e.game.changeScene(sceneTransition.getTargetScene());
 			}
 		}));
 	}));

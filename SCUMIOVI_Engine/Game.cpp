@@ -19,6 +19,16 @@ Game::Game() {
 	anyVerb = std::make_shared<Verb>("any", "Any");
 	selectedVerb = std::make_shared<Verb>("selected", "Selected");
 
+	lookAtVerb->setDefaultEvent(Event([](EventInfo e) {
+		e.player.say("No veo nada especial.");
+	}));
+	pushVerb->setDefaultEvent(Event([](EventInfo e) {
+		e.player.say("No puedo mover eso.");
+	}));
+	pullVerb->setDefaultEvent(Event([](EventInfo e) {
+		e.player.say("No puedo mover eso.");
+	}));
+
 	// Add standard verbs to the verbs vector
 	verbs = { walkVerb, pushVerb, closeVerb, openVerb, talkVerb, giveVerb, pickupVerb, useVerb, lookAtVerb, pullVerb };
 }
@@ -98,6 +108,7 @@ void Game::startGame() {
 		inputManager.mouseOver(ui, *currentScene);
 
 		currentScene->update(deltaTime);
+		Event::tick(deltaTime);
 		renderer.render(*currentScene, ui);
 
 		Uint64 afterRenderCounter = SDL_GetPerformanceCounter();
@@ -117,6 +128,9 @@ std::shared_ptr<Scene> Game::getScene() {
 
 void Game::changeScene(std::shared_ptr<Scene> newScene) {
 	currentScene = newScene;
+	if (currentPlayer) {
+		currentPlayer->moveToScene(newScene);
+	}
 }
 
 UI& Game::getUI() {

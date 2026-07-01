@@ -12,6 +12,10 @@ SceneTransitionObject::SceneTransitionObject(
 ) : GameObject(name, position, size), targetScene(targetScene) {
 	Game& game = Game::getInstance();
 	addVerbInteraction(game.walkVerb, Event([this](EventInfo e) {
-		e.player.say("Test");
+		e.game.changeScene(this->targetScene);
 	}));
+}
+
+std::shared_ptr<Scene> SceneTransitionObject::getTargetScene() {
+	return targetScene;
 }

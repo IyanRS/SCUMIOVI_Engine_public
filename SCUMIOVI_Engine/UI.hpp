@@ -3,6 +3,7 @@
 #include "Texture.hpp"
 
 #include <vector>
+#include <memory>
 #include "GameObject.hpp"
 #include "UIVerbButton.hpp"
 #include "UILayout.hpp"
@@ -10,7 +11,7 @@
 class UI {
 	UILayout* currentLayout = nullptr;
 
-	std::vector<UILayout*> layouts;
+	std::vector<std::unique_ptr<UILayout>> layouts;
 
 //	std::vector<GameObject*> uiElements; //TODO: Create Wrapper class for GameObject "UIElement"
 //	std::vector<UIVerbButton*> uiVerbButtons;

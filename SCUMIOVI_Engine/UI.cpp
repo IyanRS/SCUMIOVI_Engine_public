@@ -37,9 +37,9 @@ std::shared_ptr<GameObject> UI::getUIElement(std::string name) {
 }
 
 void UI::setLayout(std::string name) {
-	for (UILayout* layout : layouts) {
+	for (auto& layout : layouts) {
 		if (layout->getName() == name) {
-			currentLayout = layout;
+			currentLayout = layout.get();
 		}
 	}
 }
@@ -49,12 +49,11 @@ UILayout* UI::getLayout() {
 }
 
 void UI::createLayout(std::string name) {
-	UILayout* layout = new UILayout(name); // TODO: free memory on destroy
-	layouts.push_back(layout);
+	layouts.push_back(std::make_unique<UILayout>(name));
 }
 
 UILayout& UI::getLayout(std::string name) {
-	for (UILayout* layout : layouts) {
+	for (auto& layout : layouts) {
 		if (layout->getName() == name) {
 			return *layout;
 		}

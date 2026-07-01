@@ -23,45 +23,37 @@ void UILayout::updateUI() {
 	removeHightlightVerb();
 	if (highlightedVerb != nullptr)
 		highlightVerb(highlightedVerb);
-	//auto currentItemIndex = currentInventoryIndex;
-	//for (auto inventorySlot : itemSlots) {
-
-	//	currentItemIndex++;
-	//}
-
+	// Remove stale item UI elements from previous frame
 	auto& elements = getUIElements();
-	auto it = elements.begin();
-
-	while (it != elements.end()) {
+	for (auto it = elements.begin(); it != elements.end(); ) {
 		if ((*it)->hasTag("item")) {
 			it = elements.erase(it);
 		}
 		else ++it;
 	}
 
+	// Render inventory items using a sliding window over the item list.
+	// The window starts at currentInventoryIndex and fills the available slots.
 	// TODO: avoid hardcoded values
-	int currentIndex = 0;
 	int columns = 4;
 	int width = 40;
 	int height = 22;
+	int slots = (int)itemSlots.size();
 
-	for (auto& item : game.getCurrentPlayer()->getInventory().getItems()) {
-		int row = currentIndex / 4;
-		int column = currentIndex % 4;
+	auto& items = game.getCurrentPlayer()->getInventory().getItems();
 
-		if (row < 2) {
-			if (itemSlots.size() <= currentIndex)
-				break;
-			Vector2<> centerOffset = itemSlots[currentIndex]->getSize()/2-item->getSize()/2;
+	for (int i = 0; i < slots; i++) {
+		int itemIndex = currentInventoryIndex + i;
+		if (itemIndex >= (int)items.size()) break;
 
-			item->setPosition(Vector2<>(150 + (column * width), 154 + (row * height)) + centerOffset);
-			removeUIElement(item);
-			addUIElement(item);
-		}
-		else {
-			// Arrows logic
-		}
-		currentIndex++;
+		auto& item = items[itemIndex];
+		int row = i / columns;
+		int column = i % columns;
+
+		Vector2<> centerOffset = itemSlots[i]->getSize() / 2 - item->getSize() / 2;
+		item->setPosition(Vector2<>(150 + (column * width), 154 + (row * height)) + centerOffset);
+		removeUIElement(item);
+		addUIElement(item);
 	}
 }
 
@@ -77,7 +69,16 @@ void UILayout::clearDialogueOptions() {
 }
 
 void UILayout::incrementInventoryIndex(int increment) {
+	int slots = (int)itemSlots.size();
+	int maxIndex = 0;
+	Game& game = Game::getInstance();
+	auto player = game.getCurrentPlayer();
+	if (player) {
+		auto& items = player->getInventory().getItems();
+		maxIndex = std::max(0, (int)items.size() - slots);
+	}
 	currentInventoryIndex += increment;
+	currentInventoryIndex = std::max(0, std::min(currentInventoryIndex, maxIndex));
 }
 
 int UILayout::getInventoryIndex() {

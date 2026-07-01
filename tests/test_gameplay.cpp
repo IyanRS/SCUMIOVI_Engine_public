@@ -10,6 +10,7 @@
 #include "Item.hpp"
 #include "DialogueNode.hpp"
 #include "DialogueOption.hpp"
+#include "SceneTransitionObject.hpp"
 
 // ---------------------------------------------------------------------------
 // Helper: drain any leftover pending events from previous sections
@@ -482,5 +483,44 @@ TEST_CASE("Gameplay logic", "[gameplay]") {
         REQUIRE(game.giveVerb->RequiresSelectedObject() == true);
         REQUIRE(game.useVerb->RequiresSelectedObject() == true);
         REQUIRE(game.walkVerb->RequiresSelectedObject() == false);
+    }
+
+    // -----------------------------------------------------------------------
+    // SCENE TRANSITIONS (Phase 3a)
+    // -----------------------------------------------------------------------
+    SECTION("SceneTransitionObject walk interaction changes scene") {
+        auto sceneA = std::make_shared<Scene>();
+        auto sceneB = std::make_shared<Scene>();
+
+        player->moveToScene(sceneA);
+        game.changeScene(sceneA);
+        REQUIRE(game.getScene() == sceneA);
+        REQUIRE(player->getScene() == sceneA);
+
+        auto transition = std::make_shared<SceneTransitionObject>(
+            "door_to_B", Vector2<>(0, 0), Vector2<>(10, 10), sceneB
+        );
+
+        transition->interact(Vector2<>(5, 5), game.walkVerb);
+        REQUIRE(game.getScene() == sceneB);
+        REQUIRE(player->getScene() == sceneB);
+    }
+
+    // -----------------------------------------------------------------------
+    // DEFAULT VERB EVENTS (Phase 3b)
+    // -----------------------------------------------------------------------
+    SECTION("Default verb event fires for lookAt when no interaction exists") {
+        auto obj = std::make_shared<GameObject>("rock", Vector2<>(0, 0), Vector2<>(10, 10));
+        REQUIRE_NOTHROW(obj->interact(Vector2<>(5, 5), game.lookAtVerb));
+    }
+
+    SECTION("Default verb event fires for push when no interaction exists") {
+        auto obj = std::make_shared<GameObject>("boulder", Vector2<>(0, 0), Vector2<>(10, 10));
+        REQUIRE_NOTHROW(obj->interact(Vector2<>(5, 5), game.pushVerb));
+    }
+
+    SECTION("Default verb event fires for pull when no interaction exists") {
+        auto obj = std::make_shared<GameObject>("lever", Vector2<>(0, 0), Vector2<>(10, 10));
+        REQUIRE_NOTHROW(obj->interact(Vector2<>(5, 5), game.pullVerb));
     }
 }

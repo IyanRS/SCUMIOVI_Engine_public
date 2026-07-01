@@ -1,6 +1,8 @@
 #include "catch.hpp"
 #include "Event.hpp"
 #include "EventInfo.hpp"
+#include "Player.hpp"
+#include "Game.hpp"
 
 TEST_CASE("Event default construction", "[event]") {
     Event e;
@@ -59,4 +61,30 @@ TEST_CASE("Event self-assignment is safe", "[event]") {
     Event e([]() {});
     e = e;
     REQUIRE(&e != nullptr);
+}
+
+TEST_CASE("Event::tick is safe with no pending events", "[event]") {
+    REQUIRE_NOTHROW(Event::tick(0.016f));
+    REQUIRE_NOTHROW(Event::tick(0.0f));
+    REQUIRE_NOTHROW(Event::tick(-1.0f));
+}
+
+TEST_CASE("Event::tick leaves pending queue empty after firing", "[event]") {
+    Game& game = Game::getInstance();
+    auto player = std::make_shared<Player>("et_tick_player", Vector2<>(0, 0), Vector2<>(10, 10));
+    game.addPlayer(player);
+    game.setCurrentPlayer(player);
+
+    int fired = 0;
+    Event e({
+        Delay(0.1f),
+        [&fired]() { fired++; }
+    });
+    e.execute();
+    REQUIRE(fired == 0);
+    Event::tick(0.2f);
+    REQUIRE(fired == 1);
+    // Subsequent tick should not double-fire
+    Event::tick(0.2f);
+    REQUIRE(fired == 1);
 }
