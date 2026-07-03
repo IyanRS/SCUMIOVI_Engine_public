@@ -237,6 +237,14 @@ int GameObject::getState() {
 	return state;
 }
 
+void GameObject::setExamineText(const std::string& text) {
+	examineText = text;
+}
+
+const std::string& GameObject::getExamineText() const {
+	return examineText;
+}
+
 void GameObject::setTextFormat(Text& format) {
 	text.setTextFormat(format);
 }

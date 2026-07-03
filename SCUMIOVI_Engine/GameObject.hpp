@@ -47,6 +47,7 @@ class GameObject : public Interactable, public std::enable_shared_from_this<Game
 	GraphicsComponent graphics;
 
 	int state = 0;
+	std::string examineText;
 
 	void setIdleAnimation(Vector2<> lastMovementDirection);
 	void setMovementAnimation(Vector2<> movementDirection);
@@ -108,6 +109,8 @@ public:
 	void say(std::string text, float seconds = 0, Event callback = Event());
 	void setState(int state);
 	int getState();
+	void setExamineText(const std::string& text);
+	const std::string& getExamineText() const;
 	void setTextFormat(Text& text);
 	//void setDialogue(Dialogue* dialogue);
 	//void setMovementAnimations(Animation* moveUp, Animation* moveDown, Animation* moveLeft, Animation* moveRight);

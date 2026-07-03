@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include <memory>
 #include <algorithm>
+#include "GameObject.hpp"
 
 Game::Game() {
 	// Initialize standard verbs
@@ -22,7 +23,12 @@ Game::Game() {
 	audio.init();
 
 	lookAtVerb->setDefaultEvent(Event([](EventInfo e) {
-		e.player.say("No veo nada especial.");
+		auto* go = dynamic_cast<GameObject*>(&e.interactable);
+		if (go && !go->getExamineText().empty()) {
+			e.player.say(go->getExamineText());
+		} else {
+			e.player.say("No veo nada especial.");
+		}
 	}));
 	pushVerb->setDefaultEvent(Event([](EventInfo e) {
 		e.player.say("No puedo mover eso.");
