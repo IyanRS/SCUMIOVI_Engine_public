@@ -7,6 +7,7 @@
 #include "InputManager.hpp"
 #include "AudioManager.hpp"
 #include "UI.hpp"
+#include "GameState.hpp"
 
 class Game {
 	// Singleton
@@ -26,6 +27,7 @@ protected:
 	Event endEvent;
 	UI ui;
 	AudioManager audio;
+	GameState gameState;
 
 	Event defaultClickEvent; // When the player clicks but no object interaction is found
 
@@ -80,4 +82,5 @@ public:
 	void clearClicksPool();
 
 	AudioManager& getAudio();
+	GameState& getGameState();
 };

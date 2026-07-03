@@ -202,6 +202,10 @@ AudioManager& Game::getAudio() {
 	return audio;
 }
 
+GameState& Game::getGameState() {
+	return gameState;
+}
+
 void Game::clearClicksPool() {
 	inputManager.clearClicksPool();
 }

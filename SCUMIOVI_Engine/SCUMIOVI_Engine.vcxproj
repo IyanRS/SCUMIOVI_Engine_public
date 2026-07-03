@@ -77,6 +77,7 @@
     <ClCompile Include="Event.cpp" />
     <ClCompile Include="EventInfo.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameState.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GraphicsComponent.cpp" />
     <ClCompile Include="InputManager.cpp" />
@@ -117,6 +118,7 @@
     <ClInclude Include="EventInfo.hpp" />
     <ClInclude Include="GameDataLoader.hpp" />
     <ClInclude Include="Game.hpp" />
+    <ClInclude Include="GameState.hpp" />
     <ClInclude Include="GameObject.hpp" />
     <ClInclude Include="GraphicsComponent.hpp" />
     <ClInclude Include="InputManager.hpp" />

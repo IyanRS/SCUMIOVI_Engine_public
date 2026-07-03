@@ -28,4 +28,5 @@
 #include "Camera.hpp"
 #include "Delay.hpp"
 #include "Text.hpp"
+#include "GameState.hpp"
 #include "Common.hpp"
