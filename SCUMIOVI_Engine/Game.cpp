@@ -250,6 +250,34 @@ Event* Game::findCombination(const std::string& itemName, const std::string& tar
 	return nullptr;
 }
 
+// ---------------------------------------------------------------------------
+// Named script registry
+// ---------------------------------------------------------------------------
+void Game::registerScript(const std::string& name, std::function<void(EventInfo)> script) {
+	scripts[name] = std::move(script);
+}
+
+void Game::registerScript(const std::string& name, std::function<void()> script) {
+	scripts[name] = [script = std::move(script)](EventInfo) {
+		if (script) script();
+	};
+}
+
+bool Game::hasScript(const std::string& name) const {
+	return scripts.find(name) != scripts.end();
+}
+
+Event Game::scriptEvent(const std::string& name) {
+	return Event(std::function<void(EventInfo)>([name](EventInfo e) {
+		Game& game = Game::getInstance();
+		auto it = game.scripts.find(name);
+		if (it != game.scripts.end() && it->second)
+			it->second(e);
+		else
+			SDL_Log("Game::scriptEvent: no script registered named '%s'", name.c_str());
+	}));
+}
+
 Renderer& Game::getRenderer() {
 	return renderer;
 }

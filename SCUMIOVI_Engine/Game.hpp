@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <unordered_map>
+#include <functional>
 #include "Player.hpp"
 #include "Renderer.hpp"
 #include "InputManager.hpp"
@@ -33,6 +34,10 @@ protected:
 
 	Event defaultClickEvent; // When the player clicks but no object interaction is found
 	std::map<std::pair<std::string, std::string>, Event> combinations;
+
+	// Named interaction scripts, referenceable by name from data-driven UI,
+	// object interactions and dialogue.
+	std::unordered_map<std::string, std::function<void(EventInfo)>> scripts;
 
 	std::shared_ptr<Verb> rightClickVerb = nullptr;
 	std::shared_ptr<Verb> leftClickVerb = nullptr;
@@ -99,6 +104,17 @@ public:
 	const std::string& getLocale() const;
 	void addCombination(const std::string& itemName, const std::string& targetName, Event event);
 	Event* findCombination(const std::string& itemName, const std::string& targetName);
+
+	// -- Named script registry -----------------------------------------------
+	// Register a developer script under a name so data (UI actions, object and
+	// dialogue interactions) can invoke it. Two forms are accepted: one that
+	// receives the triggering EventInfo and one that ignores it.
+	void registerScript(const std::string& name, std::function<void(EventInfo)> script);
+	void registerScript(const std::string& name, std::function<void()> script);
+	bool hasScript(const std::string& name) const;
+	// Returns an Event that looks up and runs the named script when executed
+	// (late-bound, so registration order does not matter).
+	Event scriptEvent(const std::string& name);
 
 	// Scene registry
 	void registerScene(const std::string& name, std::shared_ptr<Scene> scene);
