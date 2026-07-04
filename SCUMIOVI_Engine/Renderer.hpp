@@ -37,10 +37,21 @@ class Renderer {
 	std::shared_ptr<Texture> mouseTexture;
 	Vector2<> mouseHotspot;
 	bool validState = true;
+
+	float fadeAlpha = 0.0f;
+	float fadeTarget = 0.0f;
+	float fadeSpeed = 0.0f;
+	Event fadeCompleteEvent;
+	bool fading = false;
+	void renderFadeOverlay();
+
 public:
 	Renderer();
 	~Renderer();
 	void render(Scene& scene, UI& ui);
 	void setCustomMouse(std::shared_ptr<Texture> mouseTexture, Vector2<> mouseHotspot);
-	//void render(UI ui);
+	void fadeToBlack(float duration, Event callback = Event());
+	void fadeFromBlack(float duration, Event callback = Event());
+	bool isFading() const;
+	void updateFade(float deltaTime);
 };

@@ -117,6 +117,7 @@ void Game::startGame() {
 
 		currentScene->update(deltaTime);
 		Event::tick(deltaTime);
+		renderer.updateFade(deltaTime);
 		audio.update();
 		renderer.render(*currentScene, ui);
 
@@ -135,10 +136,21 @@ std::shared_ptr<Scene> Game::getScene() {
 	return currentScene;
 }
 
-void Game::changeScene(std::shared_ptr<Scene> newScene) {
-	currentScene = newScene;
-	if (currentPlayer) {
-		currentPlayer->moveToScene(newScene);
+void Game::changeScene(std::shared_ptr<Scene> newScene, float fadeDuration) {
+	if (fadeDuration > 0.0f && !renderer.isFading()) {
+		renderer.fadeToBlack(fadeDuration, Event([this, newScene, fadeDuration]() {
+			currentScene = newScene;
+			if (currentPlayer) {
+				currentPlayer->moveToScene(newScene);
+			}
+			renderer.fadeFromBlack(fadeDuration);
+		}));
+	}
+	else {
+		currentScene = newScene;
+		if (currentPlayer) {
+			currentPlayer->moveToScene(newScene);
+		}
 	}
 }
 
@@ -225,4 +237,8 @@ Event* Game::findCombination(const std::string& itemName, const std::string& tar
 
 void Game::clearClicksPool() {
 	inputManager.clearClicksPool();
+}
+
+Renderer& Game::getRenderer() {
+	return renderer;
 }

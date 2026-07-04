@@ -1,6 +1,7 @@
 #include "Renderer.hpp"
 #include "ResourceManager.hpp"
 #include "Common.hpp"
+#include "Event.hpp"
 #include <SDL3_ttf/SDL_ttf.h>
 #include <memory>
 #include <unordered_map>
@@ -410,5 +411,67 @@ void Renderer::render(Scene& scene, UI& ui) {
 	SDL_DestroyTexture(lowResScreen);
 #endif
 
+	renderFadeOverlay();
+
 	SDL_RenderPresent(sdlRenderer);
+}
+
+void Renderer::renderFadeOverlay() {
+	if (fadeAlpha <= 0.0f) return;
+	SDL_SetRenderDrawBlendMode(sdlRenderer, SDL_BLENDMODE_BLEND);
+	SDL_SetRenderDrawColor(sdlRenderer, 0, 0, 0, (Uint8)(fadeAlpha * 255.0f));
+	SDL_RenderFillRect(sdlRenderer, NULL);
+}
+
+void Renderer::fadeToBlack(float duration, Event callback) {
+	if (duration <= 0.0f) {
+		fadeAlpha = 1.0f;
+		callback.execute();
+		return;
+	}
+	fadeAlpha = 0.0f;
+	fadeTarget = 1.0f;
+	fadeSpeed = 1.0f / duration;
+	fadeCompleteEvent = callback;
+	fading = true;
+}
+
+void Renderer::fadeFromBlack(float duration, Event callback) {
+	if (duration <= 0.0f) {
+		fadeAlpha = 0.0f;
+		callback.execute();
+		return;
+	}
+	fadeAlpha = 1.0f;
+	fadeTarget = 0.0f;
+	fadeSpeed = 1.0f / duration;
+	fadeCompleteEvent = callback;
+	fading = true;
+}
+
+bool Renderer::isFading() const {
+	return fading;
+}
+
+void Renderer::updateFade(float dt) {
+	if (!fading) return;
+
+	if (fadeAlpha < fadeTarget) {
+		fadeAlpha += fadeSpeed * dt;
+		if (fadeAlpha >= fadeTarget) {
+			fadeAlpha = fadeTarget;
+			fading = false;
+			fadeCompleteEvent.execute();
+			fadeCompleteEvent = Event();
+		}
+	}
+	else if (fadeAlpha > fadeTarget) {
+		fadeAlpha -= fadeSpeed * dt;
+		if (fadeAlpha <= fadeTarget) {
+			fadeAlpha = fadeTarget;
+			fading = false;
+			fadeCompleteEvent.execute();
+			fadeCompleteEvent = Event();
+		}
+	}
 }

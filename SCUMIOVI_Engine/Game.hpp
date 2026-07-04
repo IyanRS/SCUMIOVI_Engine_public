@@ -63,7 +63,7 @@ public:
 	std::shared_ptr<Player> getPlayerByName(std::string name);
 	void startGame();
 	std::shared_ptr<Scene> getScene();
-	void changeScene(std::shared_ptr<Scene> newScene);
+	void changeScene(std::shared_ptr<Scene> newScene, float fadeDuration = 0.0f);
 	void setStartEvent(Event);
 	void setEndEvent(Event);
 	void setDefaultClickEvent(Event);
@@ -82,6 +82,7 @@ public:
 	void setDefaultVerb(std::string verbName);
 	void changeToDefaultVerb();
 	void clearClicksPool();
+	Renderer& getRenderer();
 
 	AudioManager& getAudio();
 	GameState& getGameState();
