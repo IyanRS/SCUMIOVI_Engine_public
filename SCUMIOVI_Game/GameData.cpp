@@ -345,6 +345,8 @@ void ScriptLoader::loadGame(Game& game) {
 		mainNode->enterNode();
     }));
 
+    // --- Item combinations ---
+
     game.bindLeftClickToVerb(game.selectedVerb);
     game.bindRightClickToVerb(game.getDefaultVerb());
 

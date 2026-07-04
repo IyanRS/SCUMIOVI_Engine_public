@@ -156,6 +156,64 @@ TEST_CASE("Gameplay logic", "[gameplay]") {
     }
 
     // -----------------------------------------------------------------------
+    // COMBINATIONS — useVerb combination registry
+    // -----------------------------------------------------------------------
+    SECTION("combination registry fires when matching pair used") {
+        auto apple = std::make_shared<GameObject>("apple", Vector2<>(0, 0), Vector2<>(5, 5));
+        auto key = std::make_shared<GameObject>("key", Vector2<>(0, 0), Vector2<>(5, 5));
+        bool fired = false;
+        game.addCombination("apple", "key", Event([&fired](EventInfo) { fired = true; }));
+        player->setSelectedObject(apple);
+        key->interact(Vector2<>(5, 5), game.useVerb);
+        REQUIRE(fired == true);
+    }
+
+    SECTION("combination registry does not fire for wrong target") {
+        auto apple = std::make_shared<GameObject>("apple", Vector2<>(0, 0), Vector2<>(5, 5));
+        auto key = std::make_shared<GameObject>("key", Vector2<>(0, 0), Vector2<>(5, 5));
+        auto rock = std::make_shared<GameObject>("rock", Vector2<>(0, 0), Vector2<>(5, 5));
+        bool fired = false;
+        game.addCombination("apple", "key", Event([&fired](EventInfo) { fired = true; }));
+        player->setSelectedObject(apple);
+        rock->interact(Vector2<>(5, 5), game.useVerb);
+        REQUIRE(fired == false);
+    }
+
+    SECTION("combination registry does not fire for wrong selected item") {
+        auto apple = std::make_shared<GameObject>("apple", Vector2<>(0, 0), Vector2<>(5, 5));
+        auto key = std::make_shared<GameObject>("key", Vector2<>(0, 0), Vector2<>(5, 5));
+        bool fired = false;
+        game.addCombination("apple", "key", Event([&fired](EventInfo) { fired = true; }));
+        player->setSelectedObject(key);
+        key->interact(Vector2<>(5, 5), game.useVerb);
+        REQUIRE(fired == false);
+    }
+
+    SECTION("combination registry fires and clears selected object") {
+        auto apple = std::make_shared<GameObject>("apple", Vector2<>(0, 0), Vector2<>(5, 5));
+        auto key = std::make_shared<GameObject>("key", Vector2<>(0, 0), Vector2<>(5, 5));
+        bool fired = false;
+        game.addCombination("apple", "key", Event([&fired](EventInfo) { fired = true; }));
+        player->setSelectedObject(apple);
+        key->interact(Vector2<>(5, 5), game.useVerb);
+        REQUIRE(fired == true);
+        REQUIRE(player->getSelectedObject() == nullptr);
+    }
+
+    SECTION("per-object useVerb interaction takes priority over combination") {
+        auto apple = std::make_shared<GameObject>("apple", Vector2<>(0, 0), Vector2<>(5, 5));
+        auto key = std::make_shared<GameObject>("key", Vector2<>(0, 0), Vector2<>(5, 5));
+        bool perObjFired = false;
+        bool comboFired = false;
+        key->addVerbInteraction(game.useVerb, "apple", Event([&perObjFired](EventInfo) { perObjFired = true; }));
+        game.addCombination("apple", "key", Event([&comboFired](EventInfo) { comboFired = true; }));
+        player->setSelectedObject(apple);
+        key->interact(Vector2<>(5, 5), game.useVerb);
+        REQUIRE(perObjFired == true);
+        REQUIRE(comboFired == false);
+    }
+
+    // -----------------------------------------------------------------------
     // EVENT — execution with callbacks
     // -----------------------------------------------------------------------
     SECTION("Event execute fires void lambda") {

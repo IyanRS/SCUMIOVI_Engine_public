@@ -76,6 +76,25 @@ bool Interactable::interact(Vector2<> clickPos, std::shared_ptr<Verb> verb) {
 		}
 	}
 
+	// Combination registry: useVerb with selected object
+	if (verb && verb->getName() == "use" && verb->RequiresSelectedObject()) {
+		auto selected = game.getCurrentPlayer()->getSelectedObject();
+		if (selected) {
+			GameObject* go = dynamic_cast<GameObject*>(this);
+			if (go) {
+				Event* combo = game.findCombination(selected->getName(), go->getName());
+				if (combo) {
+					verb->getBeforeActualEvent().execute(e);
+					combo->execute(e);
+					verb->getAfterActualEvent().execute(e);
+					game.changeToDefaultVerb();
+					game.getCurrentPlayer()->setSelectedObject(nullptr);
+					return true;
+				}
+			}
+		}
+	}
+
 	verb->getDefaultEvent().execute(e);
 	game.changeToDefaultVerb();
 	game.getCurrentPlayer()->setSelectedObject(nullptr);

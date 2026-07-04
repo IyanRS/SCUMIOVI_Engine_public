@@ -212,6 +212,17 @@ GameState& Game::getGameState() {
 	return gameState;
 }
 
+void Game::addCombination(const std::string& itemName, const std::string& targetName, Event event) {
+	combinations[{itemName, targetName}] = event;
+}
+
+Event* Game::findCombination(const std::string& itemName, const std::string& targetName) {
+	auto it = combinations.find({itemName, targetName});
+	if (it != combinations.end())
+		return &it->second;
+	return nullptr;
+}
+
 void Game::clearClicksPool() {
 	inputManager.clearClicksPool();
 }

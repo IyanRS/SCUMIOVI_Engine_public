@@ -274,6 +274,13 @@ void ScriptLoader::loadGame(Game& game) {
     {% endif %}
     {% endfor %}
 
+    // --- Item combinations ---
+    {% for combo in combinations %}
+    game.addCombination("{{ combo.item }}", "{{ combo.target }}", Event([=](EventInfo e) {
+        {{ combo.script }}(e);
+    }));
+    {% endfor %}
+
     game.bindLeftClickToVerb(game.selectedVerb);
     game.bindRightClickToVerb(game.getDefaultVerb());
 

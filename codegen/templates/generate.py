@@ -373,6 +373,19 @@ def collect_data():
         reader = csv.DictReader(f)
         for row in reader:
             interactions.append(parse_interaction(row))
+    # Combinations — item-to-item (useVerb with selected object)
+    combinations = []
+    combos_path = os.path.join(GAME_FILES_FOLDER, 'Combinations.csv')
+    if os.path.exists(combos_path):
+        with open(combos_path) as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                combinations.append({
+                    'item': row['item'].strip(),
+                    'target': row['target'].strip(),
+                    'script': row['script'].strip(),
+                    'function_name': row['script'].strip()
+                })
     player_ids = { p['id'] for p in players }
     # Scenes
     scenes_dir = os.path.join(GAME_FILES_FOLDER, 'Scenes')
@@ -394,14 +407,17 @@ def collect_data():
                     dialogue_scripts.append({'function_name': line.action})
     # Settings
     settings = parse_settings()
-    return {'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'text_formats': text_formats, 'dialogues': dialogues, 'dialogue_scripts': dialogue_scripts}
+    return {'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'combinations': combinations, 'text_formats': text_formats, 'dialogues': dialogues, 'dialogue_scripts': dialogue_scripts}
 
 # --- Main: generate via Jinja2 and compile ---
 def main():
     data = collect_data()
 
     # Generate stand-alone interaction .cpp / .h files (intellisense-friendly)
-    generate_interaction_files(data['interactions'], data['dialogue_scripts'])
+    all_scripts = list(data['dialogue_scripts'])
+    for combo in data['combinations']:
+        all_scripts.append({'function_name': combo['function_name']})
+    generate_interaction_files(data['interactions'], all_scripts)
 
     # Setup Jinja2 environment
     script_dir = os.path.dirname(os.path.abspath(__file__))

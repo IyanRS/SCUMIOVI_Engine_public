@@ -2,6 +2,7 @@
 
 #include <list>
 #include <string>
+#include <map>
 #include "Player.hpp"
 #include "Renderer.hpp"
 #include "InputManager.hpp"
@@ -30,6 +31,7 @@ protected:
 	GameState gameState;
 
 	Event defaultClickEvent; // When the player clicks but no object interaction is found
+	std::map<std::pair<std::string, std::string>, Event> combinations;
 
 	std::shared_ptr<Verb> rightClickVerb = nullptr;
 	std::shared_ptr<Verb> leftClickVerb = nullptr;
@@ -83,4 +85,6 @@ public:
 
 	AudioManager& getAudio();
 	GameState& getGameState();
+	void addCombination(const std::string& itemName, const std::string& targetName, Event event);
+	Event* findCombination(const std::string& itemName, const std::string& targetName);
 };
