@@ -265,10 +265,40 @@ class DialogueLine:
         self.target = target
         self.action = action
 
+def parse_condition(suffix):
+    """Parse an optional condition suffix from a dialogue option.
+    Returns a dict or None.
+    Supported forms:
+        if:flag_name
+        ifnot:flag_name
+        ifcounter:counter_name
+        ifcounter:counter_name>N
+        ifcounter:counter_name<N
+        ifcounter:counter_name=N
+    """
+    if not suffix:
+        return None
+    suffix = suffix.strip()
+    m = re.match(r'^if:(\w+)$', suffix)
+    if m:
+        return {'type': 'flag', 'name': m.group(1)}
+    m = re.match(r'^ifnot:(\w+)$', suffix)
+    if m:
+        return {'type': 'notflag', 'name': m.group(1)}
+    m = re.match(r'^ifcounter:(\w+)([><=])(\d+)$', suffix)
+    if m:
+        return {'type': 'counter', 'name': m.group(1), 'op': m.group(2), 'value': int(m.group(3))}
+    m = re.match(r'^ifcounter:(\w+)$', suffix)
+    if m:
+        return {'type': 'counter', 'name': m.group(1), 'op': '>', 'value': 0}
+    print(f"Warning: unrecognized condition '{suffix}'")
+    return None
+
 class DialogueOption:
-    def __init__(self, text, target_label):
+    def __init__(self, text, target_label, condition=None):
         self.text = text
         self.target = target_label
+        self.condition = condition
 
 class DialogueLabel:
     def __init__(self, name):
@@ -280,7 +310,7 @@ class DialogueLabel:
 def parse_dialogue_file(path):
     labels = {}
     current = None
-    option_re = re.compile(r'^\s*"([^"]+)":\s*(\w+)$')
+    option_re = re.compile(r'^\s*"([^"]+)":\s*(\w+)(?:\s+(\S+))?$')
     line_re = re.compile(r'^\s*(?:(\w+):)?\s*"([^"]*)"(?:\s*\(([^)]+)\))?(?:\s*:\s*(\w+))?$')
     exec_re = re.compile(r'execute\(([^)]+)\)')
     exit_re = re.compile(r'exit')
@@ -305,8 +335,8 @@ def parse_dialogue_file(path):
                 continue
             m_opt = option_re.match(line)
             if m_opt:
-                text, target = m_opt.groups()
-                current.options.append(DialogueOption(text, target))
+                text, target, cond_str = m_opt.groups()
+                current.options.append(DialogueOption(text, target, condition=parse_condition(cond_str)))
                 continue
             m = line_re.match(line)
             if m:

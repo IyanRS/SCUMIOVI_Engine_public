@@ -242,6 +242,15 @@ void ScriptLoader::loadGame(Game& game) {
         "{{ cpp_string(opt.text) }}",
         {{ opt.target }}Node
     );
+        {% if opt.condition %}
+            {% if opt.condition.type == 'flag' %}
+    {{ label }}NodeOption{{ loop.index }}->setCondition([]() { return Game::getInstance().getGameState().getFlag("{{ opt.condition.name }}"); });
+            {% elif opt.condition.type == 'notflag' %}
+    {{ label }}NodeOption{{ loop.index }}->setCondition([]() { return !Game::getInstance().getGameState().getFlag("{{ opt.condition.name }}"); });
+            {% elif opt.condition.type == 'counter' %}
+    {{ label }}NodeOption{{ loop.index }}->setCondition([]() { return Game::getInstance().getGameState().getCounter("{{ opt.condition.name }}") {{ opt.condition.op }} {{ opt.condition.value }}; });
+            {% endif %}
+        {% endif %}
         {% endfor %}
     {% endfor %}
 

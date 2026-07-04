@@ -89,6 +89,7 @@ void UILayout::createDialogueOptions(DialogueNode& dialogueNode) {
 	clearDialogueOptions();
 	int currentY = 152;
 	for (std::shared_ptr<DialogueOption>& dialogueOption : dialogueNode.getOptions()) {
+		if (!dialogueOption->isVisible()) continue;
 		auto uiDialogueOption = std::make_shared<UIDialogueOption>(dialogueOption, Vector2<>(4, currentY), nullptr);
 		dialogueOptions.push_back(uiDialogueOption);
 		addUIElement(uiDialogueOption);

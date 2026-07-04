@@ -23,3 +23,11 @@ void DialogueOption::select() {
 void DialogueOption::setNextNode(std::shared_ptr<DialogueNode> node) {
 	nextNode = node;
 }
+
+void DialogueOption::setCondition(std::function<bool()> cond) {
+	condition = cond;
+}
+
+bool DialogueOption::isVisible() const {
+	return condition ? condition() : true;
+}

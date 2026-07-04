@@ -17,7 +17,15 @@ void DialogueNode::setOptions(std::vector<std::shared_ptr<DialogueOption>> optio
 void DialogueNode::showOptions() {
 	Game& game = Game::getInstance();
 
-	if (options.size() > 0) {
+	bool anyVisible = false;
+	for (auto& opt : options) {
+		if (opt->isVisible()) {
+			anyVisible = true;
+			break;
+		}
+	}
+
+	if (anyVisible) {
 		game.getUI().createDialogueOptions(*this);
 		return;
 	}
