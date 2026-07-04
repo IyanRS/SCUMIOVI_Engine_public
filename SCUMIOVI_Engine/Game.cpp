@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <fstream>
 #include "GameObject.hpp"
+#include "Localization.hpp"
 #include "json.hpp"
 
 Game::Game() {
@@ -29,16 +30,16 @@ Game::Game() {
 	lookAtVerb->setDefaultEvent(Event([](EventInfo e) {
 		auto* go = dynamic_cast<GameObject*>(&e.interactable);
 		if (go && !go->getExamineText().empty()) {
-			e.player.say(go->getExamineText());
+			e.player.say(tr(go->getExamineText()));
 		} else {
-			e.player.say("I don't see anything special.");
+			e.player.say(tr("I don't see anything special."));
 		}
 	}));
 	pushVerb->setDefaultEvent(Event([](EventInfo e) {
-		e.player.say("I can't move that.");
+		e.player.say(tr("I can't move that."));
 	}));
 	pullVerb->setDefaultEvent(Event([](EventInfo e) {
-		e.player.say("I can't move that.");
+		e.player.say(tr("I can't move that."));
 	}));
 
 	// Add standard verbs to the verbs vector
@@ -226,6 +227,16 @@ AudioManager& Game::getAudio() {
 
 GameState& Game::getGameState() {
 	return gameState;
+}
+
+void Game::setLocale(const std::string& locale) {
+	Localization::getInstance().setLocale(locale);
+	// Refresh live UI text (e.g. the current-verb sentence line).
+	ui.updateUI();
+}
+
+const std::string& Game::getLocale() const {
+	return Localization::getInstance().getLocale();
 }
 
 void Game::addCombination(const std::string& itemName, const std::string& targetName, Event event) {

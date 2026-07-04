@@ -2,6 +2,7 @@
 #include <regex>
 #include <memory>
 #include "GameObject.hpp"
+#include "Localization.hpp"
 
 VerbSyntax::VerbSyntax(const VerbSyntax& obj) {
 	this->syntaxStrings = obj.syntaxStrings;
@@ -41,7 +42,12 @@ std::string VerbSyntax::getInfo(std::vector<std::shared_ptr<GameObject>> objects
 	if (syntaxToUse == "") {
 		syntaxToUse = "Couldn't find syntax";
 	}
-	
+	else {
+		// Templates are matched in the source language, then localized (the
+		// translation keeps the $object placeholders) before substitution.
+		syntaxToUse = tr(syntaxToUse);
+	}
+
 	for (int i = 0; i < nObjects; i++) {
 		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$object" + std::to_string(i)), nonNullObjects[i]->getName());
 	}
@@ -71,7 +77,11 @@ std::string VerbSyntax::getInfo(std::shared_ptr<GameObject> selected, std::share
 	if (syntaxToUse == "") {
 		syntaxToUse = "Couldn't find syntax";
 	}
-	
+	else {
+		// Localize the chosen template (keeping $selected/$target) before substitution.
+		syntaxToUse = tr(syntaxToUse);
+	}
+
 	if (selected) {
 		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$selected"), selected->getName());
 	}

@@ -31,7 +31,9 @@ public:
 	Verb(std::string name);
 	Verb(std::string name, std::string displayName);
 	Verb(std::string name, std::string displayName, VerbSyntax syntax, bool requiresSelectedObject = false);
-	std::string& getDisplayName();
+	// Returns the localized display name (resolved through tr()), so it is a
+	// value rather than a reference into the stored source string.
+	std::string getDisplayName();
 	std::string& getName();
 	
 	void setDefaultEvent(const Event& event);

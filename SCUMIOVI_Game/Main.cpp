@@ -11,6 +11,10 @@ int main(int argc, char* argv[]) {
 	ResourceManager::init(assetsDir.string());
 	SDL_free((void*)basePath);
 
+	// Load available translations. English is the source language and needs no
+	// file; missing files are logged and ignored (the game still runs in English).
+	Localization::getInstance().loadLocaleFile("es", ResourceManager::getLocalesDirectory() + "es.json");
+
 	ScriptLoader loader;
 	Game& game = Game::getInstance();
 	loader.loadGame(game);

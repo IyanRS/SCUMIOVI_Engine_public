@@ -6,6 +6,7 @@
 ResourceManager* ResourceManager::resourceManager_ = nullptr;
 std::string ResourceManager::texturesDirectory_;
 std::string ResourceManager::fontsDirectory_;
+std::string ResourceManager::localesDirectory_;
 
 ResourceManager& ResourceManager::getInstance() {
 	if (resourceManager_ == nullptr)
@@ -20,6 +21,11 @@ ResourceManager::ResourceManager() {
 void ResourceManager::init(const std::string& assetsDirectory) {
 	texturesDirectory_ = assetsDirectory + "/textures/";
 	fontsDirectory_ = assetsDirectory + "/fonts/";
+	localesDirectory_ = assetsDirectory + "/locales/";
+}
+
+const std::string& ResourceManager::getLocalesDirectory() {
+	return localesDirectory_;
 }
 
 const std::string& ResourceManager::getTexturesDirectory() {

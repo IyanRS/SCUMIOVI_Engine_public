@@ -1,6 +1,7 @@
 #include "Verb.hpp"
 
 #include "Game.hpp"
+#include "Localization.hpp"
 
 void Verb::setDefaultDefaultEvent(const Event& event) {
 	defaultDefaultEvent = event;
@@ -30,8 +31,8 @@ Verb::Verb(std::string name, std::string displayName, VerbSyntax syntax, bool re
 	defaultEvent = defaultDefaultEvent;
 }
 
-std::string& Verb::getDisplayName() {
-	return displayName;
+std::string Verb::getDisplayName() {
+	return tr(displayName);
 }
 
 std::string& Verb::getName() {
@@ -64,13 +65,13 @@ Event Verb::getAfterActualEvent() {
 
 std::string Verb::getInfo(std::vector<std::shared_ptr<GameObject>> gameObjects) {
 	if (verbSyntax.getStringsCount() == 0)
-		return displayName;
+		return getDisplayName();
 	return verbSyntax.getInfo(gameObjects);
 }
 
 std::string Verb::getInfo(std::shared_ptr<GameObject> selected, std::shared_ptr<GameObject> target) {
 	if (verbSyntax.getStringsCount() == 0)
-		return displayName;
+		return getDisplayName();
  	return verbSyntax.getInfo(selected, target);
 }
 

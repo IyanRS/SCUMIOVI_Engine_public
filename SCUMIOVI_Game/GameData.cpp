@@ -228,11 +228,11 @@ void ScriptLoader::loadGame(Game& game) {
     auto mainNode = std::make_shared<DialogueNode>();
     mainNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
-            "Hello Guybrush",
+            tr("Hello Guybrush"),
             0.6f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                 e.game.getCurrentPlayer()->say(
-            "Hi",
+            tr("Hi"),
             0.2f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                         mainNode->showOptions();
@@ -245,11 +245,11 @@ void ScriptLoader::loadGame(Game& game) {
     auto label2Node = std::make_shared<DialogueNode>();
     label2Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
-            "I'm fine,\nwhat about you?",
+            tr("I'm fine,\nwhat about you?"),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                 e.game.getCurrentPlayer()->say(
-            "I'm fine too",
+            tr("I'm fine too"),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                         label2Node->showOptions();
@@ -262,7 +262,7 @@ void ScriptLoader::loadGame(Game& game) {
     auto label3Node = std::make_shared<DialogueNode>();
     label3Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
-            "Are you ok?",
+            tr("Are you ok?"),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                     label3Node->showOptions();
@@ -274,7 +274,7 @@ void ScriptLoader::loadGame(Game& game) {
     auto label4Node = std::make_shared<DialogueNode>();
     label4Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
-            "...",
+            tr("..."),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                     label4Node->showOptions();
@@ -286,7 +286,7 @@ void ScriptLoader::loadGame(Game& game) {
     auto byelabelNode = std::make_shared<DialogueNode>();
     byelabelNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
-            "See you",
+            tr("See you"),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                     byelabelNode->showOptions();
@@ -298,7 +298,7 @@ void ScriptLoader::loadGame(Game& game) {
     auto scripttestNode = std::make_shared<DialogueNode>();
     scripttestNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
-            "What do you want to try?",
+            tr("What do you want to try?"),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                         dialogue_script_test(e);

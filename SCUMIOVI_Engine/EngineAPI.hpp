@@ -29,5 +29,6 @@
 #include "Delay.hpp"
 #include "Text.hpp"
 #include "GameState.hpp"
+#include "Localization.hpp"
 #include "json.hpp"
 #include "Common.hpp"

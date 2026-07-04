@@ -92,6 +92,11 @@ public:
 
 	AudioManager& getAudio();
 	GameState& getGameState();
+
+	// Localization: switch the active language (e.g. "en", "es"). User-facing
+	// text resolved through tr() picks up the change; see Localization.hpp.
+	void setLocale(const std::string& locale);
+	const std::string& getLocale() const;
 	void addCombination(const std::string& itemName, const std::string& targetName, Event event);
 	Event* findCombination(const std::string& itemName, const std::string& targetName);
 

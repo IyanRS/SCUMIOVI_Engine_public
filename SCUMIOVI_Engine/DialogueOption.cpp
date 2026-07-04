@@ -1,6 +1,7 @@
 #include "DialogueOption.hpp"
 #include "DialogueNode.hpp"
 #include "Game.hpp"
+#include "Localization.hpp"
 #include <memory>
 
 DialogueOption::DialogueOption(std::string text, std::shared_ptr<DialogueNode> nextNode) {
@@ -9,7 +10,7 @@ DialogueOption::DialogueOption(std::string text, std::shared_ptr<DialogueNode> n
 }
 
 std::string DialogueOption::getText() {
-	return text;
+	return tr(text);
 }
 
 void DialogueOption::select() {

@@ -1,0 +1,42 @@
+{
+  "Walk to": "Caminar a",
+  "Push": "Empujar",
+  "Push $target": "Empujar $target",
+  "Close": "Cerrar",
+  "Close $target": "Cerrar $target",
+  "Open": "Abrir",
+  "Open $target": "Abrir $target",
+  "Talk to": "Hablar con",
+  "Talk to $target": "Hablar con $target",
+  "Give": "Dar",
+  "Give $target": "Dar $target",
+  "Give $selected to": "Dar $selected a",
+  "Give $selected to $target": "Dar $selected a $target",
+  "Pick up": "Coger",
+  "Pick up $target": "Coger $target",
+  "Use": "Usar",
+  "Use $target": "Usar $target",
+  "Use $selected on $target": "Usar $selected con $target",
+  "Look at": "Mirar",
+  "Look at $target": "Mirar $target",
+  "Pull": "Tirar de",
+  "Pull $target": "Tirar de $target",
+
+  "I don't see anything special.": "No veo nada especial.",
+  "I can't move that.": "No puedo mover eso.",
+
+  "Hello Guybrush": "Hola Guybrush",
+  "Hi": "Hola",
+  "I'm fine,\nwhat about you?": "Estoy bien,\n¿y tú?",
+  "I'm fine too": "Yo también estoy bien",
+  "Are you ok?": "¿Estás bien?",
+  "See you": "Hasta luego",
+  "What do you want to try?": "¿Qué quieres probar?",
+
+  "How are you?": "¿Cómo estás?",
+  "I need to go": "Tengo que irme",
+  "Well, I need to go": "Bueno, tengo que irme",
+  "Let me test something": "Déjame probar algo",
+
+  "Thanks": "Gracias"
+}
