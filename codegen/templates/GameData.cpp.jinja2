@@ -224,7 +224,7 @@ void ScriptLoader::loadGame(Game& game) {
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
         {% endfor %}
         {% if dlg.lines[-1].action %}
-            {{ ' ' * (4 + 4 * dlg.lines|length) }}{{ dlg.lines[-1].action }}(e);
+            {{ ' ' * (4 + 4 * dlg.lines|length) }}e.game.scriptEvent("{{ dlg.lines[-1].action }}").execute(e);
         {% else %}
             {{ ' ' * (4 + 4 * dlg.lines|length) }}{{ label }}Node->showOptions();
         {% endif %}
@@ -262,7 +262,19 @@ void ScriptLoader::loadGame(Game& game) {
 
     {% endfor %}
 
+    // --- Register named interaction scripts ---
+    {% for name in script_names %}
+    game.registerScript("{{ name }}", {{ name }});
+    {% endfor %}
+
     {% for i in interactions %}
+    {% if i.function_name %}
+    {% if i.other_object_id %}
+    {{ i.object_id }}->addVerbInteraction(game.getVerb("{{ i.verb }}"), "{{ i.other_object_id }}", game.scriptEvent("{{ i.function_name }}"));
+    {% else %}
+    {{ i.object_id }}->addVerbInteraction(game.getVerb("{{ i.verb }}"), game.scriptEvent("{{ i.function_name }}"));
+    {% endif %}
+    {% else %}
     {% if i.other_object_id %}
     {{ i.object_id }}->addVerbInteraction(game.getVerb("{{ i.verb }}"), "{{ i.other_object_id }}", Event([=](EventInfo e) {
 {{ i.script }}
@@ -272,13 +284,12 @@ void ScriptLoader::loadGame(Game& game) {
 {{ i.script }}
     }));
     {% endif %}
+    {% endif %}
     {% endfor %}
 
     // --- Item combinations ---
     {% for combo in combinations %}
-    game.addCombination("{{ combo.item }}", "{{ combo.target }}", Event([=](EventInfo e) {
-        {{ combo.script }}(e);
-    }));
+    game.addCombination("{{ combo.item }}", "{{ combo.target }}", game.scriptEvent("{{ combo.function_name }}"));
     {% endfor %}
 
     game.bindLeftClickToVerb(game.selectedVerb);

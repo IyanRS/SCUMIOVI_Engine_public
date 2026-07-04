@@ -419,6 +419,18 @@ def main():
         all_scripts.append({'function_name': combo['function_name']})
     generate_interaction_files(data['interactions'], all_scripts)
 
+    # Deduplicated list of named interaction scripts (object interactions,
+    # dialogue actions and combinations) to register with the runtime script
+    # registry so data can invoke them by name.
+    seen = set()
+    script_names = []
+    for entry in list(data['interactions']) + list(data['dialogue_scripts']) + list(data['combinations']):
+        fn = entry.get('function_name', '')
+        if fn and fn not in seen:
+            seen.add(fn)
+            script_names.append(fn)
+    data['script_names'] = script_names
+
     # Setup Jinja2 environment
     script_dir = os.path.dirname(os.path.abspath(__file__))
     env = Environment(

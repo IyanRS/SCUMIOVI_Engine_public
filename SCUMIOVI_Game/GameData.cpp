@@ -301,7 +301,7 @@ void ScriptLoader::loadGame(Game& game) {
             tr("What do you want to try?"),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
-                        dialogue_script_test(e);
+                        e.game.scriptEvent("dialogue_script_test").execute(e);
              })));  
     })));
 
@@ -336,9 +336,11 @@ void ScriptLoader::loadGame(Game& game) {
     label3Node->setOptions({ label3NodeOption1 });
 
 
-    stan->addVerbInteraction(game.getVerb("give"), "mug", Event([=](EventInfo e) {
-		give_mug_stan(e);
-    }));
+    // --- Register named interaction scripts ---
+    game.registerScript("give_mug_stan", give_mug_stan);
+    game.registerScript("dialogue_script_test", dialogue_script_test);
+
+    stan->addVerbInteraction(game.getVerb("give"), "mug", game.scriptEvent("give_mug_stan"));
     stan->addVerbInteraction(game.getVerb("talk"), Event([=](EventInfo e) {
 		e.player.disableMovement();
 		e.game.getUI().setLayout(e.game.getUI().getDialogueLayout()->getName());
