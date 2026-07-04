@@ -30,6 +30,10 @@ void GraphicsComponent::toggleVisibility() {
 	visibility = !visibility;
 }
 
+void GraphicsComponent::setVisible(bool visible) {
+	visibility = visible;
+}
+
 bool GraphicsComponent::isVisible() {
 	return visibility;
 }

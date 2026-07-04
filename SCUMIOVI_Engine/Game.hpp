@@ -3,6 +3,7 @@
 #include <list>
 #include <string>
 #include <map>
+#include <unordered_map>
 #include "Player.hpp"
 #include "Renderer.hpp"
 #include "InputManager.hpp"
@@ -36,6 +37,12 @@ protected:
 	std::shared_ptr<Verb> rightClickVerb = nullptr;
 	std::shared_ptr<Verb> leftClickVerb = nullptr;
 	std::shared_ptr<Verb> defaultVerb = nullptr;
+
+	// Scene registry for save/load
+	std::unordered_map<std::string, std::shared_ptr<Scene>> sceneRegistry;
+
+	// Inventory item prototypes for save/load reconstruction
+	std::unordered_map<std::string, std::shared_ptr<GameObject>> inventoryItemPrototypes;
 
 public:
 	// Standard Engine Verbs
@@ -88,4 +95,25 @@ public:
 	GameState& getGameState();
 	void addCombination(const std::string& itemName, const std::string& targetName, Event event);
 	Event* findCombination(const std::string& itemName, const std::string& targetName);
+
+	// Scene registry
+	void registerScene(const std::string& name, std::shared_ptr<Scene> scene);
+	std::shared_ptr<Scene> findScene(const std::string& name);
+	void clearSceneRegistry();
+
+	// Inventory prototype registry
+	void registerInventoryItemPrototype(const std::string& name, std::shared_ptr<GameObject> prototype);
+	std::shared_ptr<GameObject> findInventoryItemPrototype(const std::string& name);
+
+	// Save / Load
+	bool saveGame(int slotIndex);
+	bool loadGame(int slotIndex);
+	static std::string getSavePath(int slotIndex);
+
+	// Quick load after scene objects are created
+	void applyObjectStates(const nlohmann::json& scenesJson);
+	void applyInventory(const std::vector<std::string>& itemNames);
+
+	// Quit
+	void quitGame();
 };

@@ -16,16 +16,15 @@ class Scene : public std::enable_shared_from_this<Scene> {
 	std::vector<std::shared_ptr<GameObject>> gameObjects;
 	Camera camera;
 	std::unique_ptr<WalkableArea> walkableArea = nullptr;
+	std::string name;
 
-	//bool gameObjectsComparator(GameObject& o1, GameObject& o2);
-
-	// Debug elements to be shown
-	// TODO: group into a DebugElement class and use inheritance for dots and lines (and maybe polygon)
 	std::list<Vector2<>> debugPoints;
 	std::list<std::array<Vector2<>, 2>> debugLines;
 
 public:
 	Scene();
+	void setName(const std::string& newName);
+	const std::string& getName() const;
 	Camera& getCamera();
 	//void moveCameraTo(Vector2<> position, float seconds, Event callback);
 	void addGameObject(std::shared_ptr<GameObject> gameObject);

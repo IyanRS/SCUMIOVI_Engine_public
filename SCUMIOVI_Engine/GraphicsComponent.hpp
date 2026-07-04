@@ -25,6 +25,7 @@ public:
 	void setTexture(std::string textureName);
 
 	void toggleVisibility();
+	void setVisible(bool visible);
 	bool isVisible();
 	void setLayer(int layer);
 	int getLayer();

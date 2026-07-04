@@ -5,6 +5,14 @@
 
 Scene::Scene() {}
 
+void Scene::setName(const std::string& newName) {
+	name = newName;
+}
+
+const std::string& Scene::getName() const {
+	return name;
+}
+
 Camera& Scene::getCamera() {
 	return camera;
 }

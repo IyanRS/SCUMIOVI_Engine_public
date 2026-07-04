@@ -130,6 +130,24 @@ void InputManager::handleInput(SDL_Event& event, UI& ui, Scene& scene) {
 	if (!currentPlayer) return;
 
 	switch (event.type) {
+	case SDL_EVENT_KEY_DOWN:
+		switch (event.key.key) {
+		case SDLK_F5:
+			if (game.saveGame(0)) {
+				SDL_Log("Game saved to slot 0.");
+			} else {
+				SDL_Log("Failed to save game.");
+			}
+			break;
+		case SDLK_F9:
+			if (game.loadGame(0)) {
+				SDL_Log("Game loaded from slot 0.");
+			} else {
+				SDL_Log("Failed to load game.");
+			}
+			break;
+		}
+		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
 		SDL_MouseButtonFlags mouseButtonFlags = SDL_GetMouseState(nullptr, nullptr);
 		switch (mouseButtonFlags) {

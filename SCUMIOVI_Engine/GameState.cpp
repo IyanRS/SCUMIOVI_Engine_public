@@ -29,3 +29,17 @@ int GameState::getCounter(const std::string& key) const {
 void GameState::incrementCounter(const std::string& key, int delta) {
 	counters[key] = getCounter(key) + delta;
 }
+
+nlohmann::json GameState::to_json() const {
+	nlohmann::json j;
+	j["flags"] = flags;
+	j["counters"] = counters;
+	return j;
+}
+
+void GameState::from_json(const nlohmann::json& j) {
+	if (j.contains("flags"))
+		flags = j["flags"].get<std::unordered_map<std::string, bool>>();
+	if (j.contains("counters"))
+		counters = j["counters"].get<std::unordered_map<std::string, int>>();
+}

@@ -95,6 +95,7 @@ public:
 	void moveToAtSpeed(Vector2<> pos, float speed, Event callback = Event());
 	void moveToAtSpeed(std::vector<Vector2<>> positions, float speed, std::vector<Event> = std::vector<Event>());
 	void toggleVisibility();
+	void setVisible(bool visible);
 	void destroy();
 	bool isVisible();
 	std::string& getName();

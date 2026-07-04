@@ -188,6 +188,10 @@ void GameObject::toggleVisibility() {
 	graphics.toggleVisibility();
 }
 
+void GameObject::setVisible(bool visible) {
+	graphics.setVisible(visible);
+}
+
 void GameObject::destroy() {
 	if (currentScene != nullptr)
 		currentScene->removeGameObject(shared_from_this());

@@ -3,7 +3,9 @@
 #include <SDL3/SDL.h>
 #include <memory>
 #include <algorithm>
+#include <fstream>
 #include "GameObject.hpp"
+#include "json.hpp"
 
 Game::Game() {
 	// Initialize standard verbs
@@ -241,4 +243,197 @@ void Game::clearClicksPool() {
 
 Renderer& Game::getRenderer() {
 	return renderer;
+}
+
+// ---------------------------------------------------------------------------
+// Scene registry
+// ---------------------------------------------------------------------------
+void Game::registerScene(const std::string& name, std::shared_ptr<Scene> scene) {
+	scene->setName(name);
+	sceneRegistry[name] = scene;
+}
+
+std::shared_ptr<Scene> Game::findScene(const std::string& name) {
+	auto it = sceneRegistry.find(name);
+	if (it != sceneRegistry.end())
+		return it->second;
+	return nullptr;
+}
+
+void Game::clearSceneRegistry() {
+	sceneRegistry.clear();
+}
+
+// ---------------------------------------------------------------------------
+// Inventory prototype registry
+// ---------------------------------------------------------------------------
+void Game::registerInventoryItemPrototype(const std::string& name, std::shared_ptr<GameObject> prototype) {
+	inventoryItemPrototypes[name] = prototype;
+}
+
+std::shared_ptr<GameObject> Game::findInventoryItemPrototype(const std::string& name) {
+	auto it = inventoryItemPrototypes.find(name);
+	if (it != inventoryItemPrototypes.end())
+		return it->second;
+	return nullptr;
+}
+
+// ---------------------------------------------------------------------------
+// Save / Load
+// ---------------------------------------------------------------------------
+std::string Game::getSavePath(int slotIndex) {
+	return "save_" + std::to_string(slotIndex) + ".json";
+}
+
+bool Game::saveGame(int slotIndex) {
+	nlohmann::json data;
+
+	// Game state
+	data["gameState"] = gameState.to_json();
+
+	// Current scene
+	if (currentScene) {
+		data["currentScene"] = currentScene->getName();
+	} else {
+		data["currentScene"] = "";
+	}
+
+	// Player
+	if (currentPlayer) {
+		nlohmann::json playerData;
+		playerData["position"]["x"] = currentPlayer->getPosition().x;
+		playerData["position"]["y"] = currentPlayer->getPosition().y;
+		playerData["scene"] = currentPlayer->getScene() ? currentPlayer->getScene()->getName() : "";
+		if (currentPlayer->getVerb())
+			playerData["verb"] = currentPlayer->getVerb()->getName();
+		else
+			playerData["verb"] = "";
+
+		// Inventory
+		nlohmann::json inv = nlohmann::json::array();
+		for (auto& item : currentPlayer->getInventory().getItems()) {
+			inv.push_back(item->getName());
+		}
+		playerData["inventory"] = inv;
+		data["player"] = playerData;
+	}
+
+	// Scene object states
+	nlohmann::json scenesData;
+	for (auto& [sceneName, scene] : sceneRegistry) {
+		nlohmann::json objectsData;
+		for (auto& obj : scene->getGameObjects()) {
+			nlohmann::json objData;
+			objData["state"] = obj->getState();
+			objData["visible"] = obj->isVisible();
+			objData["position"]["x"] = obj->getPosition().x;
+			objData["position"]["y"] = obj->getPosition().y;
+			objectsData[obj->getName()] = objData;
+		}
+		scenesData[sceneName] = objectsData;
+	}
+	data["scenes"] = scenesData;
+
+	// Write to file
+	std::string path = getSavePath(slotIndex);
+	std::ofstream file(path);
+	if (!file.is_open())
+		return false;
+	file << data.dump(4);
+	file.close();
+	return true;
+}
+
+bool Game::loadGame(int slotIndex) {
+	std::string path = getSavePath(slotIndex);
+	std::ifstream file(path);
+	if (!file.is_open())
+		return false;
+
+	nlohmann::json data;
+	try {
+		file >> data;
+	} catch (...) {
+		return false;
+	}
+	file.close();
+
+	// Game state
+	if (data.contains("gameState"))
+		gameState.from_json(data["gameState"]);
+
+	// Player
+	if (data.contains("player")) {
+		auto& playerData = data["player"];
+		if (currentPlayer) {
+			float x = playerData["position"]["x"].get<float>();
+			float y = playerData["position"]["y"].get<float>();
+			currentPlayer->setPosition(Vector2<>(x, y));
+
+			if (playerData.contains("verb")) {
+				std::string verbName = playerData["verb"].get<std::string>();
+				if (!verbName.empty())
+					currentPlayer->setVerb(verbName);
+			}
+		}
+	}
+
+	// Current scene
+	if (data.contains("currentScene")) {
+		std::string sceneName = data["currentScene"].get<std::string>();
+		if (!sceneName.empty()) {
+			auto scene = findScene(sceneName);
+			if (scene) {
+				changeScene(scene);
+			}
+		}
+	}
+
+	// Apply object states (must happen after scene objects exist)
+	if (data.contains("scenes"))
+		applyObjectStates(data["scenes"]);
+
+	// Rebuild inventory
+	if (data.contains("player") && data["player"].contains("inventory"))
+		applyInventory(data["player"]["inventory"].get<std::vector<std::string>>());
+
+	return true;
+}
+
+void Game::applyObjectStates(const nlohmann::json& scenesJson) {
+	for (auto& [sceneName, objectsJson] : scenesJson.items()) {
+		auto scene = findScene(sceneName);
+		if (!scene) continue;
+		for (auto& [objName, objData] : objectsJson.items()) {
+			auto obj = scene->getGameObject(objName);
+			if (!obj) continue;
+			if (objData.contains("state"))
+				obj->setState(objData["state"].get<int>());
+			if (objData.contains("visible"))
+				obj->setVisible(objData["visible"].get<bool>());
+			if (objData.contains("position")) {
+				float x = objData["position"]["x"].get<float>();
+				float y = objData["position"]["y"].get<float>();
+				obj->setPosition(Vector2<>(x, y));
+			}
+		}
+	}
+}
+
+void Game::applyInventory(const std::vector<std::string>& itemNames) {
+	if (!currentPlayer) return;
+	auto& inventory = currentPlayer->getInventory();
+	inventory.getItems().clear();
+	for (auto& name : itemNames) {
+		auto proto = findInventoryItemPrototype(name);
+		if (proto) {
+			auto clone = std::make_shared<GameObject>(name, Vector2<>(), Vector2<>(-1, -1), proto->getTexture());
+			clone->addTag("item");
+			inventory.addItem(clone);
+		}
+	}
+}
+
+void Game::quitGame() {
+	gameIsRunning = false;
 }
