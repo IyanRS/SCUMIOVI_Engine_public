@@ -98,10 +98,10 @@ SDL_Texture* ResourceManager::loadTexture(SDL_Renderer* sdlRenderer, Texture& te
 		SDL_SetTextureScaleMode(textureImg, SDL_SCALEMODE_NEAREST);
 	}
 
-	srcRect->x = texture.getPosition().x;
-	srcRect->y = texture.getPosition().y;
-	srcRect->w = texture.getSize().x;
-	srcRect->h = texture.getSize().y;
+	srcRect->x = (float)texture.getPosition().x;
+	srcRect->y = (float)texture.getPosition().y;
+	srcRect->w = (float)texture.getSize().x;
+	srcRect->h = (float)texture.getSize().y;
 
 	return textureImg;
 }
@@ -135,7 +135,7 @@ TTF_Font* ResourceManager::loadFont(std::string fontFile, int size) {
 		font = it->second;
 	}
 	else {
-		font = TTF_OpenFont((getFontsDirectory() + fontFile).c_str(), size);
+		font = TTF_OpenFont((getFontsDirectory() + fontFile).c_str(), (float)size);
 		if (font == nullptr) {
 			SDL_Log("TTF_OpenFont() Error: %s", SDL_GetError());
 			return nullptr;

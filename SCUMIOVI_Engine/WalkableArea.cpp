@@ -9,7 +9,7 @@ bool WalkableArea::isPointInside(Vector2<> point) {
         return false;
     }
 
-    unsigned int n = walkablePolygon.size();
+    size_t n = walkablePolygon.size();
     bool inside = false;
 
     for (unsigned int i = 0; i < n; i++) {
@@ -70,7 +70,7 @@ bool WalkableArea::lineIntersectsLine(Vector2<> p1, Vector2<> q1, Vector2<> p2, 
 
 
 bool WalkableArea::lineIntersectsPolygon(Vector2<> lineStart, Vector2<> lineEnd) {
-    unsigned int n = walkablePolygon.size();
+    size_t n = walkablePolygon.size();
     for (unsigned int i = 0; i < n; i++) {
         Vector2<> p1 = walkablePolygon[i];
         Vector2<> p2 = walkablePolygon[(i + 1) % n];
@@ -135,7 +135,7 @@ struct ComparePair {
 
 int WalkableArea::getNIntersections(Vector2<> a, Vector2<> b) {
     int nIntersections = 0;
-    unsigned int n = walkablePolygon.size();
+    size_t n = walkablePolygon.size();
     for (unsigned int i = 0; i < n; i++) {
         Vector2<> p1 = walkablePolygon[i];
         Vector2<> p2 = walkablePolygon[(i + 1) % n];

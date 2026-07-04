@@ -12,14 +12,12 @@ public:
 	T x;
 	T y;
 	float distanceTo(Vector2<T> targetVector) {
-		return sqrt(pow(x - targetVector.x, 2) + pow(y - targetVector.y, 2));
+		return static_cast<float>(std::sqrt(std::pow(x - targetVector.x, 2) + std::pow(y - targetVector.y, 2)));
 	}
 	Vector2<float> normalized() {
 		float length = distanceTo(Vector2()); // Distance to (0,0)
 		return Vector2(x / length, y / length);
 	}
-	//Vector2<float> operator-(const Vector2<T>& v2) const;
-	//Vector2<float> operator/(const float value) const;
 	Vector2<T> operator-(const Vector2<T>& v2) const { return Vector2(x - v2.x, y - v2.y); }
 	Vector2<T> operator+(const Vector2<T>& v2) const { return Vector2(x + v2.x, y + v2.y); }
 	Vector2<T> operator*(float value) const { return Vector2(x*value, y*value); }

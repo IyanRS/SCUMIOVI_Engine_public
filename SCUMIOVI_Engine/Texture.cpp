@@ -11,8 +11,8 @@ Vector2<int> Texture::getPosition() {
 }
 
 Vector2<int> Texture::getSize() {
-	float sizeX = size.x;
-	float sizeY = size.y;
+	int sizeX = size.x;
+	int sizeY = size.y;
 	if (sizeX == -1 || sizeY == -1) {
 		ResourceManager& resourceManager = ResourceManager::getInstance();
 		Vector2<int> imageSize = resourceManager.getImageSize(getSource());

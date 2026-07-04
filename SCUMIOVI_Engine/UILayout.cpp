@@ -51,7 +51,7 @@ void UILayout::updateUI() {
 		int column = i % columns;
 
 		Vector2<> centerOffset = itemSlots[i]->getSize() / 2 - item->getSize() / 2;
-		item->setPosition(Vector2<>(150 + (column * width), 154 + (row * height)) + centerOffset);
+		item->setPosition(Vector2<>((float)(150 + (column * width)), (float)(154 + (row * height))) + centerOffset);
 		removeUIElement(item);
 		addUIElement(item);
 	}
@@ -90,7 +90,7 @@ void UILayout::createDialogueOptions(DialogueNode& dialogueNode) {
 	int currentY = 152;
 	for (std::shared_ptr<DialogueOption>& dialogueOption : dialogueNode.getOptions()) {
 		if (!dialogueOption->isVisible()) continue;
-		auto uiDialogueOption = std::make_shared<UIDialogueOption>(dialogueOption, Vector2<>(4, currentY), nullptr);
+		auto uiDialogueOption = std::make_shared<UIDialogueOption>(dialogueOption, Vector2<>(4.0f, (float)currentY), nullptr);
 		dialogueOptions.push_back(uiDialogueOption);
 		addUIElement(uiDialogueOption);
 		currentY += 14;
@@ -137,7 +137,7 @@ std::vector<std::shared_ptr<UIVerbButton>> UILayout::createVerbsMatrix(Vector2<>
 				buttonPos.x += columnLengths[k] * 7;
 				buttonPos.x += 2;
 			}
-			auto button = std::make_shared<UIVerbButton>(verbs[j][i], buttonPos, Vector2<>(columnLengths[i] * 7, height), verbBackground);
+			auto button = std::make_shared<UIVerbButton>(verbs[j][i], buttonPos, Vector2<>((float)(columnLengths[i] * 7), (float)height), verbBackground);
 			addUIElement(button);
 			uiVerbButtons.push_back(button);
 			buttons.push_back(button);
@@ -162,7 +162,7 @@ void UILayout::createInventoryMatrix(Vector2<> position, int columns, int rows, 
 	for (int j = 0; j < rows; j++) {
 		for (int i = 0; i < columns; i++) {
 			Vector2<> slotPos = Vector2<>(position.x + (width + 2) * i, position.y + (height + 2) * j);
-			createUIItemSlot(i + j * columns, slotPos, Vector2<>(width, height), background, onUIUpdate);
+			createUIItemSlot(i + j * columns, slotPos, Vector2<>((float)width, (float)height), background, onUIUpdate);
 		}
 	}
 }

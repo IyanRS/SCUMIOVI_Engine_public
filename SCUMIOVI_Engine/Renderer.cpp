@@ -130,7 +130,7 @@ void Renderer::renderText(Vector2<> position, Text& text, Camera& camera, bool h
 		renderText(position+Vector2<>(0,1), outlineText, camera, true);
 	}
 
-	Vector2<> positionRounded = Vector2<>((int)position.x, (int)position.y);
+	Vector2<> positionRounded = Vector2<>((float)(int)position.x, (float)(int)position.y);
 	TTF_Text* ttfText = TTF_CreateText(textEngine, font, text.toString().c_str(), (size_t)text.toString().size());
 	int w, h;
 	TTF_GetTextSize(ttfText, &w, &h);
