@@ -8,7 +8,7 @@ class Door : public GameObject {
 private:
 	SceneTransitionObject sceneTransition;
 public:
-	static const enum DoorState {
+	enum DoorState {
 		OPEN, CLOSED
 	};
 

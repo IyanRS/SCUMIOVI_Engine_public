@@ -20,6 +20,7 @@ inspired scene), a data-driven code generator, and a unit-test suite.
 | `codegen/`         | Python + Jinja2 generator that turns `game/*.csv` into `SCUMIOVI_Game/GameData.cpp`. |
 | `assets/`          | Textures and fonts loaded at runtime. |
 | `tests/`           | Catch2 unit tests. |
+| `third_party/`     | Vendored single-header libraries (`json.hpp`, `catch.hpp`). |
 | `SDL3/`, `SDL3_image/`, `SDL3_ttf/` | Third-party SDL libraries (headers + prebuilt Windows binaries). |
 
 ## Architecture overview

@@ -220,7 +220,7 @@ void ScriptLoader::loadGame(Game& game) {
         {% for line in dlg.lines if line.text is not none %}
         {{ ' ' * (4 + 4 * loop.index0) }}{% if line.speaker == 'player' %}e.game.getCurrentPlayer()->{% else %}{{ line.speaker }}->{% endif %}say(
             "{{ cpp_string(line.text) }}",
-            {{ line.delay if line.delay is not none else 0.0 }},
+            {{ line.delay if line.delay is not none else 0.0 }}f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
         {% endfor %}
         {% if dlg.lines[-1].action %}

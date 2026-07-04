@@ -229,11 +229,11 @@ void ScriptLoader::loadGame(Game& game) {
     mainNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
             "Hello Guybrush",
-            0.6,
+            0.6f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                 e.game.getCurrentPlayer()->say(
             "Hi",
-            0.2,
+            0.2f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                         mainNode->showOptions();
                  })));  
@@ -246,11 +246,11 @@ void ScriptLoader::loadGame(Game& game) {
     label2Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
             "I'm fine,\nwhat about you?",
-            0.0,
+            0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                 e.game.getCurrentPlayer()->say(
             "I'm fine too",
-            0.0,
+            0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                         label2Node->showOptions();
                  })));  
@@ -263,7 +263,7 @@ void ScriptLoader::loadGame(Game& game) {
     label3Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
             "Are you ok?",
-            0.0,
+            0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                     label3Node->showOptions();
              })));  
@@ -275,7 +275,7 @@ void ScriptLoader::loadGame(Game& game) {
     label4Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
             "...",
-            0.0,
+            0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                     label4Node->showOptions();
              })));  
@@ -287,7 +287,7 @@ void ScriptLoader::loadGame(Game& game) {
     byelabelNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
             "See you",
-            0.0,
+            0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                     byelabelNode->showOptions();
              })));  
@@ -299,7 +299,7 @@ void ScriptLoader::loadGame(Game& game) {
     scripttestNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
             "What do you want to try?",
-            0.0,
+            0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                         dialogue_script_test(e);
              })));  

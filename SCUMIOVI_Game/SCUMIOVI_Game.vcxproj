@@ -49,7 +49,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\SCUMIOVI_Engine;..\SDL3\include;..\SDL3_image\include;..\SDL3_ttf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\SCUMIOVI_Engine;..\third_party;..\SDL3\include;..\SDL3_image\include;..\SDL3_ttf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -62,7 +62,7 @@
       <Command>python "$(ProjectDir)..\codegen\templates\generate.py"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy /Y "$(ProjectDir)..\SDL3\lib\x64\SDL3.dll" "$(OutDir)" &amp;&amp; copy /Y "$(ProjectDir)..\SDL3_image\lib\x64\SDL3_image.dll" "$(OutDir)" &amp;&amp; copy /Y "$(ProjectDir)..\SCUMIOVI_Engine\SDL3_ttf.dll" "$(OutDir)"</Command>
+      <Command>copy /Y "$(ProjectDir)..\SDL3\lib\x64\SDL3.dll" "$(OutDir)" &amp;&amp; copy /Y "$(ProjectDir)..\SDL3_image\lib\x64\SDL3_image.dll" "$(OutDir)" &amp;&amp; copy /Y "$(ProjectDir)..\SDL3_ttf\lib\x64\SDL3_ttf.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -73,7 +73,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\SCUMIOVI_Engine;..\SDL3\include;..\SDL3_image\include;..\SDL3_ttf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\SCUMIOVI_Engine;..\third_party;..\SDL3\include;..\SDL3_image\include;..\SDL3_ttf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -88,7 +88,7 @@
       <Command>python "$(ProjectDir)..\codegen\templates\generate.py"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy /Y "$(ProjectDir)..\SDL3\lib\x64\SDL3.dll" "$(OutDir)" &amp;&amp; copy /Y "$(ProjectDir)..\SDL3_image\lib\x64\SDL3_image.dll" "$(OutDir)" &amp;&amp; copy /Y "$(ProjectDir)..\SCUMIOVI_Engine\SDL3_ttf.dll" "$(OutDir)"</Command>
+      <Command>copy /Y "$(ProjectDir)..\SDL3\lib\x64\SDL3.dll" "$(OutDir)" &amp;&amp; copy /Y "$(ProjectDir)..\SDL3_image\lib\x64\SDL3_image.dll" "$(OutDir)" &amp;&amp; copy /Y "$(ProjectDir)..\SDL3_ttf\lib\x64\SDL3_ttf.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
