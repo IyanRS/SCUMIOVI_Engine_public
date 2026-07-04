@@ -1,7 +1,6 @@
 #include "InputManager.hpp"
 #include <SDL3/SDL.h>
 #include "Common.hpp"
-#include <thread>
 #include <memory>
 #include "Game.hpp"
 
@@ -58,16 +57,6 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 	if (ui.getLayout() == nullptr)
 		return;
 
-	auto now = std::chrono::system_clock::now();
-	auto lastCheckTimeDiff = now - lastCheckTime;
-	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(lastCheckTimeDiff).count();
-
-	long long msUntilNextFrame = (1000 / FPS) - ms;
-
-	if (msUntilNextFrame > 0) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(msUntilNextFrame));
-	}
-
 	float xMouse;
 	float yMouse;
 
@@ -89,8 +78,6 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 	for (int i = (int)gameObjects.size() - 1; i >= 0; i--) {
 		checkMouseOverObject(xMouse, yMouse, gameObjects[i]);
 	}
-
-	lastCheckTime = now;
 }
 
 bool InputManager::click(UI& ui, Scene& scene, std::shared_ptr<Verb> verb) {
@@ -152,13 +139,13 @@ void InputManager::handleInput(SDL_Event& event, UI& ui, Scene& scene) {
 		SDL_MouseButtonFlags mouseButtonFlags = SDL_GetMouseState(nullptr, nullptr);
 		switch (mouseButtonFlags) {
 		case 0:
-		case SDL_BUTTON_LEFT:
+		case SDL_BUTTON_LMASK:
 			if (game.getLeftClickVerb() == nullptr)
 				click(ui, scene, currentPlayer->getVerb());
 			else
 				click(ui, scene, game.getLeftClickVerb());
 			break;
-		case 4: // SDL_BUTTON_RIGHT bitmask
+		case SDL_BUTTON_RMASK:
 			if (game.getRightClickVerb() == nullptr)
 				click(ui, scene, currentPlayer->getVerb());
 			else
@@ -167,8 +154,4 @@ void InputManager::handleInput(SDL_Event& event, UI& ui, Scene& scene) {
 		}
 		break;
 	}
-}
-
-void InputManager::clearClicksPool() {
-	// Currently a stub as part of the refactoring
 }

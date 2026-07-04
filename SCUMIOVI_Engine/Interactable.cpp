@@ -160,7 +160,7 @@ Event& Interactable::getMouseNotOverEvent() {
 			e.game.getUI().updateUI();
 		});
 
-		mouseNotOverEventPlusNoHighlight = mouseOverEvent + dontHighlightDefaultVerbEvent;
+		mouseNotOverEventPlusNoHighlight = mouseNotOverEvent + dontHighlightDefaultVerbEvent;
 		return mouseNotOverEventPlusNoHighlight;
 	}
 	return mouseNotOverEvent;

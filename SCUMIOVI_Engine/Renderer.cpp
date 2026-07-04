@@ -211,27 +211,14 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 
 	std::shared_ptr<Texture> textureToRender = nullptr;
 	auto animation = gameObject.getAnimation();
-	
-	if (animation != nullptr) {
-		int textureIndex = animation->currentFrame / animation->getFrameRate();
-		auto& frames = animation->getFrames();
-		if (textureIndex < frames.size()) {
-			// Frames are currently stored as vector<Texture> in Animation.
-			// Animation.hpp: std::vector<Texture> frames;
-			// I should probably update Animation to hold shared_ptr<Texture> too?
-			// For now, I'll take a pointer to the frame if it's value-based, but 
-			// wait, our renderTexture takes shared_ptr.
-			
-			// Let's create a temporary shared_ptr for the frame if needed, 
-			// though it's better to update Animation class too.
-			textureToRender = std::make_shared<Texture>(frames[textureIndex]);
-		}
 
-		if (animation->currentFrame < frames.size() * animation->getFrameRate() - 1) {
-			animation->currentFrame++;
-		}
-		else if (animation->doesLoop()) {
-			animation->currentFrame = 0;
+	// Rendering only reads animation state; the frame counter is advanced in
+	// AnimationComponent::update() so simulation and rendering stay separate.
+	if (animation != nullptr) {
+		auto& frames = animation->getFrames();
+		int textureIndex = animation->currentFrame / animation->getFrameRate();
+		if (textureIndex < (int)frames.size()) {
+			textureToRender = std::make_shared<Texture>(frames[textureIndex]);
 		}
 	}
 	else {
@@ -262,41 +249,6 @@ void Renderer::renderGameObject(GameObject& gameObject, Camera& camera) {
 #endif
 
 		renderText(textPosition, gameObject.getTextOver(), camera);
-	}
-}
-
-void Renderer::checkOverlaps(std::shared_ptr<GameObject> gameObject1, std::shared_ptr<GameObject> gameObject2) {
-	auto& overlapEvents = gameObject1->getOverlapEvents();
-	auto it = overlapEvents.find(gameObject2);
-	if (it == overlapEvents.end()) {
-		return;
-	}
-
-	SDL_Rect rectObj1 = { (int)gameObject1->getPosition().x, (int)gameObject1->getPosition().y, (int)gameObject1->getSize().x, (int)gameObject1->getSize().y };
-	SDL_Rect rectObj2 = { (int)gameObject2->getPosition().x, (int)gameObject2->getPosition().y, (int)gameObject2->getSize().x, (int)gameObject2->getSize().y };
-	
-	int currentOverlappingIndex = -1;
-	for (int i = 0; i < (int)currentlyOverlapping.size(); i++) {
-		auto& overlap = currentlyOverlapping[i];
-		if (overlap[0] == gameObject1 && overlap[1] == gameObject2) {
-			currentOverlappingIndex = i;
-			break;
-		}
-	}
-
-	if (SDL_HasRectIntersection(&rectObj1, &rectObj2)) {
-		if (currentOverlappingIndex == -1) {
-			it->second.execute();
-			std::array<std::shared_ptr<GameObject>, 2> overlapping;
-			overlapping[0] = gameObject1;
-			overlapping[1] = gameObject2;
-			currentlyOverlapping.push_back(overlapping);
-		}
-	}
-	else {
-		if (currentOverlappingIndex != -1) {
-			currentlyOverlapping.erase(currentlyOverlapping.begin() + currentOverlappingIndex);
-		}
 	}
 }
 
@@ -370,12 +322,6 @@ void Renderer::render(Scene& scene, UI& ui) {
 	auto gameObjects = scene.getGameObjects();
 	for (const auto& object : gameObjects) {
 		if (object == nullptr) continue;
-
-		for (const auto& object2 : gameObjects) {
-			if (object2 == nullptr || object == object2) continue;
-			checkOverlaps(object, object2);
-		}
-
 		renderGameObject(*object, scene.getCamera());
 	}
 

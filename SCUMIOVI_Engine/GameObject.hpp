@@ -10,19 +10,15 @@
 #include "GraphicsComponent.hpp"
 
 class Scene;
-//#include "Scene.hpp"
 
 #include <list>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <string>
 #include <unordered_set>
 
 #include "Text.hpp"
-
 #include "Dialogue.hpp"
 
 enum VerticalDirection { UP, DOWN };
@@ -38,7 +34,6 @@ class GameObject : public Interactable, public std::enable_shared_from_this<Game
 	Vector2<> position;
 	Vector2<> size;
 	bool interactable = true;
-	//Event clickEvent;
 	std::shared_ptr<Scene> currentScene = nullptr;
 	std::map<std::shared_ptr<GameObject>, Event> overlapEvents;
 	MovementComponent movement;
@@ -56,9 +51,8 @@ class GameObject : public Interactable, public std::enable_shared_from_this<Game
 	bool horizontalIdleDefined();
 	bool verticalIdleDefined();
 
-	//Dialogue* dialogue;
 	std::unordered_set<std::string> objectTags;
-	
+
 public:
 	GameObject(std::string name,
 			   Vector2<> position = Vector2<>(), 
@@ -80,11 +74,9 @@ public:
 	void addTexture(std::shared_ptr<Texture> texture);
 	std::shared_ptr<Animation> getAnimation();
 	void addAnimation(std::shared_ptr<Animation> animation);
-	void setAnimation(std::string animatioName);
-	void playAnimation(std::string animatioName, Event event = Event());
+	void setAnimation(std::string animationName);
+	void playAnimation(std::string animationName, Event event = Event());
 	std::shared_ptr<Animation> getAnimationByName(std::string name);
-	//void setAnimation(Animation& animation);
-	//Event& getClickEvent();
 	void addOverlapEvent(std::shared_ptr<GameObject> object, Event event);
 	std::map<std::shared_ptr<GameObject>, Event>& getOverlapEvents();
 	Vector2<> getDirectionVector();
@@ -113,9 +105,6 @@ public:
 	void setExamineText(const std::string& text);
 	const std::string& getExamineText() const;
 	void setTextFormat(Text& text);
-	//void setDialogue(Dialogue* dialogue);
-	//void setMovementAnimations(Animation* moveUp, Animation* moveDown, Animation* moveLeft, Animation* moveRight);
-	//void setIdleAnimations(Animation* idleUp, Animation* idleDown, Animation* idleLeft, Animation* idleRight);
 	void addTag(std::string tag);
 	bool hasTag(std::string tag);
 	VerticalDirection getCurrentVerticalDirection();

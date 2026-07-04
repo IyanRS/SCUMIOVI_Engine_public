@@ -7,6 +7,9 @@
 AnimationComponent::AnimationComponent(GameObject* owner) : owner(owner) {}
 
 void AnimationComponent::update(float deltaTime) {
+	// Return to the previous animation once a one-shot animation has finished.
+	// Checked before advancing so it reads the prior frame's counter, matching
+	// the ordering from when the renderer performed the advance.
 	if (animation != nullptr && animReturnTo != nullptr && animReturnFrame >= 0) {
 		if (animation->currentFrame >= animReturnFrame - 1) {
 			animation       = animReturnTo;
@@ -14,6 +17,19 @@ void AnimationComponent::update(float deltaTime) {
 			animReturnFrame = -1;
 			animCallback.execute();
 			animCallback    = Event();
+		}
+	}
+
+	// Advance the current animation's frame counter (previously done inside the
+	// renderer). Looping animations wrap; one-shot animations hold on the last
+	// frame until the return-to logic above swaps them out.
+	if (animation != nullptr) {
+		int totalTicks = (int)animation->getFrames().size() * animation->getFrameRate();
+		if (animation->currentFrame < totalTicks - 1) {
+			animation->currentFrame++;
+		}
+		else if (animation->doesLoop()) {
+			animation->currentFrame = 0;
 		}
 	}
 }

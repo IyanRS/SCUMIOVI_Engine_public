@@ -20,10 +20,16 @@ Camera& Scene::getCamera() {
 void Scene::addGameObject(std::shared_ptr<GameObject> gameObject) {
 	gameObjects.push_back(gameObject);
 	gameObject->setScene(shared_from_this());
+	objectsDirty = true;
 }
 
 void Scene::removeGameObject(const std::shared_ptr<GameObject>& gameObject) {
 	gameObjects.erase(std::remove(gameObjects.begin(), gameObjects.end(), gameObject), gameObjects.end());
+	objectsDirty = true;
+}
+
+void Scene::markLayersDirty() {
+	objectsDirty = true;
 }
 
 std::shared_ptr<GameObject> Scene::addBackground(std::string source, Vector2<int> size) {
@@ -35,9 +41,12 @@ std::shared_ptr<GameObject> Scene::addBackground(std::string source, Vector2<int
 }
 
 std::vector<std::shared_ptr<GameObject>> Scene::getGameObjects() {
-	std::sort(gameObjects.begin(), gameObjects.end(), [](const std::shared_ptr<GameObject>& a, const std::shared_ptr<GameObject>& b) {
-		return a->getLayer() < b->getLayer();
-	});
+	if (objectsDirty) {
+		std::sort(gameObjects.begin(), gameObjects.end(), [](const std::shared_ptr<GameObject>& a, const std::shared_ptr<GameObject>& b) {
+			return a->getLayer() < b->getLayer();
+		});
+		objectsDirty = false;
+	}
 	return gameObjects;
 }
 
@@ -74,9 +83,52 @@ std::list<std::array<Vector2<>, 2>> Scene::getDebugLines() {
 	return debugLines;
 }
 
+void Scene::checkOverlaps(std::shared_ptr<GameObject> gameObject1, std::shared_ptr<GameObject> gameObject2) {
+	auto& overlapEvents = gameObject1->getOverlapEvents();
+	auto it = overlapEvents.find(gameObject2);
+	if (it == overlapEvents.end()) {
+		return;
+	}
+
+	SDL_Rect rectObj1 = { (int)gameObject1->getPosition().x, (int)gameObject1->getPosition().y, (int)gameObject1->getSize().x, (int)gameObject1->getSize().y };
+	SDL_Rect rectObj2 = { (int)gameObject2->getPosition().x, (int)gameObject2->getPosition().y, (int)gameObject2->getSize().x, (int)gameObject2->getSize().y };
+
+	int currentOverlappingIndex = -1;
+	for (int i = 0; i < (int)currentlyOverlapping.size(); i++) {
+		auto& overlap = currentlyOverlapping[i];
+		if (overlap[0] == gameObject1 && overlap[1] == gameObject2) {
+			currentOverlappingIndex = i;
+			break;
+		}
+	}
+
+	if (SDL_HasRectIntersection(&rectObj1, &rectObj2)) {
+		if (currentOverlappingIndex == -1) {
+			it->second.execute();
+			currentlyOverlapping.push_back({ gameObject1, gameObject2 });
+		}
+	}
+	else {
+		if (currentOverlappingIndex != -1) {
+			currentlyOverlapping.erase(currentlyOverlapping.begin() + currentOverlappingIndex);
+		}
+	}
+}
+
 void Scene::update(float deltaTime) {
 	camera.update(deltaTime);
 	for (int i = 0; i < (int)gameObjects.size(); i++) {
 		gameObjects[i]->update(deltaTime);
+	}
+
+	// Overlap events (moved out of the renderer so gameplay logic lives here).
+	// Iterate a snapshot because an overlap event may add/remove objects.
+	auto snapshot = gameObjects;
+	for (const auto& object : snapshot) {
+		if (object == nullptr) continue;
+		for (const auto& object2 : snapshot) {
+			if (object2 == nullptr || object == object2) continue;
+			checkOverlaps(object, object2);
+		}
 	}
 }

@@ -1,5 +1,6 @@
 #include "UI.hpp"
 #include <SDL3/SDL.h>
+#include <stdexcept>
 
 std::vector<std::shared_ptr<GameObject>>& UI::getUIElements() {
 	static std::vector<std::shared_ptr<GameObject>> empty;
@@ -62,7 +63,7 @@ UILayout& UI::getLayout(std::string name) {
 			return *layout;
 		}
 	}
-	// TODO: throw error
+	throw std::runtime_error("UI::getLayout: no layout named '" + name + "'");
 }
 
 void UI::createDialogueOptions(DialogueNode& dialogueNode) {

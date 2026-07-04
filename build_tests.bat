@@ -28,9 +28,11 @@ for %%f in (..\..\SCUMIOVI_Engine\*.cpp) do (
 :: Compiling Catch2 tests...
 cl.exe /nologo /EHsc /std:c++20 /I..\..\SCUMIOVI_Engine /I..\..\SCUMIOVI_Game /I..\..\SDL3\include /I..\..\SDL3_image\include /I..\..\SDL3_ttf\include ..\test_main.cpp ..\test_vector2.cpp ..\test_delay.cpp ..\test_walkable_area.cpp ..\test_verb.cpp ..\test_inventory.cpp ..\test_event.cpp ..\test_gameplay.cpp ..\test_dialogue.cpp ..\test_ui.cpp ..\test_audio.cpp ..\test_gamestate.cpp ..\test_examine.cpp ..\test_dialogue_conditions.cpp ..\test_fade.cpp ..\test_saveload.cpp !ENGINE_SRC! /Fe:run_tests.exe /link /LIBPATH:..\..\SDL3\lib\x64 /LIBPATH:..\..\SDL3_image\lib\x64 /LIBPATH:..\..\SDL3_ttf\lib\x64 SDL3.lib SDL3_image.lib SDL3_ttf.lib
 
+set "BUILD_ERR=%ERRORLEVEL%"
+
 copy /Y ..\..\SCUMIOVI_Engine\SDL3*.dll . >nul
 
-if %ERRORLEVEL% equ 0 (
+if %BUILD_ERR% equ 0 (
     echo.
     echo ----------------------------------------------------------------------
     echo Build successful. Running tests...

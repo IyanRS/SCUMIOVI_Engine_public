@@ -1,7 +1,6 @@
 #include "MovementComponent.hpp"
 #include "GameObject.hpp"
-
-#define EPSILON 0.001f
+#include "Common.hpp"
 
 MovementComponent::MovementComponent(GameObject* owner) : owner(owner) {}
 

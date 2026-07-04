@@ -5,9 +5,6 @@
 #include <memory>
 #include <cmath>
 
-#define EPSILON 0.001f
-#define TEXT_SPEED 10.0f
-
 GameObject::GameObject(
 	std::string name,
 	Vector2<> position,
@@ -215,6 +212,8 @@ std::string& GameObject::getName() {
 
 void GameObject::setLayer(int layer) {
 	graphics.setLayer(layer);
+	if (currentScene != nullptr)
+		currentScene->markLayersDirty();
 }
 
 int GameObject::getLayer() {

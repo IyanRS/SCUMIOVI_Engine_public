@@ -2,7 +2,9 @@
 
 #include "Common.hpp"
 
-#define EPSILON 0.00001f
+// Camera uses a tighter tolerance than the shared EPSILON because its
+// movement is measured in sub-pixel lerp increments.
+constexpr float CAMERA_EPSILON = 0.00001f;
 
 Camera::Camera() {
 	size = Vector2<>(RENDER_WIDTH, RENDER_HEIGHT);
@@ -39,7 +41,7 @@ void Camera::moveTo(Vector2<> pos, float seconds, Event callback) {
 	if (isMoving && moveTarget.x == pos.x && moveTarget.y == pos.y)
 		return;
 
-	if (seconds <= EPSILON) {
+	if (seconds <= CAMERA_EPSILON) {
 		// Instantaneous
 		position = pos;
 		callback.execute();

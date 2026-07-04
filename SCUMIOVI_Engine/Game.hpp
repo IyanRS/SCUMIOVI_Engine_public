@@ -88,7 +88,6 @@ public:
 	void setDefaultVerb(std::shared_ptr<Verb> verb);
 	void setDefaultVerb(std::string verbName);
 	void changeToDefaultVerb();
-	void clearClicksPool();
 	Renderer& getRenderer();
 
 	AudioManager& getAudio();

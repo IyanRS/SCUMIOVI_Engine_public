@@ -4,8 +4,6 @@
 
 void Player::disableMovement() {
     canPlayerMove = false;
-	Game& game = Game::getInstance();
-	game.clearClicksPool();
 }
 
 void Player::enableMovement() {

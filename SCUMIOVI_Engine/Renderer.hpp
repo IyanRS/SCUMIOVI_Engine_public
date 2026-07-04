@@ -21,9 +21,7 @@ class Renderer {
 	void applyScreenTransform(SDL_FRect& rect, Vector2<> renderFrameSize = { RENDER_HEIGHT, RENDER_WIDTH });
 	void applyCameraTransform(Camera& camera, Vector2<>& point);
 	void applyScreenTransform(Vector2<>& point, Vector2<> renderFrameSize = { RENDER_HEIGHT, RENDER_WIDTH });
-	std::vector<std::array<std::shared_ptr<GameObject>, 2>> currentlyOverlapping;
 	void renderGameObject(GameObject& gameObject, Camera& camera);
-	void checkOverlaps(std::shared_ptr<GameObject> gameObject1, std::shared_ptr<GameObject> gameObject2);
 	void renderText(Vector2<>, Text&, Camera& camera, bool hasOutline=false);
 	std::string generateTextureKey(TTF_Font* font, const std::string& textString, const int color[3], bool hasOutline); // Used for hashing fonts
 	void renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, const std::string& textString, const int color[3], bool hasOutline=false);

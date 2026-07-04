@@ -209,7 +209,7 @@ std::vector<Vector2<>> WalkableArea::findPath(Vector2<> start, Vector2<> end) {
     distances[end] = std::numeric_limits<float>::infinity();
 
     distances[start] = 0;
-    pq.push({ 0, start });
+    pq.push({ 0.0f, start });
 
     while (!pq.empty()) {
         Vector2<> current = pq.top().second;

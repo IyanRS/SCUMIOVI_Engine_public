@@ -362,6 +362,9 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
+# Test build output (compiled by build_tests.bat)
+tests/build/
+
 !SDL3/
 !SDL3/lib/
 !SDL3/lib/x64/

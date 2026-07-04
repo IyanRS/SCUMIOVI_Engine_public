@@ -24,19 +24,21 @@ Game::Game() {
 
 	audio.init();
 
+	// Fallback responses used when the game provides no interaction of its own.
+	// Games can override these per verb via Verb::setDefaultEvent().
 	lookAtVerb->setDefaultEvent(Event([](EventInfo e) {
 		auto* go = dynamic_cast<GameObject*>(&e.interactable);
 		if (go && !go->getExamineText().empty()) {
 			e.player.say(go->getExamineText());
 		} else {
-			e.player.say("No veo nada especial.");
+			e.player.say("I don't see anything special.");
 		}
 	}));
 	pushVerb->setDefaultEvent(Event([](EventInfo e) {
-		e.player.say("No puedo mover eso.");
+		e.player.say("I can't move that.");
 	}));
 	pullVerb->setDefaultEvent(Event([](EventInfo e) {
-		e.player.say("No puedo mover eso.");
+		e.player.say("I can't move that.");
 	}));
 
 	// Add standard verbs to the verbs vector
@@ -235,10 +237,6 @@ Event* Game::findCombination(const std::string& itemName, const std::string& tar
 	if (it != combinations.end())
 		return &it->second;
 	return nullptr;
-}
-
-void Game::clearClicksPool() {
-	inputManager.clearClicksPool();
 }
 
 Renderer& Game::getRenderer() {
