@@ -1,0 +1,6 @@
+{
+    "name": "dialogue",
+    "elements": [
+        { "type": "image", "name": "uiBackground", "position": [0, 144], "size": [640, 56], "texture": [0, 0, 0, 255] }
+    ]
+}

@@ -180,32 +180,10 @@ void ScriptLoader::loadGame(Game& game) {
     guybrush->moveToScene(scummbar);
 
     // --- UI Setup ---
-    int blackColor[] = { 0x00, 0x00, 0x00, 0xff };
-	auto blackImage = std::make_shared<Texture>("black", blackColor);
-	auto uiBackground = std::make_shared<GameObject>("uiBackground", Vector2<>(0.0f, 144.0f), Vector2<>(640.0f, 56.0f), blackImage);
-
-	game.getUI().createLayout("inventory");
-	game.getUI().setLayout("inventory");
-
-	game.getUI().getLayout("inventory").addUIElement(uiBackground);
-    int verbBackgroundColor[] = { 20, 0, 20, 0xff };
-	auto verbBackground = std::make_shared<Texture>("white", verbBackgroundColor);
-
-	game.getUI().getLayout("inventory").createVerbsMatrix(Vector2<>(2.0f, 154.0f), {
-		{game.giveVerb, game.pickupVerb, game.useVerb},
-		{game.openVerb, game.lookAtVerb, game.pushVerb},
-		{game.closeVerb, game.talkVerb, game.pullVerb} },
-		verbBackground);
-
-	Event emptyEvent = Event();
-	game.getUI().getLayout("inventory").createInventoryMatrix(Vector2<>(150.0f, 154.0f), 4, 2, verbBackground, emptyEvent);
-
-	auto uiCurrentVerbInfo = std::make_shared<GameObject>("uiCurrentVerbInfo", Vector2<>(160.0f, 148.0f), Vector2<>(0.0f, 0.0f));
-	int textColorUI[4] = { 125, 44, 125, 0xff };
-	Text currentInfoText = Text("Test info", 11, textColorUI, false, TEXT_CENTERED);
-	uiCurrentVerbInfo->setTextOver(currentInfoText);
-	uiCurrentVerbInfo->setTextFormat(currentInfoText);
-	game.getUI().getLayout("inventory").addUIElement(uiCurrentVerbInfo);
+    // Layouts (backgrounds, verb grid, inventory grid, verb-info label) are
+    // authored as data under assets/ui/*.json and loaded here; see UILoader.
+    UILoader::loadLayoutsFromDirectory(game, ResourceManager::getUIDirectory());
+    game.getUI().setLayout("inventory");
 
     // Custom cursor
     auto customCursorTexture = std::make_shared<Texture>("", "cursor.png");
@@ -213,8 +191,6 @@ void ScriptLoader::loadGame(Game& game) {
 
 	game.setDefaultVerb("walk");
 
-	game.getUI().createLayout("dialogue");
-	game.getUI().getLayout("dialogue").addUIElement(uiBackground);
     game.getUI().setDialogueLayout(&game.getUI().getLayout("dialogue"));
     game.getUI().setAfterDialogueLayout(&game.getUI().getLayout("inventory"));
 

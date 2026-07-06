@@ -11,37 +11,43 @@
 
 #include "DialogueNode.hpp"
 #include "UIItemSlot.hpp"
+#include "UIElement.hpp"
+#include "UIVerbGrid.hpp"
+#include "UIInventoryGrid.hpp"
 
 class UILayout {
-	std::vector<std::shared_ptr<GameObject>> uiElements; //TODO: Create Wrapper class for GameObject "UIElement"
-	std::vector<std::shared_ptr<UIVerbButton>> uiVerbButtons;
+	std::vector<std::shared_ptr<GameObject>> uiElements;
 	bool visible = true;
 	std::string name;
 
 	std::vector<std::shared_ptr<UIDialogueOption>> dialogueOptions;
 
+	// Verb currently highlighted (e.g. hovering an object with a default verb);
+	// applied to the matching button by whichever UIVerbGrid is present.
 	std::shared_ptr<Verb> highlightedVerb;
 
-	std::vector<std::shared_ptr<UIItemSlot>> itemSlots;
+	// Set by createInventoryMatrix; used to clamp the inventory scroll index to
+	// the number of slots actually available.
+	std::shared_ptr<UIInventoryGrid> inventoryGrid;
 	int currentInventoryIndex = 0;
 
 public:
 	UILayout(std::string name);
 	std::vector<std::shared_ptr<GameObject>>& getUIElements();
+	// Flattens the element tree into a draw-ordered list with absolute positions
+	// resolved (parents before their children). The renderer and input hit-test
+	// consume this so nested UIElement trees work without special-casing.
+	std::vector<std::shared_ptr<GameObject>> getRenderElements();
 
-	// TODO: add more parameters for customization: spacing, text size, text color, etc.
-	//GameObject& createUIVerbButton(Verb& verb, Vector2<> position, Vector2<> size, Texture* verbBackground, Event& onUIUpdate);
 	std::vector<std::shared_ptr<UIVerbButton>> createVerbsMatrix(Vector2<> position, std::vector<std::vector<std::shared_ptr<Verb>>> verbs, std::shared_ptr<Texture> verbBackground);
-	std::shared_ptr<GameObject> createUIItemSlot(int index, Vector2<> position, Vector2<> size, std::shared_ptr<Texture> background, Event& onUIUpdate);
 	void createDialogueOptions(DialogueNode& dialogueNode);
 	void updateUI();
 	void createInventoryMatrix(Vector2<> position, int columns, int rows, std::shared_ptr<Texture> background, Event& onUIUpdate);
-	void highlightVerb(std::shared_ptr<Verb> verb);
-	void removeHightlightVerb();
 	void addUIElement(std::shared_ptr<GameObject> uiElement);
 	void removeUIElement(std::shared_ptr<GameObject> uiElement);
 	void toggleVisibility();
 	void setHighlightedVerb(std::shared_ptr<Verb> verb);
+	std::shared_ptr<Verb> getHighlightedVerb();
 	std::shared_ptr<GameObject> getUIElement(std::string name);
 	std::string getName();
 	void clearDialogueOptions();

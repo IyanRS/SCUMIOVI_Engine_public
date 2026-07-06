@@ -1,7 +1,7 @@
 #pragma once
-#include "GameObject.hpp"
+#include "UIElement.hpp"
 
-class UIVerbButton : public GameObject {
+class UIVerbButton : public UIElement {
 private:
 	std::shared_ptr<Verb> verb;
 public:

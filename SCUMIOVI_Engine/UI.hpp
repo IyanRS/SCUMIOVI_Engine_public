@@ -13,30 +13,34 @@ class UI {
 
 	std::vector<std::unique_ptr<UILayout>> layouts;
 
-//	std::vector<GameObject*> uiElements; //TODO: Create Wrapper class for GameObject "UIElement"
-//	std::vector<UIVerbButton*> uiVerbButtons;
-//	bool visible = true;
-//
-
-	void highlightVerb(std::shared_ptr<Verb> verb);
-	void removeHightlightVerb();
-
 	UILayout* dialogueLayout = nullptr;
 	UILayout* afterDialogueLayout = nullptr;
 
+	// A layout shown on top of the current one (e.g. a pause/options menu),
+	// without replacing it. See openOverlay/closeOverlay.
+	UILayout* overlayLayout = nullptr;
+	bool overlayPausesGame = false;
+
 public:
 	std::vector<std::shared_ptr<GameObject>>& getUIElements();
+	// Draw-ordered, absolute-positioned list of the active layout's element
+	// tree, followed by the overlay layout's (if any) so it renders on top and
+	// receives clicks first.
+	std::vector<std::shared_ptr<GameObject>> getRenderElements();
 
-	// TODO: add more parameters for customization: spacing, text size, text color, etc.
-	//GameObject& createUIVerbButton(Verb& verb, Vector2<> position, Vector2<> size, Texture* verbBackground, Event& onUIUpdate);
-	//std::vector<UIVerbButton*> createVerbsMatrix(Vector2<> position, std::vector<std::vector<Verb>> verbs, Texture* verbBackground);
-	//GameObject& createUIItemSlot(Vector2<> position, Vector2<> size, Texture* background, Event& onUIUpdate);
+	// Shows a previously created layout on top of the current one. If
+	// pauseGame is true (the default), the scene stops updating and world
+	// objects stop receiving clicks/hover while the overlay is active — the
+	// base layout and the overlay itself keep working normally.
+	void openOverlay(std::string name, bool pauseGame = true);
+	void closeOverlay();
+	UILayout* getOverlay();
+	bool isGamePaused();
+
 	void updateUI();
-	//void createInventoryMatrix(Vector2<> position, int columns, int rows, Texture* background, Event& onUIUpdate);
 
 	void setHighlightedVerb(std::shared_ptr<Verb> verb);
 
-	//void addUIElement(GameObject& uiElement);
 	void toggleVisibility();
 	std::shared_ptr<GameObject> getUIElement(std::string name);
 	void setLayout(std::string name);

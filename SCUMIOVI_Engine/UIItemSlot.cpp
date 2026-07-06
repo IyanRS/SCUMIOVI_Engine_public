@@ -3,7 +3,7 @@
 #include "UI.hpp"
 #include "Game.hpp"
 
-UIItemSlot::UIItemSlot(Vector2<> position, Vector2<> size, std::shared_ptr<Texture> slotBackground, int relativeIndex) : GameObject("itemSlot", position, size, slotBackground) {
+UIItemSlot::UIItemSlot(Vector2<> position, Vector2<> size, std::shared_ptr<Texture> slotBackground, int relativeIndex) : UIElement("itemSlot", position, size, slotBackground) {
 	setDefaultVerb(Game::getInstance().anyVerb);
 	addVerbInteraction(Game::getInstance().anyVerb, Event([relativeIndex](EventInfo e) {
 		SDL_Log("Selected item %d", relativeIndex);

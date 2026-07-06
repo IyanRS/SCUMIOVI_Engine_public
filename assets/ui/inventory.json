@@ -1,0 +1,19 @@
+{
+    "name": "inventory",
+    "elements": [
+        { "type": "image", "name": "uiBackground", "position": [0, 144], "size": [640, 56], "texture": [0, 0, 0, 255] },
+
+        { "type": "verbGrid", "position": [2, 154], "texture": [20, 0, 20, 255],
+          "verbs": [
+            ["give", "pickup", "use"],
+            ["open", "lookat", "push"],
+            ["close", "talk", "pull"]
+          ]
+        },
+
+        { "type": "inventoryGrid", "position": [150, 154], "columns": 4, "rows": 2, "texture": [20, 0, 20, 255] },
+
+        { "type": "infoLabel", "name": "uiCurrentVerbInfo", "position": [160, 148],
+          "textSize": 11, "textColor": [125, 44, 125, 255], "textAlign": "center" }
+    ]
+}

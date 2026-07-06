@@ -120,7 +120,12 @@ void Game::startGame() {
 		}
 		inputManager.mouseOver(ui, *currentScene);
 
-		currentScene->update(deltaTime);
+		// A pausing overlay (e.g. a pause/options menu) freezes the scene
+		// simulation while it's shown; Event::tick still runs so the overlay's
+		// own UI (fades, delayed actions) keeps working.
+		if (!ui.isGamePaused()) {
+			currentScene->update(deltaTime);
+		}
 		Event::tick(deltaTime);
 		renderer.updateFade(deltaTime);
 		audio.update();

@@ -70,7 +70,7 @@ void Renderer::renderUIElement(GameObject& uiElement) {
 void Renderer::renderUI(UI& ui) {
 	if (ui.getLayout() == nullptr)
 		return;
-	auto elements = ui.getUIElements();
+	auto elements = ui.getRenderElements();
 	for (const auto& uiElement : elements) {
 		renderUIElement(*uiElement);
 	}

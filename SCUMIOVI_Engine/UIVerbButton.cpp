@@ -13,8 +13,8 @@ void UIVerbButton::stopHighlight() {
 	setTextOver(getTextOver().toString());
 }
 
-UIVerbButton::UIVerbButton(std::shared_ptr<Verb> verb, Vector2<> position, Vector2<> size, std::shared_ptr<Texture> verbBackground) 
-    : GameObject(verb->getName() + "Button", position, size, verbBackground), verb(verb) 
+UIVerbButton::UIVerbButton(std::shared_ptr<Verb> verb, Vector2<> position, Vector2<> size, std::shared_ptr<Texture> verbBackground)
+    : UIElement(verb->getName() + "Button", position, size, verbBackground), verb(verb)
 {
 	int color[4] = { 125, 44, 125, 0xff };
 	Text text = Text(verb->getDisplayName(), 11, color, false, TEXT_CENTERED, true);

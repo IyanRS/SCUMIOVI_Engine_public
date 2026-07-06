@@ -18,7 +18,7 @@ inspired scene), a data-driven code generator, and a unit-test suite.
 | `SCUMIOVI_Game/`   | The sample game. `GameData.cpp` here is **generated** from the CSV files in `game/`. |
 | `game/`            | Data definitions for the sample game (scenes, objects, animations, dialogue, UI, verbs, text formats). |
 | `codegen/`         | Python + Jinja2 generator that turns `game/*.csv` into `SCUMIOVI_Game/GameData.cpp`. |
-| `assets/`          | Textures and fonts loaded at runtime. |
+| `assets/`          | Textures, fonts, locale files (`assets/locales/`) and UI layouts (`assets/ui/`) loaded at runtime. |
 | `tests/`           | Catch2 unit tests. |
 | `third_party/`     | Vendored single-header libraries (`json.hpp`, `catch.hpp`). |
 | `SDL3/`, `SDL3_image/`, `SDL3_ttf/` | Third-party SDL libraries (headers + prebuilt Windows binaries). |
@@ -39,9 +39,73 @@ focused managers, coordinated by a `Game` singleton:
 - **`Event`** is a list of actions (with optional `Delay`s) executed through a
   non-blocking, frame-driven pending queue rather than blocking threads.
 - **`GameState`**, `saveGame`/`loadGame` persist progress to JSON.
+- **`Game::registerScript`/`scriptEvent`** is a named-script registry: object
+  interactions, dialogue actions, combinations and UI actions can all reference
+  a developer-provided script by name instead of only by inline lambda.
+- **`UIElement`** is a `GameObject` with a parent-relative offset, a nine-point
+  anchor and child elements; `UILayout` flattens that tree into an
+  absolute-positioned draw/hit-test list each frame. See "Data-driven UI" below.
+- **`Localization`** is a gettext-style catalogue (`tr(sourceString)`); see
+  "Localization" below.
 
 Global configuration (window/render size, target FPS, pixel-perfect toggles)
 lives in `SCUMIOVI_Engine/Common.hpp`.
+
+## Localization
+
+User-facing strings are written in English directly in engine code and
+generated game data, and that string doubles as the lookup key — so English
+needs no data file, and any string missing from another locale's file falls
+back to English instead of showing a blank or a raw key.
+
+```cpp
+tr("I don't see anything special.");     // -> looked up in the active locale
+Game::getInstance().setLocale("es");     // switches at runtime
+```
+
+Translations live in `assets/locales/<locale>.json` as flat
+`{ "source string": "translation" }` maps (see `assets/locales/es.json`) and
+are loaded with `Localization::loadLocaleFile`. `Verb` display names/sentence
+templates, `DialogueOption` text, and JSON-authored UI labels/buttons (see
+below) all resolve through `tr()` on every refresh, so a locale switch updates
+already-visible text without rebuilding anything.
+
+## Data-driven UI
+
+Menus, HUDs and inventories are authored as JSON under `assets/ui/` and loaded
+by `UILoader` — no C++ required for a new menu. `SCUMIOVI_Game`'s own HUD
+(`assets/ui/inventory.json`, `assets/ui/dialogue.json`) is itself built this
+way; the codegen just calls
+`UILoader::loadLayoutsFromDirectory(game, ResourceManager::getUIDirectory())`.
+
+```json
+{
+  "name": "options",
+  "elements": [
+    { "type": "label", "text": "Options", "anchor": "top-center" },
+    { "type": "button", "text": "Language",
+      "anchor": "center", "onClick": { "action": "script", "name": "cycleLanguage" } },
+    { "type": "button", "text": "Back",
+      "anchor": "bottom-center", "onClick": { "action": "closeOverlay" } }
+  ]
+}
+```
+
+Element `type`s: `image`, `label`, `button`, `panel` (container, nestable via
+`"children"`), `infoLabel` (self-refreshing current-verb sentence), and the
+top-level-only `verbGrid`/`inventoryGrid` (built through
+`UILayout::createVerbsMatrix`/`createInventoryMatrix`, which own the label-width
+column sizing and slot geometry). Common fields: `position`/`size` ([x, y]),
+`anchor` (nine-point: `top-left` … `bottom-right`), `texture` (an image
+filename or an `[r, g, b, a]` solid color), and `text*` formatting fields
+(`textSize`, `textColor`, `textOutline`, `textShadow`, `textAlign`).
+
+`onClick`/`onHover` accept either a bare string (shorthand for
+`{"action": "script", "name": "<string>"}`, resolving through
+`Game::registerScript`) or an action object from a small built-in vocabulary:
+`script`, `openLayout`, `openOverlay` (renders on top of the current layout and
+optionally pauses the scene — see `UI::openOverlay`), `closeOverlay`,
+`setLocale`, `setVerb`, `save`, `load`, `quit`.
 
 ## Building
 

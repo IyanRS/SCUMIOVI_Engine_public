@@ -20,6 +20,7 @@ public:
 	static const std::string& getTexturesDirectory();
 	static const std::string& getFontsDirectory();
 	static const std::string& getLocalesDirectory();
+	static const std::string& getUIDirectory();
 
 	std::map<std::string, SDL_Texture*> cachedTextures;
 	std::map<std::string, SDL_Surface*> cachedSurfaces;
@@ -35,4 +36,5 @@ private:
 	static std::string texturesDirectory_;
 	static std::string fontsDirectory_;
 	static std::string localesDirectory_;
+	static std::string uiDirectory_;
 };

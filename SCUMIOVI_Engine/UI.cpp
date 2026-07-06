@@ -8,19 +8,46 @@ std::vector<std::shared_ptr<GameObject>>& UI::getUIElements() {
 	return currentLayout->getUIElements();
 }
 
+std::vector<std::shared_ptr<GameObject>> UI::getRenderElements() {
+	std::vector<std::shared_ptr<GameObject>> out;
+	if (currentLayout) {
+		auto base = currentLayout->getRenderElements();
+		out.insert(out.end(), base.begin(), base.end());
+	}
+	if (overlayLayout) {
+		auto overlay = overlayLayout->getRenderElements();
+		out.insert(out.end(), overlay.begin(), overlay.end());
+	}
+	return out;
+}
+
 void UI::updateUI() {
-	if (!currentLayout) return;
-	currentLayout->updateUI();
+	if (currentLayout) currentLayout->updateUI();
+	if (overlayLayout) overlayLayout->updateUI();
 }
 
-void UI::highlightVerb(std::shared_ptr<Verb> verb) {
-	if (!currentLayout) return;
-	currentLayout->highlightVerb(verb);
+void UI::openOverlay(std::string name, bool pauseGame) {
+	for (auto& layout : layouts) {
+		if (layout->getName() == name) {
+			overlayLayout = layout.get();
+			overlayPausesGame = pauseGame;
+			return;
+		}
+	}
+	SDL_Log("UI::openOverlay: no layout named '%s'", name.c_str());
 }
 
-void UI::removeHightlightVerb() {
-	if (!currentLayout) return;
-	currentLayout->removeHightlightVerb();
+void UI::closeOverlay() {
+	overlayLayout = nullptr;
+	overlayPausesGame = false;
+}
+
+UILayout* UI::getOverlay() {
+	return overlayLayout;
+}
+
+bool UI::isGamePaused() {
+	return overlayLayout != nullptr && overlayPausesGame;
 }
 
 void UI::setHighlightedVerb(std::shared_ptr<Verb> verb) {

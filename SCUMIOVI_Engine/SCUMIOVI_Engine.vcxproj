@@ -96,7 +96,12 @@
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="UI.cpp" />
     <ClCompile Include="UIDialogueOption.cpp" />
+    <ClCompile Include="UIElement.cpp" />
+    <ClCompile Include="UIInfoLabel.cpp" />
     <ClCompile Include="UIInventoryArrow.cpp" />
+    <ClCompile Include="UIInventoryGrid.cpp" />
+    <ClCompile Include="UILoader.cpp" />
+    <ClCompile Include="UIVerbGrid.cpp" />
     <ClCompile Include="UIItemSlot.cpp" />
     <ClCompile Include="UILayout.cpp" />
     <ClCompile Include="UIVerbButton.cpp" />
@@ -138,7 +143,12 @@
     <ClInclude Include="Texture.hpp" />
     <ClInclude Include="UI.hpp" />
     <ClInclude Include="UIDialogueOption.hpp" />
+    <ClInclude Include="UIElement.hpp" />
+    <ClInclude Include="UIInfoLabel.hpp" />
     <ClInclude Include="UIInventoryArrow.hpp" />
+    <ClInclude Include="UIInventoryGrid.hpp" />
+    <ClInclude Include="UILoader.hpp" />
+    <ClInclude Include="UIVerbGrid.hpp" />
     <ClInclude Include="UIItemSlot.hpp" />
     <ClInclude Include="UILayout.hpp" />
     <ClInclude Include="UIVerbButton.hpp" />

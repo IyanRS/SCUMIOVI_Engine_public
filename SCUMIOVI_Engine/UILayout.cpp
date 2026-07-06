@@ -3,57 +3,93 @@
 #include "DialogueOption.hpp"
 #include "UIDialogueOption.hpp"
 #include "Game.hpp"
+#include "UIElement.hpp"
+#include "Common.hpp"
 
-#include "DialogueOption.hpp"
+namespace {
+	// Normalized (x, y) in [0,1] for each anchor point: (0,0) is top-left,
+	// (1,1) is bottom-right, (0.5,0.5) is center, etc.
+	Vector2<> anchorFraction(UIAnchor anchor) {
+		switch (anchor) {
+			case UIAnchor::TopLeft:      return Vector2<>(0.0f, 0.0f);
+			case UIAnchor::TopCenter:    return Vector2<>(0.5f, 0.0f);
+			case UIAnchor::TopRight:     return Vector2<>(1.0f, 0.0f);
+			case UIAnchor::CenterLeft:   return Vector2<>(0.0f, 0.5f);
+			case UIAnchor::Center:       return Vector2<>(0.5f, 0.5f);
+			case UIAnchor::CenterRight:  return Vector2<>(1.0f, 0.5f);
+			case UIAnchor::BottomLeft:   return Vector2<>(0.0f, 1.0f);
+			case UIAnchor::BottomCenter: return Vector2<>(0.5f, 1.0f);
+			case UIAnchor::BottomRight:  return Vector2<>(1.0f, 1.0f);
+		}
+		return Vector2<>(0.0f, 0.0f);
+	}
+
+	// Recursively appends an element and its descendants to the draw list,
+	// writing each UIElement's absolute position. An element's anchor picks a
+	// point within its parent's bounds (the screen, for top-level elements);
+	// its offset is then applied as a nudge from that point, and the element's
+	// own size is used to keep it fully inside the anchor edge it's pinned to.
+	// With the default TopLeft anchor this reduces to parentAbsolute + offset,
+	// so pre-existing, non-anchored layouts are unaffected.
+	void flattenElement(const std::shared_ptr<GameObject>& element, Vector2<> parentAbsolute, Vector2<> parentSize,
+		std::vector<std::shared_ptr<GameObject>>& out) {
+		auto uiElement = std::dynamic_pointer_cast<UIElement>(element);
+		if (!uiElement) {
+			// Plain GameObject element: position is already absolute.
+			out.push_back(element);
+			return;
+		}
+		Vector2<> frac = anchorFraction(uiElement->getAnchor());
+		Vector2<> anchorPoint(parentSize.x * frac.x, parentSize.y * frac.y);
+		Vector2<> elementSize = uiElement->getSize();
+		Vector2<> originOffset(elementSize.x * frac.x, elementSize.y * frac.y);
+
+		Vector2<> absolute = parentAbsolute + anchorPoint - originOffset + uiElement->getOffset();
+		uiElement->setPosition(absolute);
+		out.push_back(element);
+		for (auto& child : uiElement->getChildren()) {
+			flattenElement(child, absolute, uiElement->getSize(), out);
+		}
+	}
+
+	// Depth-first search for a named element through the tree.
+	std::shared_ptr<GameObject> findElement(const std::shared_ptr<GameObject>& element, const std::string& name) {
+		if (element->getName() == name) return element;
+		auto uiElement = std::dynamic_pointer_cast<UIElement>(element);
+		if (uiElement) {
+			for (auto& child : uiElement->getChildren()) {
+				if (auto found = findElement(child, name)) return found;
+			}
+		}
+		return nullptr;
+	}
+}
+
+UILayout::UILayout(std::string name) {
+	this->name = name;
+}
 
 std::vector<std::shared_ptr<GameObject>>& UILayout::getUIElements() {
 	return uiElements;
 }
 
+std::vector<std::shared_ptr<GameObject>> UILayout::getRenderElements() {
+	std::vector<std::shared_ptr<GameObject>> out;
+	Vector2<> screenSize(RENDER_WIDTH, RENDER_HEIGHT);
+	for (auto& element : uiElements) {
+		flattenElement(element, Vector2<>(0, 0), screenSize, out);
+	}
+	return out;
+}
+
 void UILayout::updateUI() {
-	Game& game = Game::getInstance();
-	std::shared_ptr<Verb> currentVerb = game.getCurrentPlayer()->getVerb();
-	if (currentVerb != nullptr) {
-		// TODO: uiCurrentVerbInfo reference in UI class
-		auto infoElement = getUIElement("uiCurrentVerbInfo");
-		if (infoElement) {
-			infoElement->setTextOver(currentVerb->getInfo(game.getCurrentPlayer()->getSelectedObject(), game.getCurrentPlayer()->getTargetObject()));
+	// Widgets (UIInfoLabel, UIVerbGrid, UIInventoryGrid, ...) own their
+	// per-frame state and refresh themselves; UILayout no longer needs to know
+	// about verb highlighting, inventory windowing or magic element names.
+	for (auto& element : uiElements) {
+		if (auto uiElement = std::dynamic_pointer_cast<UIElement>(element)) {
+			uiElement->refresh();
 		}
-	}
-	removeHightlightVerb();
-	if (highlightedVerb != nullptr)
-		highlightVerb(highlightedVerb);
-	// Remove stale item UI elements from previous frame
-	auto& elements = getUIElements();
-	for (auto it = elements.begin(); it != elements.end(); ) {
-		if ((*it)->hasTag("item")) {
-			it = elements.erase(it);
-		}
-		else ++it;
-	}
-
-	// Render inventory items using a sliding window over the item list.
-	// The window starts at currentInventoryIndex and fills the available slots.
-	// TODO: avoid hardcoded values
-	int columns = 4;
-	int width = 40;
-	int height = 22;
-	int slots = (int)itemSlots.size();
-
-	auto& items = game.getCurrentPlayer()->getInventory().getItems();
-
-	for (int i = 0; i < slots; i++) {
-		int itemIndex = currentInventoryIndex + i;
-		if (itemIndex >= (int)items.size()) break;
-
-		auto& item = items[itemIndex];
-		int row = i / columns;
-		int column = i % columns;
-
-		Vector2<> centerOffset = itemSlots[i]->getSize() / 2 - item->getSize() / 2;
-		item->setPosition(Vector2<>((float)(150 + (column * width)), (float)(154 + (row * height))) + centerOffset);
-		removeUIElement(item);
-		addUIElement(item);
 	}
 }
 
@@ -69,7 +105,7 @@ void UILayout::clearDialogueOptions() {
 }
 
 void UILayout::incrementInventoryIndex(int increment) {
-	int slots = (int)itemSlots.size();
+	int slots = inventoryGrid ? (int)inventoryGrid->getItemSlots().size() : 0;
 	int maxIndex = 0;
 	Game& game = Game::getInstance();
 	auto player = game.getCurrentPlayer();
@@ -97,21 +133,6 @@ void UILayout::createDialogueOptions(DialogueNode& dialogueNode) {
 	}
 }
 
-void UILayout::removeHightlightVerb() {
-	for (auto& button : uiVerbButtons) {
-		button->setTextOver(button->getTextOver().toString());
-	}
-}
-
-void UILayout::highlightVerb(std::shared_ptr<Verb> verb) {
-	removeHightlightVerb();
-	for (auto& button : uiVerbButtons) {
-		if (button->getVerb() == verb) {
-			button->highlight();
-		}
-	}
-}
-
 std::vector<std::shared_ptr<UIVerbButton>> UILayout::createVerbsMatrix(Vector2<> position, std::vector<std::vector<std::shared_ptr<Verb>>> verbs, std::shared_ptr<Texture> verbBackground) {
 	int height = 14;
 	std::vector<int> columnLengths;
@@ -130,41 +151,30 @@ std::vector<std::shared_ptr<UIVerbButton>> UILayout::createVerbsMatrix(Vector2<>
 		}
 		columnLengths.push_back(maxLengthColumn);
 	}
+
+	auto grid = std::make_shared<UIVerbGrid>("verbGrid", position);
+
 	for (int i = 0; i < columns; i++) {
 		for (int j = 0; j < rows; j++) {
-			Vector2<> buttonPos = Vector2<>(position.x, position.y + (height + 2) * j);
+			// Positions are relative to the grid; the grid itself carries `position`.
+			Vector2<> buttonPos = Vector2<>(0.0f, (float)((height + 2) * j));
 			for (int k = 0; k < i; k++) {
 				buttonPos.x += columnLengths[k] * 7;
 				buttonPos.x += 2;
 			}
 			auto button = std::make_shared<UIVerbButton>(verbs[j][i], buttonPos, Vector2<>((float)(columnLengths[i] * 7), (float)height), verbBackground);
-			addUIElement(button);
-			uiVerbButtons.push_back(button);
+			grid->addButton(button);
 			buttons.push_back(button);
 		}
 	}
+
+	addUIElement(grid);
 	return buttons;
 }
 
-std::shared_ptr<GameObject> UILayout::createUIItemSlot(int index, Vector2<> position, Vector2<> size, std::shared_ptr<Texture> background, Event& onUIUpdate) {
-	auto itemSlot = std::make_shared<UIItemSlot>(position, size, background, index);
-
-	addUIElement(itemSlot);
-	itemSlots.push_back(itemSlot);
-
-	return itemSlot;
-}
-
 void UILayout::createInventoryMatrix(Vector2<> position, int columns, int rows, std::shared_ptr<Texture> background, Event& onUIUpdate) {
-	int width = 40;
-	int height = 22;
-
-	for (int j = 0; j < rows; j++) {
-		for (int i = 0; i < columns; i++) {
-			Vector2<> slotPos = Vector2<>(position.x + (width + 2) * i, position.y + (height + 2) * j);
-			createUIItemSlot(i + j * columns, slotPos, Vector2<>((float)width, (float)height), background, onUIUpdate);
-		}
-	}
+	inventoryGrid = std::make_shared<UIInventoryGrid>("inventoryGrid", position, columns, rows, Vector2<>(40.0f, 22.0f), background);
+	addUIElement(inventoryGrid);
 }
 
 void UILayout::addUIElement(std::shared_ptr<GameObject> uiElement) {
@@ -185,10 +195,14 @@ void UILayout::setHighlightedVerb(std::shared_ptr<Verb> verb) {
 	highlightedVerb = verb;
 }
 
+std::shared_ptr<Verb> UILayout::getHighlightedVerb() {
+	return highlightedVerb;
+}
+
 std::shared_ptr<GameObject> UILayout::getUIElement(std::string name) {
 	for (auto& element : uiElements) {
-		if (element->getName() == name) {
-			return element;
+		if (auto found = findElement(element, name)) {
+			return found;
 		}
 	}
 	return nullptr;
@@ -197,33 +211,3 @@ std::shared_ptr<GameObject> UILayout::getUIElement(std::string name) {
 std::string UILayout::getName() {
 	return name;
 }
-
-UILayout::UILayout(std::string name) {
-	this->name = name;
-}
-
-//void UILayout::createDialogueOptions(DialogueNode& dialogueNode) {
-//	clearDialogueOptions();
-//	int i = 0;
-//	for (auto& option : dialogueNode.getOptions()) {
-//		auto uiOption = std::make_shared<UIDialogueOption>(option, Vector2<>(10.0f, 10.0f + 20 * i), nullptr);
-//		addUIElement(uiOption);
-//		dialogueOptions.push_back(uiOption);
-//		i++;
-//	}
-//}
-
-//void UILayout::clearDialogueOptions() {
-//	for (auto& option : dialogueOptions) {
-//		removeUIElement(option);
-//	}
-//	dialogueOptions.clear();
-//}
-//
-//void UILayout::incrementInventoryIndex(int increment) {
-//	currentInventoryIndex += increment;
-//}
-//
-//int UILayout::getInventoryIndex() {
-//	return currentInventoryIndex;
-//}

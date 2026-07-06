@@ -14,8 +14,8 @@ void UIDialogueOption::stopHighlight() {
 	setTextOver(getTextOver().toString());
 }
 
-UIDialogueOption::UIDialogueOption(std::shared_ptr<DialogueOption> option, Vector2<> position, std::shared_ptr<Texture> optionBackground) 
-    : GameObject("option", position, Vector2<>((float)option->getText().length() * 5, 11), optionBackground), option(option) 
+UIDialogueOption::UIDialogueOption(std::shared_ptr<DialogueOption> option, Vector2<> position, std::shared_ptr<Texture> optionBackground)
+    : UIElement("option", position, Vector2<>((float)option->getText().length() * 5, 11), optionBackground), option(option)
 {
 	int color[4] = { 125, 44, 125, 0xff };
 	Text text = Text(option->getText(), 11, color, false, TEXT_TO_LEFT, true);

@@ -65,10 +65,14 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 	xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
 	yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
-	auto uiElements = ui.getUIElements();
+	auto uiElements = ui.getRenderElements();
 	for (int i = (int)uiElements.size() - 1; i >= 0; i--) {
 		checkMouseOverObject(xMouse, yMouse, uiElements[i]);
 	}
+
+	// A pausing overlay (see UI::openOverlay) keeps the scene from receiving
+	// hover state while it's shown, matching the click-blocking below.
+	if (ui.isGamePaused()) return;
 
 	Camera& camera = scene.getCamera();
 	xMouse += camera.getPosition().x;
@@ -90,13 +94,17 @@ bool InputManager::click(UI& ui, Scene& scene, std::shared_ptr<Verb> verb) {
 		xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
 		yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
-		auto uiElements = ui.getUIElements();
+		auto uiElements = ui.getRenderElements();
 		for (int i = (int)uiElements.size() - 1; i >= 0; i--) {
 			if (checkObjectClicked(xMouse, yMouse, uiElements[i], verb)) {
 				return true;
 			}
 		}
 	}
+
+	// While a pausing overlay is active, only UI (base layout + overlay)
+	// receives clicks — the world underneath is frozen and shouldn't react.
+	if (ui.isGamePaused()) return false;
 
 	Camera& camera = scene.getCamera();
 	xMouse += camera.getPosition().x;
