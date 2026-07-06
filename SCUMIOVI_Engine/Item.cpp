@@ -1,5 +1,6 @@
 #include "Item.hpp"
 #include "Game.hpp"
+#include "Localization.hpp"
 #include <memory>
 
 Item::Item(std::string name,
@@ -31,11 +32,11 @@ Item::Item(std::string name,
 				if (player) {
 					if (player->getSelectedObject() == nullptr) {
 						player->setSelectedObject(interactableObj);
-						player->say("Test1");
+						player->say(tr("Test1"));
 					}
 					else {
 						player->setSelectedObject(nullptr);
-						player->say("Test2");
+						player->say(tr("Test2"));
 					}
 				}
 			}));

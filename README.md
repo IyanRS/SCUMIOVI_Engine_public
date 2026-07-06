@@ -16,7 +16,7 @@ inspired scene), a data-driven code generator, and a unit-test suite.
 |------|-------------|
 | `SCUMIOVI_Engine/` | The engine library (rendering, input, audio, scenes, game objects, dialogue, UI, save/load). |
 | `SCUMIOVI_Game/`   | The sample game. `GameData.cpp` here is **generated** from the CSV files in `game/`. |
-| `game/`            | Data definitions for the sample game (scenes, objects, animations, dialogue, UI, verbs, text formats). |
+| `game/`            | Data definitions for the sample game: `Verbs.csv`, `Objects.csv`, `Players.csv`, `Scenes/`, `Dialogues/`, `Interactions.csv`, `Combinations.csv`, `TextFormats.csv`, `Settings.csv`. |
 | `codegen/`         | Python + Jinja2 generator that turns `game/*.csv` into `SCUMIOVI_Game/GameData.cpp`. |
 | `assets/`          | Textures, fonts, locale files (`assets/locales/`) and UI layouts (`assets/ui/`) loaded at runtime. |
 | `tests/`           | Catch2 unit tests. |
@@ -24,6 +24,15 @@ inspired scene), a data-driven code generator, and a unit-test suite.
 | `SDL3/`, `SDL3_image/`, `SDL3_ttf/` | Third-party SDL libraries (headers + prebuilt Windows binaries). |
 
 ## Architecture overview
+
+The engine draws a hard line between itself and any particular game: `Game`'s
+constructor creates only the "any"/"selected" protocol verbs the interaction
+system depends on structurally — every game-facing verb (walk, use, give, ...),
+scene, object, dialogue line and UI layout comes from `game/*.csv`,
+`game/Dialogues/*.txt` or `assets/ui/*.json`, loaded by the generated
+`GameData.cpp` at startup. The only thing that's still C++ by design is
+*custom scripts* (`SCUMIOVI_Game/Interactions/*.cpp`) — bespoke behavior a CSV
+can't express, referenced from data by name (see `Game::registerScript`).
 
 The engine is organised around a **component-based `GameObject`** and a set of
 focused managers, coordinated by a `Game` singleton:

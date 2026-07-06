@@ -7,7 +7,46 @@
 #include "Interactions/interactions.h"
 #include <memory>
 
+{% macro cpp_string(s) -%}
+{{ s
+| replace('"', '\\"')
+}}
+{%- endmacro %}
+
 void ScriptLoader::loadGame(Game& game) {
+
+    // --- Verbs ---
+    // The engine only provides the "any"/"selected" protocol verbs; every
+    // game-facing verb (walk, use, give, ...) comes from game/Verbs.csv.
+    {% set verb_ids = verbs | map(attribute='id') | list %}
+    {% for v in verbs %}
+    game.{{ v.member_name }} = std::make_shared<Verb>("{{ v.id }}", "{{ cpp_string(v.displayName) }}"
+        {%- if v.syntax %}, VerbSyntax({ {% for s in v.syntax %}"{{ cpp_string(s) }}"{{ ", " if not loop.last }}{% endfor %} }){% if v.requires_selected %}, true{% endif %}{% endif %});
+    game.addVerb(game.{{ v.member_name }});
+    {% if v.check_examine_text %}
+    game.{{ v.member_name }}->setDefaultEvent(Event([](EventInfo e) {
+        auto* go = dynamic_cast<GameObject*>(&e.interactable);
+        if (go && !go->getExamineText().empty()) {
+            e.player.say(tr(go->getExamineText()));
+        } else {
+            e.player.say(tr("{{ cpp_string(v.default_message) }}"));
+        }
+    }));
+    {% elif v.default_message %}
+    game.{{ v.member_name }}->setDefaultEvent(Event([](EventInfo e) {
+        e.player.say(tr("{{ cpp_string(v.default_message) }}"));
+    }));
+    {% endif %}
+    {% endfor %}
+
+    // Engine-provided mechanics (click-to-walk pathfinding, give-removes-item)
+    // are wired up here, now that the verbs they attach to exist.
+    {% if 'walk' in verb_ids %}
+    game.walkVerb->setDefaultEvent(moveToEvent);
+    {% endif %}
+    {% if 'give' in verb_ids %}
+    game.giveVerb->setAfterActualEvent(afterGiveEvent);
+    {% endif %}
 
     // --- Animations ---
     {% for a in animations %}
@@ -162,6 +201,10 @@ void ScriptLoader::loadGame(Game& game) {
     UILoader::loadLayoutsFromDirectory(game, ResourceManager::getUIDirectory());
     game.getUI().setLayout("inventory");
 
+    {% if config.window_title %}
+    game.getRenderer().setWindowTitle("{{ cpp_string(config.window_title) }}");
+    {% endif %}
+
     // Custom cursor
     {% if config.cursor %}
     auto customCursorTexture = std::make_shared<Texture>("", "{{ config.cursor }}");
@@ -180,12 +223,6 @@ void ScriptLoader::loadGame(Game& game) {
     // ==========================================
     //  Auto-generated dialogue code
     // ==========================================
-
-    {% macro cpp_string(s) -%}
-    {{ s
-    | replace('"', '\\"')
-    }}
-    {%- endmacro %}
 
     {% for dialogue_map in dialogues %}
     {% for label, dlg in dialogue_map.items() %}

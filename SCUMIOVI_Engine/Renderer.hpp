@@ -48,6 +48,9 @@ public:
 	~Renderer();
 	void render(Scene& scene, UI& ui);
 	void setCustomMouse(std::shared_ptr<Texture> mouseTexture, Vector2<> mouseHotspot);
+	// Overrides the window title set at construction; games set their own via
+	// Settings.csv's "window_title" key (see GameData.cpp.jinja2).
+	void setWindowTitle(const std::string& title);
 	void fadeToBlack(float duration, Event callback = Event());
 	void fadeFromBlack(float duration, Event callback = Event());
 	bool isFading() const;

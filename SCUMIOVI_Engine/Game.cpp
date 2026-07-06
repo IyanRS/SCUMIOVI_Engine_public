@@ -9,41 +9,14 @@
 #include "json.hpp"
 
 Game::Game() {
-	// Initialize standard verbs
-	walkVerb = std::make_shared<Verb>("walk", "Walk to");
-	pushVerb = std::make_shared<Verb>("push", "Push", VerbSyntax({ "Push", "Push $target"}));
-	closeVerb = std::make_shared<Verb>("close", "Close", VerbSyntax({ "Close", "Close $target" }));
-	openVerb = std::make_shared<Verb>("open", "Open", VerbSyntax({ "Open", "Open $target" }));
-	talkVerb = std::make_shared<Verb>("talk", "Talk to", VerbSyntax({ "Talk to", "Talk to $target" }));
-	giveVerb = std::make_shared<Verb>("give", "Give", VerbSyntax({ "Give", "Give $target", "Give $selected to", "Give $selected to $target" }), true);
-	pickupVerb = std::make_shared<Verb>("pickup", "Pick up", VerbSyntax({ "Pick up", "Pick up $target" }));
-	useVerb = std::make_shared<Verb>("use", "Use", VerbSyntax({ "Use", "Use $target", "Use $selected on $target" }), true);
-	lookAtVerb = std::make_shared<Verb>("lookat", "Look at", VerbSyntax({ "Look at", "Look at $target" }));
-	pullVerb = std::make_shared<Verb>("pull", "Pull", VerbSyntax({ "Pull", "Pull $target" }));
+	// "any" and "selected" are protocol verbs the interaction system itself
+	// depends on structurally (Interactable::onClick, UI element click binding),
+	// not game content — every other verb (walk, use, give, ...) is defined by
+	// the game's own data (see game/Verbs.csv) and created during loadGame().
 	anyVerb = std::make_shared<Verb>("any", "Any");
 	selectedVerb = std::make_shared<Verb>("selected", "Selected");
 
 	audio.init();
-
-	// Fallback responses used when the game provides no interaction of its own.
-	// Games can override these per verb via Verb::setDefaultEvent().
-	lookAtVerb->setDefaultEvent(Event([](EventInfo e) {
-		auto* go = dynamic_cast<GameObject*>(&e.interactable);
-		if (go && !go->getExamineText().empty()) {
-			e.player.say(tr(go->getExamineText()));
-		} else {
-			e.player.say(tr("I don't see anything special."));
-		}
-	}));
-	pushVerb->setDefaultEvent(Event([](EventInfo e) {
-		e.player.say(tr("I can't move that."));
-	}));
-	pullVerb->setDefaultEvent(Event([](EventInfo e) {
-		e.player.say(tr("I can't move that."));
-	}));
-
-	// Add standard verbs to the verbs vector
-	verbs = { walkVerb, pushVerb, closeVerb, openVerb, talkVerb, giveVerb, pickupVerb, useVerb, lookAtVerb, pullVerb };
 }
 
 Game* Game::game_ = nullptr;

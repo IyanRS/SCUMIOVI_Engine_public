@@ -51,7 +51,8 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 		currentPlayer->moveToAtSpeed(pathAtFeetHeight, 100.0f, {Event()});
 	});
 
-	game.walkVerb->setDefaultEvent(walkEvent);
+	// walkVerb doesn't exist yet here (it's created from game/Verbs.csv in the
+	// generated loadGame()); moveToEvent is wired to it there instead.
 	moveToEvent = walkEvent;
 
 	Event highlightDefaultVerbEvent([](EventInfo e) {
@@ -71,7 +72,8 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 		}
 	});
 
-	Event afterGiveEvent([](EventInfo e) {
+	// giveVerb doesn't exist yet here either; wired in the generated loadGame().
+	afterGiveEvent = Event([](EventInfo e) {
 		auto currentPlayer = e.player.shared_from_this();
 		auto selected = e.player.getSelectedObject();
 		if (selected != nullptr) {
@@ -81,10 +83,9 @@ ScriptLoader::ScriptLoader() : game(Game::getInstance()) {
 			e.game.getUI().updateUI();
 		}
 	});
-	game.giveVerb->setAfterActualEvent(afterGiveEvent);
 
 	Event noInteractionEvent([](EventInfo e) {
-		e.player.say("I can't do that", 1.0f);
+		e.player.say(tr("I can't do that"), 1.0f);
 		e.game.changeToDefaultVerb();
 		e.player.setSelectedObject(nullptr);
 	});
@@ -118,11 +119,11 @@ std::shared_ptr<GameObject> ScriptLoader::addItemObject(std::string name, Scene&
 				auto interactableObj = std::dynamic_pointer_cast<GameObject>(static_cast<GameObject&>(e.interactable).shared_from_this());
 				if (e.player.getSelectedObject() == nullptr) {
 					e.player.setSelectedObject(interactableObj);
-					e.player.say("Test1");
+					e.player.say(tr("Test1"));
 				}
 				else {
 					e.player.setSelectedObject(nullptr);
-					e.player.say("Test2");
+					e.player.say(tr("Test2"));
 				}
 			}));
 			e.player.getInventory().addItem(itemInInventory);

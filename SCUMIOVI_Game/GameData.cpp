@@ -7,7 +7,51 @@
 #include "Interactions/interactions.h"
 #include <memory>
 
+
 void ScriptLoader::loadGame(Game& game) {
+
+    // --- Verbs ---
+    // The engine only provides the "any"/"selected" protocol verbs; every
+    // game-facing verb (walk, use, give, ...) comes from game/Verbs.csv.
+    game.walkVerb = std::make_shared<Verb>("walk", "Walk to");
+    game.addVerb(game.walkVerb);
+    game.pushVerb = std::make_shared<Verb>("push", "Push", VerbSyntax({ "Push", "Push $target" }));
+    game.addVerb(game.pushVerb);
+    game.pushVerb->setDefaultEvent(Event([](EventInfo e) {
+        e.player.say(tr("I can't move that."));
+    }));
+    game.closeVerb = std::make_shared<Verb>("close", "Close", VerbSyntax({ "Close", "Close $target" }));
+    game.addVerb(game.closeVerb);
+    game.openVerb = std::make_shared<Verb>("open", "Open", VerbSyntax({ "Open", "Open $target" }));
+    game.addVerb(game.openVerb);
+    game.talkVerb = std::make_shared<Verb>("talk", "Talk to", VerbSyntax({ "Talk to", "Talk to $target" }));
+    game.addVerb(game.talkVerb);
+    game.giveVerb = std::make_shared<Verb>("give", "Give", VerbSyntax({ "Give", "Give $target", "Give $selected to", "Give $selected to $target" }), true);
+    game.addVerb(game.giveVerb);
+    game.pickupVerb = std::make_shared<Verb>("pickup", "Pick up", VerbSyntax({ "Pick up", "Pick up $target" }));
+    game.addVerb(game.pickupVerb);
+    game.useVerb = std::make_shared<Verb>("use", "Use", VerbSyntax({ "Use", "Use $target", "Use $selected on $target" }), true);
+    game.addVerb(game.useVerb);
+    game.lookAtVerb = std::make_shared<Verb>("lookat", "Look at", VerbSyntax({ "Look at", "Look at $target" }));
+    game.addVerb(game.lookAtVerb);
+    game.lookAtVerb->setDefaultEvent(Event([](EventInfo e) {
+        auto* go = dynamic_cast<GameObject*>(&e.interactable);
+        if (go && !go->getExamineText().empty()) {
+            e.player.say(tr(go->getExamineText()));
+        } else {
+            e.player.say(tr("I don't see anything special."));
+        }
+    }));
+    game.pullVerb = std::make_shared<Verb>("pull", "Pull", VerbSyntax({ "Pull", "Pull $target" }));
+    game.addVerb(game.pullVerb);
+    game.pullVerb->setDefaultEvent(Event([](EventInfo e) {
+        e.player.say(tr("I can't move that."));
+    }));
+
+    // Engine-provided mechanics (click-to-walk pathfinding, give-removes-item)
+    // are wired up here, now that the verbs they attach to exist.
+    game.walkVerb->setDefaultEvent(moveToEvent);
+    game.giveVerb->setAfterActualEvent(afterGiveEvent);
 
     // --- Animations ---
     auto guybrushWalkRight = std::make_shared<Animation>(
@@ -185,6 +229,8 @@ void ScriptLoader::loadGame(Game& game) {
     UILoader::loadLayoutsFromDirectory(game, ResourceManager::getUIDirectory());
     game.getUI().setLayout("inventory");
 
+    game.getRenderer().setWindowTitle("SCUMIOVI");
+
     // Custom cursor
     auto customCursorTexture = std::make_shared<Texture>("", "cursor.png");
 	game.setCustomCursor(customCursorTexture, Vector2<>(-1.0f, -1.0f));
@@ -197,7 +243,6 @@ void ScriptLoader::loadGame(Game& game) {
     // ==========================================
     //  Auto-generated dialogue code
     // ==========================================
-
 
         // --- DialogueNode for "main" ---
 

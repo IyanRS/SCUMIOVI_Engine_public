@@ -11,6 +11,9 @@ class ScriptLoader : public GameDataLoader {
 
 	Event moveToEvent;
 	Event pathEvent;
+	// Built in the constructor; wired to game.giveVerb in the generated
+	// loadGame() once verbs exist (see GameData.cpp.jinja2).
+	Event afterGiveEvent;
 
 	std::shared_ptr<GameObject> createUIVerbButton(std::shared_ptr<Verb> verb,
 		Vector2<> position, Vector2<> size, std::shared_ptr<Texture> verbBackground, Event& onUIUpdate);

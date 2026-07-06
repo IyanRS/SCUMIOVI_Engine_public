@@ -1,5 +1,6 @@
 #include "Door.hpp"
 #include "Game.hpp"
+#include "Localization.hpp"
 #include <memory>
 
 Door::Door(std::string name,
@@ -30,7 +31,7 @@ Door::Door(std::string name,
 		pos.y -= e.player.getSize().y * 0.8f;
 		e.player.moveToAtSpeed(pos, 100, Event([this, closedTexture](EventInfo e) {
 			setTexture(closedTexture->getName());
-			e.player.say("Cerrada");
+			e.player.say(tr("Closed"));
 			Game& game = Game::getInstance();
 			setDefaultVerb(game.openVerb);
 			setState(CLOSED);
@@ -66,7 +67,7 @@ Door::Door(std::string name,
 			Game& game = Game::getInstance();
 			setDefaultVerb(game.closeVerb);
 			setState(OPEN);
-			e.player.say("Abierta");
+			e.player.say(tr("Opened"));
 		}));
 	}));
 }

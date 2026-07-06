@@ -14,7 +14,9 @@ Renderer::Renderer() : resourceManager(ResourceManager::getInstance()) {
 		return;
 	}
 
-	sdlWindow = SDL_CreateWindow("SCUMIOVI", WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+	// Placeholder until the game sets its own title via Settings.csv's
+	// "window_title" key (see Renderer::setWindowTitle).
+	sdlWindow = SDL_CreateWindow("SCUMIOVI Engine", WINDOW_WIDTH, WINDOW_HEIGHT, 0);
 	if (sdlWindow == NULL) {
 		SDL_Log("SDL_CreateWindow error %s", SDL_GetError());
 		validState = false;
@@ -32,6 +34,12 @@ Renderer::Renderer() : resourceManager(ResourceManager::getInstance()) {
 	if (textEngine == NULL) {
 		SDL_Log("TTF_CreateRendererTextEngine error %s", SDL_GetError());
 		validState = false;
+	}
+}
+
+void Renderer::setWindowTitle(const std::string& title) {
+	if (sdlWindow) {
+		SDL_SetWindowTitle(sdlWindow, title.c_str());
 	}
 }
 

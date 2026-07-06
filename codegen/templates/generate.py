@@ -256,6 +256,31 @@ def parse_text_format(row):
         'shadow': row['shadow'].strip().lower() == 'true'
     }
 
+def parse_verb(row):
+    """
+    Parses a single verb row.
+    Expected fields: id,memberName,displayName,syntax,requiresSelected,defaultMessage,checkExamineText
+    - memberName is the Game field the created Verb is assigned to (e.g. "lookAtVerb"
+      for id "lookat" — the two aren't always the same string).
+    - syntax is a ';'-separated list of sentence templates using $target/$selected/
+      $object0../$objectN placeholders; empty means the verb has no VerbSyntax
+      (its display name is used as-is).
+    - defaultMessage is what the player says when the verb has no matching
+      interaction on the clicked object; empty means no default response.
+    - checkExamineText (used by "look at"-style verbs) checks the object's own
+      examine text before falling back to defaultMessage.
+    """
+    syntax = row['syntax'].strip()
+    return {
+        'id': row['id'].strip(),
+        'member_name': row['memberName'].strip(),
+        'displayName': row['displayName'].strip(),
+        'syntax': [s for s in syntax.split(VALUES_SEPARATOR)] if syntax else [],
+        'requires_selected': row['requiresSelected'].strip().lower() == 'true',
+        'default_message': row['defaultMessage'].strip(),
+        'check_examine_text': row['checkExamineText'].strip().lower() == 'true'
+    }
+
 # --- Dialogue parsing helpers ---
 class DialogueLine:
     def __init__(self, speaker, text, delay=None, target=None, action=None):
@@ -352,6 +377,13 @@ def parse_dialogue_file(path):
 # Collect all data
 def collect_data():
     animations, players, objects, scenes, interactions, text_formats, dialogues = [], [], [], [], [], [], []
+    # Verbs — the engine only provides the "any"/"selected" protocol verbs;
+    # every game-facing verb (walk, use, give, ...) is defined here.
+    verbs = []
+    with open(os.path.join(GAME_FILES_FOLDER, 'Verbs.csv')) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            verbs.append(parse_verb(row))
     # Animations
     with open(os.path.join(GAME_FILES_FOLDER, 'Animations.csv')) as f:
         for l in f:
@@ -407,7 +439,7 @@ def collect_data():
                     dialogue_scripts.append({'function_name': line.action})
     # Settings
     settings = parse_settings()
-    return {'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'combinations': combinations, 'text_formats': text_formats, 'dialogues': dialogues, 'dialogue_scripts': dialogue_scripts}
+    return {'verbs': verbs, 'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'combinations': combinations, 'text_formats': text_formats, 'dialogues': dialogues, 'dialogue_scripts': dialogue_scripts}
 
 # --- Main: generate via Jinja2 and compile ---
 def main():
