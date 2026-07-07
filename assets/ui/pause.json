@@ -1,0 +1,21 @@
+{
+    "name": "pauseMenu",
+    "elements": [
+        { "type": "image", "name": "dim", "position": [0, 0], "size": [320, 200], "texture": [0, 0, 0, 140] },
+
+        { "type": "panel", "name": "pausePanel", "anchor": "center", "size": [140, 110], "texture": [30, 10, 30, 255],
+          "children": [
+            { "type": "label", "text": "Paused", "position": [70, 10], "textAlign": "center", "textColor": [255, 255, 255, 255], "textSize": 14 },
+
+            { "type": "button", "name": "resumeBtn", "text": "Resume", "position": [20, 32], "size": [100, 16],
+              "textAlign": "center", "onClick": { "action": "closeOverlay" } },
+
+            { "type": "button", "name": "saveLoadBtn", "text": "Save / Load Game", "position": [20, 54], "size": [100, 16],
+              "textAlign": "center", "onClick": { "action": "openOverlay", "name": "saveLoadMenu" } },
+
+            { "type": "button", "name": "quitBtn", "text": "Quit Game", "position": [20, 76], "size": [100, 16],
+              "textAlign": "center", "onClick": { "action": "quit" } }
+          ]
+        }
+    ]
+}

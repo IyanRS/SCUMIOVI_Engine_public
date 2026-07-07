@@ -12,6 +12,7 @@ void TextComponent::update(float deltaTime) {
 			sayTimer = 0.0f;
 			Text empty;
 			setTextOver(empty);
+			owner->animator.stopTalking();
 			sayCallback.execute();
 			sayCallback = Event();  // clear to avoid double-fire
 		}
@@ -43,9 +44,19 @@ void TextComponent::say(Text& textToSay, float seconds, Event callback) {
 	setTextOver(textToSay);
 	sayTimer    = seconds;
 	sayCallback = callback;
+	owner->animator.startTalking();
 }
 
 void TextComponent::say(std::string text, float seconds, Event callback) {
 	Text textToSay = Text(text, textFormat);
 	say(textToSay, seconds, callback);
+}
+
+void TextComponent::stopSaying() {
+	if (sayTimer <= 0.0f) return;
+	sayTimer = 0.0f;
+	sayCallback = Event();
+	Text empty;
+	setTextOver(empty);
+	owner->animator.stopTalking();
 }

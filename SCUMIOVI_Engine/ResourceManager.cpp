@@ -8,6 +8,7 @@ std::string ResourceManager::texturesDirectory_;
 std::string ResourceManager::fontsDirectory_;
 std::string ResourceManager::localesDirectory_;
 std::string ResourceManager::uiDirectory_;
+std::string ResourceManager::keybindingsPath_;
 
 ResourceManager& ResourceManager::getInstance() {
 	if (resourceManager_ == nullptr)
@@ -24,6 +25,7 @@ void ResourceManager::init(const std::string& assetsDirectory) {
 	fontsDirectory_ = assetsDirectory + "/fonts/";
 	localesDirectory_ = assetsDirectory + "/locales/";
 	uiDirectory_ = assetsDirectory + "/ui/";
+	keybindingsPath_ = assetsDirectory + "/keybindings.json";
 }
 
 const std::string& ResourceManager::getLocalesDirectory() {
@@ -32,6 +34,10 @@ const std::string& ResourceManager::getLocalesDirectory() {
 
 const std::string& ResourceManager::getUIDirectory() {
 	return uiDirectory_;
+}
+
+const std::string& ResourceManager::getKeybindingsPath() {
+	return keybindingsPath_;
 }
 
 const std::string& ResourceManager::getTexturesDirectory() {

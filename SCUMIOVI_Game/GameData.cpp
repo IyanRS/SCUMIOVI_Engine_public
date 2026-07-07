@@ -224,10 +224,15 @@ void ScriptLoader::loadGame(Game& game) {
     guybrush->moveToScene(scummbar);
 
     // --- UI Setup ---
-    // Layouts (backgrounds, verb grid, inventory grid, verb-info label) are
-    // authored as data under assets/ui/*.json and loaded here; see UILoader.
+    // Layouts (backgrounds, verb grid, inventory grid, verb-info label, pause
+    // menu) are authored as data under assets/ui/*.json and loaded here.
     UILoader::loadLayoutsFromDirectory(game, ResourceManager::getUIDirectory());
     game.getUI().setLayout("inventory");
+
+    // --- Key bindings ---
+    // What each key does (e.g. Escape opens the pause menu) is game data too;
+    // see assets/keybindings.json and KeyBindings.
+    game.getInputManager().getKeyBindings().loadFromFile(ResourceManager::getKeybindingsPath());
 
     game.getRenderer().setWindowTitle("SCUMIOVI");
 

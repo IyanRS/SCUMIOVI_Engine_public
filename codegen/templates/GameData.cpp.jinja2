@@ -196,10 +196,15 @@ void ScriptLoader::loadGame(Game& game) {
     {% endif %}
 
     // --- UI Setup ---
-    // Layouts (backgrounds, verb grid, inventory grid, verb-info label) are
-    // authored as data under assets/ui/*.json and loaded here; see UILoader.
+    // Layouts (backgrounds, verb grid, inventory grid, verb-info label, pause
+    // menu) are authored as data under assets/ui/*.json and loaded here.
     UILoader::loadLayoutsFromDirectory(game, ResourceManager::getUIDirectory());
     game.getUI().setLayout("inventory");
+
+    // --- Key bindings ---
+    // What each key does (e.g. Escape opens the pause menu) is game data too;
+    // see assets/keybindings.json and KeyBindings.
+    game.getInputManager().getKeyBindings().loadFromFile(ResourceManager::getKeybindingsPath());
 
     {% if config.window_title %}
     game.getRenderer().setWindowTitle("{{ cpp_string(config.window_title) }}");

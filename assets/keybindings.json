@@ -1,0 +1,5 @@
+{
+  "Escape": { "action": "toggleOverlay", "name": "pauseMenu" },
+  "F5": { "action": "save", "slot": 0 },
+  "F9": { "action": "load", "slot": 0 }
+}

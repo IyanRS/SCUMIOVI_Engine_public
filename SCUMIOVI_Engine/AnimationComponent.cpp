@@ -102,6 +102,14 @@ bool AnimationComponent::verticalIdleDefined() {
 	return idleUpAnimation != nullptr && idleDownAnimation != nullptr;
 }
 
+bool AnimationComponent::horizontalTalkDefined() {
+	return talkRightAnimation != nullptr && talkLeftAnimation != nullptr;
+}
+
+bool AnimationComponent::verticalTalkDefined() {
+	return talkUpAnimation != nullptr && talkDownAnimation != nullptr;
+}
+
 void AnimationComponent::setIdleAnimation(Vector2<> lastDir) {
 	if ((abs(lastDir.x) > abs(lastDir.y) || !verticalIdleDefined()) && horizontalIdleDefined()) {
 		animation = (lastDir.x > 0) ? idleRightAnimation : idleLeftAnimation;
@@ -140,4 +148,48 @@ void AnimationComponent::setMovementAnimation(Vector2<> movementDirection) {
 	} else if (verticalAnimationsDefined()) {
 		animation = (movementDirection.y > 0) ? moveDownAnimation : moveUpAnimation;
 	}
+}
+
+void AnimationComponent::setTalkAnimations(
+	std::shared_ptr<Animation> talkRight, std::shared_ptr<Animation> talkLeft,
+	std::shared_ptr<Animation> talkUp,    std::shared_ptr<Animation> talkDown)
+{
+	talkRightAnimation = talkRight;
+	talkLeftAnimation  = talkLeft;
+	talkUpAnimation    = talkUp;
+	talkDownAnimation  = talkDown;
+}
+
+void AnimationComponent::startTalking() {
+	// No talk animations configured: leave whatever's currently showing alone
+	// (existing games without them behave exactly as before).
+	if (!horizontalTalkDefined() && !verticalTalkDefined()) return;
+
+	talking = true;
+	Vector2<> lastDir = owner->movement.getLastMovementDirection();
+	// Mirrors setIdleAnimation's facing-direction convention (talking is a
+	// stationary-facing state, the same as idle).
+	if ((std::abs(lastDir.x) > std::abs(lastDir.y) || !verticalTalkDefined()) && horizontalTalkDefined()) {
+		animation = (lastDir.x > 0) ? talkRightAnimation : talkLeftAnimation;
+	} else if (verticalTalkDefined()) {
+		animation = (lastDir.y > 0) ? talkUpAnimation : talkDownAnimation;
+	}
+}
+
+void AnimationComponent::stopTalking() {
+	if (!talking) return;
+	talking = false;
+	setIdleAnimation(owner->movement.getLastMovementDirection());
+}
+
+bool AnimationComponent::isTalking() const {
+	return talking;
+}
+
+void AnimationComponent::cancelOneShot() {
+	if (animReturnTo == nullptr) return;
+	animation       = animReturnTo;
+	animReturnTo    = nullptr;
+	animReturnFrame = -1;
+	animCallback    = Event(); // discard without executing
 }

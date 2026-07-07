@@ -24,6 +24,8 @@
 #include "UIVerbGrid.hpp"
 #include "UIInventoryGrid.hpp"
 #include "UILoader.hpp"
+#include "UIAction.hpp"
+#include "KeyBindings.hpp"
 #include "DialogueNode.hpp"
 #include "DialogueOption.hpp"
 #include "Texture.hpp"

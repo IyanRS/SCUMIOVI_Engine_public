@@ -26,5 +26,8 @@ public:
 	void setTextOver(Text& textOver);
 	void say(Text& textOver, float seconds = 0, Event callback = Event());
 	void say(std::string text, float seconds = 0, Event callback = Event());
+	// Immediately dismisses any displayed text and stops the talk animation,
+	// without firing the completion callback.
+	void stopSaying();
 	void setTextFormat(Text& text);
 };

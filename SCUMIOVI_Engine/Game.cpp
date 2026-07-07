@@ -56,6 +56,61 @@ std::shared_ptr<Player> Game::getPlayerByName(std::string name) {
 	return nullptr;
 }
 
+// ---------------------------------------------------------------------------
+// Multi-character party switching
+// ---------------------------------------------------------------------------
+bool Game::switchToPlayer(std::shared_ptr<Player> player, float fadeDuration) {
+	if (!player) return false;
+	if (std::find(players.begin(), players.end(), player) == players.end()) return false;
+
+	auto targetScene = player->getScene();
+
+	// Unlike changeScene(), we don't call moveToScene() here: the player being
+	// switched to is already in targetScene (they may have been there all
+	// along), we're just making the game follow them there.
+	auto applySwitch = [this, player, targetScene]() {
+		currentPlayer = player;
+		if (targetScene) {
+			currentScene = targetScene;
+		}
+		ui.updateUI();
+	};
+
+	bool changingScene = targetScene && targetScene != currentScene;
+	if (fadeDuration > 0.0f && changingScene && !renderer.isFading()) {
+		renderer.fadeToBlack(fadeDuration, Event([this, applySwitch, fadeDuration]() {
+			applySwitch();
+			renderer.fadeFromBlack(fadeDuration);
+		}));
+	}
+	else {
+		applySwitch();
+	}
+	return true;
+}
+
+bool Game::switchToPlayer(const std::string& name, float fadeDuration) {
+	return switchToPlayer(getPlayerByName(name), fadeDuration);
+}
+
+bool Game::switchToNextPlayer(float fadeDuration) {
+	if (players.size() < 2) return false;
+	auto it = std::find(players.begin(), players.end(), currentPlayer);
+	if (it == players.end()) return false;
+	++it;
+	if (it == players.end()) it = players.begin();
+	return switchToPlayer(*it, fadeDuration);
+}
+
+bool Game::switchToPreviousPlayer(float fadeDuration) {
+	if (players.size() < 2) return false;
+	auto it = std::find(players.begin(), players.end(), currentPlayer);
+	if (it == players.end()) return false;
+	if (it == players.begin()) it = players.end();
+	--it;
+	return switchToPlayer(*it, fadeDuration);
+}
+
 std::shared_ptr<Verb> Game::getVerb(std::string verbName) {
 	for (auto v : verbs) {
 		if (v->getName() == verbName) {
@@ -260,6 +315,10 @@ Renderer& Game::getRenderer() {
 	return renderer;
 }
 
+InputManager& Game::getInputManager() {
+	return inputManager;
+}
+
 // ---------------------------------------------------------------------------
 // Scene registry
 // ---------------------------------------------------------------------------
@@ -312,26 +371,29 @@ bool Game::saveGame(int slotIndex) {
 	} else {
 		data["currentScene"] = "";
 	}
+	data["currentPlayerName"] = currentPlayer ? currentPlayer->getName() : "";
 
-	// Player
-	if (currentPlayer) {
+	// Every party member's own position/scene/verb/inventory is saved — not
+	// just whoever is currently active — so multi-character games (where
+	// party members can be off in different rooms simultaneously; see
+	// Game::switchToPlayer) don't lose anyone on load.
+	nlohmann::json playersData;
+	for (auto& player : players) {
 		nlohmann::json playerData;
-		playerData["position"]["x"] = currentPlayer->getPosition().x;
-		playerData["position"]["y"] = currentPlayer->getPosition().y;
-		playerData["scene"] = currentPlayer->getScene() ? currentPlayer->getScene()->getName() : "";
-		if (currentPlayer->getVerb())
-			playerData["verb"] = currentPlayer->getVerb()->getName();
-		else
-			playerData["verb"] = "";
+		playerData["position"]["x"] = player->getPosition().x;
+		playerData["position"]["y"] = player->getPosition().y;
+		playerData["scene"] = player->getScene() ? player->getScene()->getName() : "";
+		playerData["verb"] = player->getVerb() ? player->getVerb()->getName() : "";
 
-		// Inventory
 		nlohmann::json inv = nlohmann::json::array();
-		for (auto& item : currentPlayer->getInventory().getItems()) {
+		for (auto& item : player->getInventory().getItems()) {
 			inv.push_back(item->getName());
 		}
 		playerData["inventory"] = inv;
-		data["player"] = playerData;
+
+		playersData[player->getName()] = playerData;
 	}
+	data["players"] = playersData;
 
 	// Scene object states
 	nlohmann::json scenesData;
@@ -377,23 +439,52 @@ bool Game::loadGame(int slotIndex) {
 	if (data.contains("gameState"))
 		gameState.from_json(data["gameState"]);
 
-	// Player
-	if (data.contains("player")) {
-		auto& playerData = data["player"];
-		if (currentPlayer) {
-			float x = playerData["position"]["x"].get<float>();
-			float y = playerData["position"]["y"].get<float>();
-			currentPlayer->setPosition(Vector2<>(x, y));
+	// Restore every party member's own position/scene/verb/inventory. Any
+	// in-progress action (walking, a one-shot animation, mid-speech text) is
+	// cancelled first — otherwise a character mid-walk when the load happens
+	// would keep interpolating toward its old (pre-load) destination on top
+	// of the position we're about to restore.
+	if (data.contains("players")) {
+		for (auto& [name, playerData] : data["players"].items()) {
+			auto player = getPlayerByName(name);
+			if (!player) continue;
+
+			player->stopCurrentAction();
+
+			if (playerData.contains("scene")) {
+				std::string sceneName = playerData["scene"].get<std::string>();
+				if (!sceneName.empty()) {
+					auto scene = findScene(sceneName);
+					if (scene) player->moveToScene(scene);
+				}
+			}
+
+			if (playerData.contains("position")) {
+				float x = playerData["position"]["x"].get<float>();
+				float y = playerData["position"]["y"].get<float>();
+				player->setPosition(Vector2<>(x, y));
+			}
 
 			if (playerData.contains("verb")) {
 				std::string verbName = playerData["verb"].get<std::string>();
 				if (!verbName.empty())
-					currentPlayer->setVerb(verbName);
+					player->setVerb(verbName);
 			}
+
+			if (playerData.contains("inventory"))
+				applyInventory(player, playerData["inventory"].get<std::vector<std::string>>());
 		}
 	}
 
-	// Current scene
+	// Current player
+	if (data.contains("currentPlayerName")) {
+		std::string name = data["currentPlayerName"].get<std::string>();
+		auto player = getPlayerByName(name);
+		if (player) currentPlayer = player;
+	}
+
+	// Current scene (players above are already relocated to their own saved
+	// scenes; this just makes the active scene match currentPlayer's again)
 	if (data.contains("currentScene")) {
 		std::string sceneName = data["currentScene"].get<std::string>();
 		if (!sceneName.empty()) {
@@ -407,10 +498,6 @@ bool Game::loadGame(int slotIndex) {
 	// Apply object states (must happen after scene objects exist)
 	if (data.contains("scenes"))
 		applyObjectStates(data["scenes"]);
-
-	// Rebuild inventory
-	if (data.contains("player") && data["player"].contains("inventory"))
-		applyInventory(data["player"]["inventory"].get<std::vector<std::string>>());
 
 	return true;
 }
@@ -435,9 +522,9 @@ void Game::applyObjectStates(const nlohmann::json& scenesJson) {
 	}
 }
 
-void Game::applyInventory(const std::vector<std::string>& itemNames) {
-	if (!currentPlayer) return;
-	auto& inventory = currentPlayer->getInventory();
+void Game::applyInventory(std::shared_ptr<Player> player, const std::vector<std::string>& itemNames) {
+	if (!player) return;
+	auto& inventory = player->getInventory();
 	inventory.getItems().clear();
 	for (auto& name : itemNames) {
 		auto proto = findInventoryItemPrototype(name);

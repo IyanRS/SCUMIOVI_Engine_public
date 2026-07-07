@@ -84,6 +84,7 @@
     <ClCompile Include="Interactable.cpp" />
     <ClCompile Include="Inventory.cpp" />
     <ClCompile Include="Item.cpp" />
+    <ClCompile Include="KeyBindings.cpp" />
     <ClCompile Include="Localization.cpp" />
     <ClCompile Include="MovementComponent.cpp" />
     <ClCompile Include="Player.cpp" />
@@ -100,6 +101,7 @@
     <ClCompile Include="UIInfoLabel.cpp" />
     <ClCompile Include="UIInventoryArrow.cpp" />
     <ClCompile Include="UIInventoryGrid.cpp" />
+    <ClCompile Include="UIAction.cpp" />
     <ClCompile Include="UILoader.cpp" />
     <ClCompile Include="UIVerbGrid.cpp" />
     <ClCompile Include="UIItemSlot.cpp" />
@@ -131,6 +133,7 @@
     <ClInclude Include="Interactable.hpp" />
     <ClInclude Include="Inventory.hpp" />
     <ClInclude Include="Item.hpp" />
+    <ClInclude Include="KeyBindings.hpp" />
     <ClInclude Include="Localization.hpp" />
     <ClInclude Include="MovementComponent.hpp" />
     <ClInclude Include="Player.hpp" />
@@ -147,6 +150,7 @@
     <ClInclude Include="UIInfoLabel.hpp" />
     <ClInclude Include="UIInventoryArrow.hpp" />
     <ClInclude Include="UIInventoryGrid.hpp" />
+    <ClInclude Include="UIAction.hpp" />
     <ClInclude Include="UILoader.hpp" />
     <ClInclude Include="UIVerbGrid.hpp" />
     <ClInclude Include="UIItemSlot.hpp" />

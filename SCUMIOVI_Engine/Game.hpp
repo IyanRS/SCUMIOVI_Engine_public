@@ -73,6 +73,26 @@ public:
 	void removePlayer(std::shared_ptr<Player> player);
 	std::list<std::shared_ptr<Player>> getPlayers();
 	std::shared_ptr<Player> getPlayerByName(std::string name);
+
+	// -- Multi-character party switching --------------------------------------
+	// Makes `player` the active, player-controlled character. If it's already
+	// in a different scene than the one currently showing, the active scene
+	// switches to that one (optionally fading, like changeScene) — mirroring
+	// classic multi-character SCUMM games where party members can be off in
+	// different rooms simultaneously. Each Player already tracks its own verb
+	// selection, selected/target object and inventory independently, so those
+	// carry over untouched. Camera follow behavior is NOT changed automatically
+	// (a game using Camera::setObjectToFollow should re-point it itself if it
+	// wants the camera to track whichever character is currently active).
+	// Returns false if player is null or was never added via addPlayer.
+	bool switchToPlayer(std::shared_ptr<Player> player, float fadeDuration = 0.0f);
+	bool switchToPlayer(const std::string& name, float fadeDuration = 0.0f);
+	// Cycles to the next/previous player in the order they were added via
+	// addPlayer, wrapping around. Returns false with fewer than two players,
+	// or if the current player isn't part of the party.
+	bool switchToNextPlayer(float fadeDuration = 0.0f);
+	bool switchToPreviousPlayer(float fadeDuration = 0.0f);
+
 	void startGame();
 	std::shared_ptr<Scene> getScene();
 	void changeScene(std::shared_ptr<Scene> newScene, float fadeDuration = 0.0f);
@@ -94,6 +114,7 @@ public:
 	void setDefaultVerb(std::string verbName);
 	void changeToDefaultVerb();
 	Renderer& getRenderer();
+	InputManager& getInputManager();
 
 	AudioManager& getAudio();
 	GameState& getGameState();
@@ -132,7 +153,7 @@ public:
 
 	// Quick load after scene objects are created
 	void applyObjectStates(const nlohmann::json& scenesJson);
-	void applyInventory(const std::vector<std::string>& itemNames);
+	void applyInventory(std::shared_ptr<Player> player, const std::vector<std::string>& itemNames);
 
 	// Quit
 	void quitGame();

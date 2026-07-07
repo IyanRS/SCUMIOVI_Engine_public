@@ -6,6 +6,7 @@
 #include "UIVerbGrid.hpp"
 #include "UIInventoryGrid.hpp"
 #include "UIInfoLabel.hpp"
+#include "UIAction.hpp"
 #include "Localization.hpp"
 #include "json.hpp"
 
@@ -93,74 +94,6 @@ namespace {
 		}
 	}
 
-	// Resolves an "onClick"/"onHover" descriptor into an Event. Accepts either
-	// a bare string (shorthand for {"action":"script","name":<string>}) or an
-	// object with an "action" field selecting the built-in vocabulary.
-	Event resolveAction(const json& actionJson) {
-		if (actionJson.is_string()) {
-			return Game::getInstance().scriptEvent(actionJson.get<std::string>());
-		}
-		if (!actionJson.is_object() || !actionJson.contains("action")) {
-			return Event();
-		}
-		std::string action = actionJson.value("action", std::string());
-
-		if (action == "script") {
-			return Game::getInstance().scriptEvent(actionJson.value("name", std::string()));
-		}
-		if (action == "openLayout") {
-			std::string name = actionJson.value("name", std::string());
-			return Event(std::function<void(EventInfo)>([name](EventInfo e) {
-				e.game.getUI().setLayout(name);
-			}));
-		}
-		if (action == "openOverlay") {
-			std::string name = actionJson.value("name", std::string());
-			bool pause = actionJson.value("pauseGame", true);
-			return Event(std::function<void(EventInfo)>([name, pause](EventInfo e) {
-				e.game.getUI().openOverlay(name, pause);
-			}));
-		}
-		if (action == "closeOverlay") {
-			return Event(std::function<void(EventInfo)>([](EventInfo e) {
-				e.game.getUI().closeOverlay();
-			}));
-		}
-		if (action == "setLocale") {
-			std::string locale = actionJson.value("locale", std::string("en"));
-			return Event(std::function<void(EventInfo)>([locale](EventInfo e) {
-				e.game.setLocale(locale);
-			}));
-		}
-		if (action == "setVerb") {
-			std::string verbName = actionJson.value("name", std::string());
-			return Event(std::function<void(EventInfo)>([verbName](EventInfo e) {
-				auto player = e.game.getCurrentPlayer();
-				if (player) player->setVerb(verbName);
-			}));
-		}
-		if (action == "save") {
-			int slot = actionJson.value("slot", 0);
-			return Event(std::function<void(EventInfo)>([slot](EventInfo e) {
-				e.game.saveGame(slot);
-			}));
-		}
-		if (action == "load") {
-			int slot = actionJson.value("slot", 0);
-			return Event(std::function<void(EventInfo)>([slot](EventInfo e) {
-				e.game.loadGame(slot);
-			}));
-		}
-		if (action == "quit") {
-			return Event(std::function<void(EventInfo)>([](EventInfo e) {
-				e.game.quitGame();
-			}));
-		}
-
-		SDL_Log("UILoader: unknown action '%s'", action.c_str());
-		return Event();
-	}
-
 	std::shared_ptr<GameObject> buildElement(const json& j);
 
 	void buildChildren(const json& j, std::shared_ptr<UIElement> parent) {
@@ -188,8 +121,8 @@ namespace {
 			element = label;
 		}
 		else if (type == "button") {
-			Event onClick = j.contains("onClick") ? resolveAction(j.at("onClick")) : Event();
-			Event onHover = j.contains("onHover") ? resolveAction(j.at("onHover")) : Event();
+			Event onClick = j.contains("onClick") ? resolveUIAction(j.at("onClick")) : Event();
+			Event onHover = j.contains("onHover") ? resolveUIAction(j.at("onHover")) : Event();
 			auto button = std::make_shared<UIButton>(name, position, size, resolveTexture(j, "texture"),
 				buildTextFormat(j), onClick, onHover);
 			button->setLocalizedText(j.value("text", std::string()));

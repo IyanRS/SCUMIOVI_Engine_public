@@ -139,8 +139,10 @@ TEST_CASE("saveGame and loadGame round-trip", "[saveload][game]") {
 	REQUIRE(saved["gameState"]["flags"]["test_flag"] == true);
 	REQUIRE(saved["gameState"]["counters"]["test_counter"] == 99);
 	REQUIRE(saved["currentScene"] == "test_scene");
-	REQUIRE(saved["player"]["position"]["x"] == 15);
-	REQUIRE(saved["player"]["position"]["y"] == 25);
+	REQUIRE(saved["currentPlayerName"] == "test_player");
+	REQUIRE(saved["players"]["test_player"]["position"]["x"] == 15);
+	REQUIRE(saved["players"]["test_player"]["position"]["y"] == 25);
+	REQUIRE(saved["players"]["test_player"]["scene"] == "test_scene");
 	REQUIRE(saved["scenes"]["test_scene"]["test_obj"]["state"] == 5);
 	REQUIRE(saved["scenes"]["test_scene"]["test_obj"]["visible"] == false);
 
@@ -193,7 +195,7 @@ TEST_CASE("applyInventory restores items from prototypes", "[saveload][game]") {
 
 	REQUIRE(player->getInventory().getItems().empty());
 
-	game.applyInventory({"mug"});
+	game.applyInventory(player, {"mug"});
 
 	REQUIRE(player->getInventory().getItems().size() == 1);
 	REQUIRE(player->getInventory().getItems()[0]->getName() == "mug");
@@ -206,4 +208,120 @@ TEST_CASE("quitGame stops the game loop", "[saveload][game]") {
 	drainPendingEvents();
 	Game& game = Game::getInstance();
 	game.quitGame();
+}
+
+TEST_CASE("saveGame persists every party member, not just the current one", "[saveload][game][party]") {
+	drainPendingEvents();
+	Game& game = Game::getInstance();
+
+	auto sceneA = std::make_shared<Scene>();
+	sceneA->setName("party_save_scene_a");
+	auto sceneB = std::make_shared<Scene>();
+	sceneB->setName("party_save_scene_b");
+	game.registerScene("party_save_scene_a", sceneA);
+	game.registerScene("party_save_scene_b", sceneB);
+
+	auto a = std::make_shared<Player>("party_save_a", Vector2<>(1, 2), Vector2<>(10, 10));
+	auto b = std::make_shared<Player>("party_save_b", Vector2<>(3, 4), Vector2<>(10, 10));
+	game.addPlayer(a);
+	game.addPlayer(b);
+	a->moveToScene(sceneA);
+	b->moveToScene(sceneB);
+	game.setCurrentPlayer(a);
+	game.changeScene(sceneA, 0.0f);
+	drainPendingEvents();
+
+	REQUIRE(game.saveGame(98) == true);
+
+	std::ifstream check("save_98.json");
+	nlohmann::json saved;
+	check >> saved;
+	check.close();
+
+	REQUIRE(saved["currentPlayerName"] == "party_save_a");
+	REQUIRE(saved["players"]["party_save_a"]["scene"] == "party_save_scene_a");
+	REQUIRE(saved["players"]["party_save_b"]["scene"] == "party_save_scene_b");
+	REQUIRE(saved["players"]["party_save_b"]["position"]["x"] == 3);
+	REQUIRE(saved["players"]["party_save_b"]["position"]["y"] == 4);
+
+	std::remove("save_98.json");
+}
+
+TEST_CASE("loadGame restores every party member's scene/position/inventory", "[saveload][game][party]") {
+	drainPendingEvents();
+	Game& game = Game::getInstance();
+
+	auto sceneA = std::make_shared<Scene>();
+	sceneA->setName("party_load_scene_a");
+	auto sceneB = std::make_shared<Scene>();
+	sceneB->setName("party_load_scene_b");
+	game.registerScene("party_load_scene_a", sceneA);
+	game.registerScene("party_load_scene_b", sceneB);
+
+	auto a = std::make_shared<Player>("party_load_a", Vector2<>(0, 0), Vector2<>(10, 10));
+	auto b = std::make_shared<Player>("party_load_b", Vector2<>(0, 0), Vector2<>(10, 10));
+	game.addPlayer(a);
+	game.addPlayer(b);
+	a->moveToScene(sceneA);
+	b->moveToScene(sceneB);
+
+	auto proto = std::make_shared<GameObject>("party_load_item", Vector2<>(), Vector2<>(-1, -1));
+	game.registerInventoryItemPrototype("party_load_item", proto);
+	b->getInventory().addItem(std::make_shared<GameObject>("party_load_item", Vector2<>(), Vector2<>(-1, -1)));
+
+	game.setCurrentPlayer(a);
+	game.changeScene(sceneA, 0.0f);
+	drainPendingEvents();
+
+	REQUIRE(game.saveGame(97) == true);
+
+	// Mutate everything after saving
+	a->setPosition(Vector2<>(999, 999));
+	b->setPosition(Vector2<>(888, 888));
+	b->getInventory().getItems().clear();
+	game.setCurrentPlayer(b);
+
+	REQUIRE(game.loadGame(97) == true);
+
+	REQUIRE(game.getCurrentPlayer() == a);
+	REQUIRE(a->getPosition().x == 0);
+	REQUIRE(b->getPosition().x == 0);
+	REQUIRE(b->getScene() == sceneB);
+	REQUIRE(b->getInventory().getItems().size() == 1);
+	REQUIRE(b->getInventory().getItems()[0]->getName() == "party_load_item");
+
+	std::remove("save_97.json");
+}
+
+TEST_CASE("loadGame cancels in-progress movement so the player doesn't finish an old walk", "[saveload][game]") {
+	drainPendingEvents();
+	Game& game = Game::getInstance();
+
+	auto scene = std::make_shared<Scene>();
+	scene->setName("move_cancel_scene");
+	game.registerScene("move_cancel_scene", scene);
+
+	auto player = std::make_shared<Player>("move_cancel_player", Vector2<>(0, 0), Vector2<>(10, 10));
+	game.addPlayer(player);
+	player->moveToScene(scene);
+	game.setCurrentPlayer(player);
+	game.changeScene(scene, 0.0f);
+	drainPendingEvents();
+
+	REQUIRE(game.saveGame(96) == true); // saves position (0,0)
+
+	// Start walking toward a far point, then immediately load an older save —
+	// the player should end up exactly at the loaded position and NOT keep
+	// interpolating toward (500,500) on subsequent frames.
+	player->moveTo(Vector2<>(500, 500), 10.0f);
+	REQUIRE(game.loadGame(96) == true);
+
+	REQUIRE(player->getPosition().x == 0);
+	REQUIRE(player->getPosition().y == 0);
+
+	scene->update(1.0f); // would move the player further along the old path if not cancelled
+	REQUIRE(player->getPosition().x == 0);
+	REQUIRE(player->getPosition().y == 0);
+
+	std::remove("save_96.json");
 }

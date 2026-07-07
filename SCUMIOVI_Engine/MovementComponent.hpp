@@ -28,6 +28,13 @@ public:
 	void moveToAtSpeed(Vector2<> pos, float speed, Event callback = Event());
 	void moveToAtSpeed(std::vector<Vector2<>> positions, float speed, std::vector<Event> callbacks = std::vector<Event>());
 
+	// Cancels any in-progress movement immediately, without firing the
+	// completion callback, and resets to the idle animation for the last
+	// facing direction. Used when e.g. a save is loaded mid-walk, so the
+	// object doesn't keep interpolating toward a now-irrelevant destination.
+	void stop();
+	bool isMoving() const;
+
 	Vector2<> getDirectionVector();
 	Vector2<> getLastMovementDirection() const;
 	void setLastMovementDirection(Vector2<> dir);

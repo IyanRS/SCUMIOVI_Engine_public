@@ -1,0 +1,17 @@
+{
+    "currentScene": "",
+    "gameState": {
+        "counters": {},
+        "flags": {}
+    },
+    "player": {
+        "inventory": [],
+        "position": {
+            "x": 80.0,
+            "y": 80.0
+        },
+        "scene": "",
+        "verb": "walk"
+    },
+    "scenes": null
+}

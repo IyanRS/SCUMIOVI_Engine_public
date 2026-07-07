@@ -126,22 +126,9 @@ void InputManager::handleInput(SDL_Event& event, UI& ui, Scene& scene) {
 
 	switch (event.type) {
 	case SDL_EVENT_KEY_DOWN:
-		switch (event.key.key) {
-		case SDLK_F5:
-			if (game.saveGame(0)) {
-				SDL_Log("Game saved to slot 0.");
-			} else {
-				SDL_Log("Failed to save game.");
-			}
-			break;
-		case SDLK_F9:
-			if (game.loadGame(0)) {
-				SDL_Log("Game loaded from slot 0.");
-			} else {
-				SDL_Log("Failed to load game.");
-			}
-			break;
-		}
+		// Bindings are game-provided data (see assets/keybindings.json); the
+		// engine has no hardcoded keys of its own.
+		keyBindings.handleKeyDown(event.key.key);
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
 		SDL_MouseButtonFlags mouseButtonFlags = SDL_GetMouseState(nullptr, nullptr);
@@ -162,4 +149,8 @@ void InputManager::handleInput(SDL_Event& event, UI& ui, Scene& scene) {
 		}
 		break;
 	}
+}
+
+KeyBindings& InputManager::getKeyBindings() {
+	return keyBindings;
 }

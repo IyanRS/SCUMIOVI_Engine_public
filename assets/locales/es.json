@@ -41,5 +41,17 @@
   "Well, I need to go": "Bueno, tengo que irme",
   "Let me test something": "Déjame probar algo",
 
-  "Thanks": "Gracias"
+  "Thanks": "Gracias",
+
+  "Paused": "Pausa",
+  "Resume": "Reanudar",
+  "Save / Load Game": "Guardar / Cargar partida",
+  "Quit Game": "Salir del juego",
+  "Save / Load": "Guardar / Cargar",
+  "Slot 1": "Ranura 1",
+  "Slot 2": "Ranura 2",
+  "Slot 3": "Ranura 3",
+  "Save": "Guardar",
+  "Load": "Cargar",
+  "Back": "Atrás"
 }

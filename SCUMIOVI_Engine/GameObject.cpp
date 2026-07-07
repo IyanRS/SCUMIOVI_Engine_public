@@ -129,6 +129,23 @@ void GameObject::setMovementAnimation(Vector2<> movementDirection) {
 	animator.setMovementAnimation(movementDirection);
 }
 
+void GameObject::setTalkAnimations(
+	std::shared_ptr<Animation> talkRight, std::shared_ptr<Animation> talkLeft,
+	std::shared_ptr<Animation> talkUp,    std::shared_ptr<Animation> talkDown)
+{
+	animator.setTalkAnimations(talkRight, talkLeft, talkUp, talkDown);
+}
+
+bool GameObject::isTalking() {
+	return animator.isTalking();
+}
+
+void GameObject::stopCurrentAction() {
+	movement.stop();
+	animator.cancelOneShot();
+	text.stopSaying();
+}
+
 void GameObject::moveTo(Vector2<> pos, float seconds, Event callback) {
 	movement.moveTo(pos, seconds, callback);
 }

@@ -184,6 +184,7 @@ void Renderer::renderTexture(Vector2<> position, Vector2<> size, std::shared_ptr
 		applyScreenTransform(colorRect, camera.getSize());
 #endif
 
+		SDL_SetRenderDrawBlendMode(sdlRenderer, SDL_BLENDMODE_BLEND);
 		SDL_SetRenderDrawColor(sdlRenderer, (Uint8)color[0], (Uint8)color[1], (Uint8)color[2], (Uint8)color[3]);
 		SDL_RenderFillRect(sdlRenderer, &colorRect);
 		return;

@@ -65,6 +65,17 @@ void MovementComponent::moveToAtSpeed(std::vector<Vector2<>> positions, float sp
 	moveToAtSpeed(positions[0], speed, callbacks[0]);
 }
 
+void MovementComponent::stop() {
+	if (!moving) return;
+	moving = false;
+	moveCallback = Event(); // discard without executing
+	owner->setMovementAnimation(Vector2<>(0, 0));
+}
+
+bool MovementComponent::isMoving() const {
+	return moving;
+}
+
 Vector2<> MovementComponent::getDirectionVector() {
 	if (!moving)
 		return Vector2<>();

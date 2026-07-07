@@ -113,6 +113,16 @@ public:
 		std::shared_ptr<Animation> moveUpAnimation, std::shared_ptr<Animation> moveDownAnimation,
 		std::shared_ptr<Animation> idleRightAnimation, std::shared_ptr<Animation> idleLeftAnimation,
 		std::shared_ptr<Animation> idleUpAnimation, std::shared_ptr<Animation> idleDownAnimation);
+	void setTalkAnimations(std::shared_ptr<Animation> talkRightAnimation, std::shared_ptr<Animation> talkLeftAnimation,
+		std::shared_ptr<Animation> talkUpAnimation, std::shared_ptr<Animation> talkDownAnimation);
+	bool isTalking();
+
+	// Cancels any in-progress movement, one-shot animation and displayed
+	// "say" text immediately (no completion callbacks fire). Used when
+	// loading a save so a mid-action object doesn't keep executing an action
+	// that's no longer relevant after being repositioned.
+	void stopCurrentAction();
+
 	// Called once per frame by Scene::update()
 	void update(float deltaTime);
 };

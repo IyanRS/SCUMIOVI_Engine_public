@@ -18,7 +18,7 @@ inspired scene), a data-driven code generator, and a unit-test suite.
 | `SCUMIOVI_Game/`   | The sample game. `GameData.cpp` here is **generated** from the CSV files in `game/`. |
 | `game/`            | Data definitions for the sample game: `Verbs.csv`, `Objects.csv`, `Players.csv`, `Scenes/`, `Dialogues/`, `Interactions.csv`, `Combinations.csv`, `TextFormats.csv`, `Settings.csv`. |
 | `codegen/`         | Python + Jinja2 generator that turns `game/*.csv` into `SCUMIOVI_Game/GameData.cpp`. |
-| `assets/`          | Textures, fonts, locale files (`assets/locales/`) and UI layouts (`assets/ui/`) loaded at runtime. |
+| `assets/`          | Textures, fonts, locale files (`assets/locales/`), UI layouts (`assets/ui/`) and `keybindings.json`, all loaded at runtime. |
 | `tests/`           | Catch2 unit tests. |
 | `third_party/`     | Vendored single-header libraries (`json.hpp`, `catch.hpp`). |
 | `SDL3/`, `SDL3_image/`, `SDL3_ttf/` | Third-party SDL libraries (headers + prebuilt Windows binaries). |
@@ -111,10 +111,84 @@ filename or an `[r, g, b, a]` solid color), and `text*` formatting fields
 
 `onClick`/`onHover` accept either a bare string (shorthand for
 `{"action": "script", "name": "<string>"}`, resolving through
-`Game::registerScript`) or an action object from a small built-in vocabulary:
-`script`, `openLayout`, `openOverlay` (renders on top of the current layout and
-optionally pauses the scene — see `UI::openOverlay`), `closeOverlay`,
-`setLocale`, `setVerb`, `save`, `load`, `quit`.
+`Game::registerScript`) or an action object from a small built-in vocabulary
+(`UIAction.hpp`, shared with key bindings — see below): `script`, `openLayout`,
+`openOverlay` (renders on top of the current layout and optionally pauses the
+scene — see `UI::openOverlay`), `toggleOverlay` (opens it, or closes it if it's
+already the active overlay — what a single key like Escape wants), `closeOverlay`,
+`setLocale`, `setVerb`, `switchPlayer`/`switchToNextPlayer`/`switchToPreviousPlayer`
+(see "Multi-character parties" below), `save`, `load`, `quit`.
+
+## Multi-character parties
+
+Classic multi-character SCUMM games (Day of the Tentacle, Maniac Mansion) let
+you control several characters that can be off in different rooms
+simultaneously. The engine supports this out of the box, even though the
+sample game only uses one character:
+
+```cpp
+game.addPlayer(hoagie);
+game.addPlayer(laverne);
+game.switchToPlayer(laverne);          // or switchToPlayer("laverne")
+game.switchToNextPlayer(0.5f);         // cycles party order, fades over 0.5s
+```
+
+`Game::switchToPlayer` makes the given (already-added) player active. If that
+player is in a different scene than the one currently showing, the active
+scene switches to follow them there — each `Player` already tracks its own
+verb selection, selected/target object and inventory independently, so
+switching back and forth preserves per-character state automatically.
+`switchToNextPlayer`/`switchToPreviousPlayer` cycle through the party in
+`addPlayer` order. All four are also available as `onClick`/key-binding
+actions (`switchPlayer`, `switchToNextPlayer`, `switchToPreviousPlayer`), so a
+game can wire up character-portrait buttons or a hotkey entirely from data.
+
+Camera follow behavior is intentionally **not** changed automatically by a
+switch — a game using `Camera::setObjectToFollow` should re-point it itself
+if it wants the camera to track whichever character is currently active.
+
+`saveGame`/`loadGame` persist **every** party member's own position, scene,
+verb and inventory (keyed by player name), not just whoever is active at save
+time — so saving mid-game doesn't lose a character who's off in a different
+room. Loading also cancels each restored player's in-progress action (walking,
+a one-shot animation, mid-speech text — see `GameObject::stopCurrentAction`)
+before repositioning them, so a character who was mid-walk when you load an
+older save lands exactly at the saved position instead of continuing to
+interpolate toward wherever they were headed before the load.
+
+## Talking animation
+
+`GameObject::setTalkAnimations(right, left, up, down)` registers directional
+animations that play automatically for the duration of `say()`/`Player::say()`
+and revert to idle when the text ends (or is cut short by
+`stopCurrentAction()`), mirroring how `setMovementAnimations` already handles
+walk/idle. Games that don't call it are unaffected — `say()` just doesn't
+touch the animation, exactly as before.
+
+```cpp
+guybrush->setTalkAnimations(talkRight, talkLeft, nullptr, nullptr);
+guybrush->say("I'm looking for a three-headed monkey.");
+```
+
+## Key bindings
+
+What each key does is game data, not an engine `switch` statement. `assets/keybindings.json`
+maps SDL key names (`SDL_GetKeyFromName`, e.g. `"Escape"`, `"F5"`, `"A"`) to the
+same action vocabulary UI buttons use:
+
+```json
+{
+  "Escape": { "action": "toggleOverlay", "name": "pauseMenu" },
+  "F5": { "action": "save", "slot": 0 },
+  "F9": { "action": "load", "slot": 0 }
+}
+```
+
+Loaded once via `KeyBindings::loadFromFile` (called from the generated
+`loadGame()`) into `Game::getInstance().getInputManager().getKeyBindings()`.
+The sample game's `assets/ui/pause.json` (Resume / Save-Load / Quit) and
+`assets/ui/saveload.json` (3 save slots) show the overlay pattern this enables:
+Escape pauses the scene and shows a menu built entirely from data.
 
 ## Building
 
@@ -126,7 +200,9 @@ Requires **Visual Studio 2022** with the C++ desktop workload (C++20).
 2. Select the `x64` configuration.
 3. Build and run the `SCUMIOVI_Game` project.
 
-In-game, **F5** quick-saves to slot 0 and **F9** quick-loads it.
+In-game, **Escape** opens the pause menu (Resume / Save-Load / Quit), and
+**F5**/**F9** quick-save/quick-load slot 0 — all three are data (see "Key
+bindings" below), not hardcoded engine behavior.
 
 ### Tests
 
