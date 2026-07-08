@@ -3,5 +3,6 @@
   "F5": { "action": "save", "slot": 0 },
   "F9": { "action": "load", "slot": 0 },
   "Tab": { "action": "switchToNextPlayer", "fadeDuration": 0.4 },
-  "Space": { "action": "skipCutscene" }
+  "Space": { "action": "skipCutscene" },
+  "F3": { "action": "script", "name": "show_debug" }
 }

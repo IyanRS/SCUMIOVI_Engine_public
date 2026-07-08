@@ -65,6 +65,7 @@ void ScriptLoader::loadGame(Game& game) {
 
     // --- Textures for objects ---
     {% for o in objects %}
+    {% if o.image %}
     auto {{ o.id }}Texture = std::make_shared<Texture>(
         "{{ o.id }}",
         "{{ o.image }}"{{ ',\n' + 
@@ -72,10 +73,17 @@ void ScriptLoader::loadGame(Game& game) {
           + '\t\t' + parse_vector(o.size, type_hint="int") if o.size else 'Vector2<int>(-1,-1)' + '\n')
             if o.offset else ''}}
     );
+    {% endif %}
     {% if o.type == 'item' %}
     auto {{ o.id }}ItemTexture = std::make_shared<Texture>(
         "{{ o.id }}_item",
         "{{ o.itemImage }}"
+    );
+    {% endif %}
+    {% if o.type == 'door' %}
+    auto {{ o.id }}OpenTexture = std::make_shared<Texture>(
+        "{{ o.id }}_open",
+        "{{ o.open_image }}"
     );
     {% endif %}
     {% endfor %}
@@ -120,6 +128,7 @@ void ScriptLoader::loadGame(Game& game) {
     game.addPlayer({{ p.id }});
     {% endfor %}
 
+    {% set objAliases = namespace(seenIds=[]) %}
     // --- Scenes ---
     {% for s in scenes %}
     auto {{ s.name }} = std::make_shared<Scene>();
@@ -140,42 +149,68 @@ void ScriptLoader::loadGame(Game& game) {
     {% endfor %}
 
     // Objects
-    {% set ns = namespace(isItem=false) %}
+    {% set ns = namespace(objType="", doorTargetScene="", objHasImage=false, objDisplayName="") %}
     {% for o in s.objects %}
+    {% set varName = s.name + "_" + o.id %}
     {% for obj in objects %}
-    {% if o.id == obj.id and obj.type == 'item' %}
-        {% set ns.isItem = True %}
+    {% if o.id == obj.id %}
+        {% set ns.objType = obj.type %}
+        {% if obj.type == 'door' %}
+            {% set ns.doorTargetScene = obj.target_scene %}
+        {% endif %}
+        {% set ns.objHasImage = obj.image | length > 0 %}
+        {% set ns.objDisplayName = obj.display_name %}
     {% endif %}
     {% endfor %}
-    {% if ns.isItem == True %}
-    auto {{ o.id }} = std::make_shared<Item>(
+    {% if ns.objType == 'item' %}
+    auto {{ varName }} = std::make_shared<Item>(
         "{{ o.id }}",
         {{ parse_vector(o.pos, type_hint='') }},
         {{ o.id }}Texture,
         {{ o.id }}ItemTexture
     );
-    {% set ns.isItem = False %}
+    {% elif ns.objType == 'door' %}
+    auto {{ varName }} = std::make_shared<Door>(
+        "{{ o.id }}",
+        {{ parse_vector(o.pos, type_hint='') }},
+        {% if ns.objHasImage %}
+        {{ o.id }}Texture,
+        {% else %}
+        nullptr,
+        {% endif %}
+        {{ o.id }}OpenTexture,
+        game.findScene("{{ ns.doorTargetScene }}")
+    );
     {% else %}
-    auto {{ o.id }} = std::make_shared<GameObject>(
+    auto {{ varName }} = std::make_shared<GameObject>(
         "{{ o.id }}",
         {{ parse_vector(o.pos,type_hint='') }},
         Vector2<>(-1.0f, -1.0f),
         {{ o.id }}Texture
     );
     {% endif %}
+    {{ varName }}->setDisplayName("{{ cpp_string(ns.objDisplayName) }}");
+    {% set ns.objType = "" %}
+    {% set ns.doorTargetScene = "" %}
+    {% set ns.objHasImage = false %}
+    {% set ns.objDisplayName = "" %}
 
-    {{ o.id }}->moveToScene({{ s.name }});
-    {{ o.id }}->setLayer({{ o.layer }});
+    {{ varName }}->moveToScene({{ s.name }});
+    {{ varName }}->setLayer({{ o.layer }});
+    {% if o.id not in objAliases.seenIds %}
+    {% set _ = objAliases.seenIds.append(o.id) %}
+    auto& {{ o.id }} = {{ varName }};
+    {% endif %}
     {% endfor %}
 
     {% set scene_object_ids = s.objects | map(attribute='id') | list %}
     {% for obj in objects %}
     {% if obj.id in scene_object_ids %}
     {% if obj.text_format %}
-    {{obj.id}}->setTextFormat({{obj.text_format}}Format);
+    {{ s.name }}_{{obj.id}}->setTextFormat({{obj.text_format}}Format);
     {% endif %}
     {% if obj.examine_text %}
-    {{obj.id}}->setExamineText("{{ cpp_string(obj.examine_text) }}");
+    {{ s.name }}_{{obj.id}}->setExamineText("{{ cpp_string(obj.examine_text) }}");
     {% endif %}
     {% endif %}
     {% endfor %}

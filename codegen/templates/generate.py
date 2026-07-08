@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import csv
+import json
 import shutil
 import subprocess
 import sys
@@ -10,6 +11,7 @@ from jinja2 import Environment, FileSystemLoader
 # --- Paths and settings ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 GAME_FILES_FOLDER = os.path.join(SCRIPT_DIR, '..', '..', 'game')
+ASSETS_FOLDER = os.path.join(SCRIPT_DIR, '..', '..', 'assets')
 TEMPLATES_FOLDER = SCRIPT_DIR
 OUTPUT_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, '..', '..', 'SCUMIOVI_Game'))
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -55,9 +57,13 @@ def parse_player(line):
 # Parse single object line into a dict
 def parse_object(line):
     examine_text = line.get('examine_text', '').strip()
+    display_name = line.get('display_name', '').strip()
+    if not display_name:
+        display_name = line['id'].strip()
     if line['type'] == '':
         return {
             'id': line['id'].strip(),
+            'display_name': display_name,
             'type': line['type'].strip(),
             'image': line['image'].strip(),
             'offset': line['offset'].strip(),
@@ -68,9 +74,28 @@ def parse_object(line):
     elif line['type'].split(VALUES_SEPARATOR)[0] == 'item':
         return {
             'id': line['id'].strip(),
+            'display_name': display_name,
             'type': line['type'].split(VALUES_SEPARATOR)[0].strip(),
             'itemImage': line['type'].split(VALUES_SEPARATOR)[1].strip(),
             'image': line['image'].strip(),
+            'offset': line['offset'].strip(),
+            'size': line['size'].strip(),
+            'text_format': line['text_format'].strip(),
+            'examine_text': examine_text
+        }
+    elif line['type'].split(VALUES_SEPARATOR)[0] == 'door':
+        parts = line['type'].split(VALUES_SEPARATOR)
+        open_image = parts[1] if len(parts) > 1 else ''
+        target_scene = parts[2] if len(parts) > 2 else ''
+        close_image = parts[3] if len(parts) > 3 else ''
+        image = line['image'].strip()
+        return {
+            'id': line['id'].strip(),
+            'display_name': display_name,
+            'type': 'door',
+            'image': close_image if close_image else image,
+            'open_image': open_image,
+            'target_scene': target_scene,
             'offset': line['offset'].strip(),
             'size': line['size'].strip(),
             'text_format': line['text_format'].strip(),
@@ -135,6 +160,44 @@ def parse_scene(scene_folder, player_ids):
         'player': player_obj,
         'objects': objects
     }
+
+def find_script_action_names(obj, names):
+    """Recursively walk a parsed JSON value, collecting the 'name' of every
+    { "action": "script", "name": "..." } object found anywhere inside it
+    (keybindings are a flat map of these; UI layouts nest them under
+    onClick/onHover and arbitrarily deep "children" arrays)."""
+    if isinstance(obj, dict):
+        if obj.get('action') == 'script' and obj.get('name'):
+            names.add(obj['name'].strip())
+        for value in obj.values():
+            find_script_action_names(value, names)
+    elif isinstance(obj, list):
+        for item in obj:
+            find_script_action_names(item, names)
+
+def collect_ui_script_names():
+    """Scripts referenced only from assets/keybindings.json or assets/ui/*.json
+    (the 'script' UIAction) — these never appear in game/*.csv, so they'd
+    otherwise be missing from the generated interactions.h declaration and
+    the runtime script registry."""
+    names = set()
+    json_paths = [os.path.join(ASSETS_FOLDER, 'keybindings.json')]
+    ui_dir = os.path.join(ASSETS_FOLDER, 'ui')
+    if os.path.isdir(ui_dir):
+        for fname in os.listdir(ui_dir):
+            if fname.endswith('.json'):
+                json_paths.append(os.path.join(ui_dir, fname))
+    for path in json_paths:
+        if not os.path.exists(path):
+            continue
+        with open(path, encoding='utf-8') as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError as ex:
+                print(f"Warning: could not parse '{path}': {ex}")
+                continue
+        find_script_action_names(data, names)
+    return sorted(names)
 
 def parse_settings():
     config = {}
@@ -442,7 +505,10 @@ def collect_data():
                     dialogue_scripts.append({'function_name': line.action})
     # Settings
     settings = parse_settings()
-    return {'verbs': verbs, 'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'combinations': combinations, 'text_formats': text_formats, 'dialogues': dialogues, 'dialogue_scripts': dialogue_scripts}
+    # Scripts referenced only from keybindings.json / ui/*.json (the "script"
+    # UIAction) — not declared anywhere in game/*.csv.
+    ui_scripts = [{'function_name': name} for name in collect_ui_script_names()]
+    return {'verbs': verbs, 'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'combinations': combinations, 'text_formats': text_formats, 'dialogues': dialogues, 'dialogue_scripts': dialogue_scripts, 'ui_scripts': ui_scripts}
 
 # --- Main: generate via Jinja2 and compile ---
 def main():
@@ -452,14 +518,16 @@ def main():
     all_scripts = list(data['dialogue_scripts'])
     for combo in data['combinations']:
         all_scripts.append({'function_name': combo['function_name']})
+    all_scripts.extend(data['ui_scripts'])
     generate_interaction_files(data['interactions'], all_scripts)
 
     # Deduplicated list of named interaction scripts (object interactions,
-    # dialogue actions and combinations) to register with the runtime script
-    # registry so data can invoke them by name.
+    # dialogue actions, combinations, and scripts referenced only from
+    # keybindings/UI JSON) to register with the runtime script registry so
+    # data can invoke them by name.
     seen = set()
     script_names = []
-    for entry in list(data['interactions']) + list(data['dialogue_scripts']) + list(data['combinations']):
+    for entry in list(data['interactions']) + list(data['dialogue_scripts']) + list(data['combinations']) + list(data['ui_scripts']):
         fn = entry.get('function_name', '')
         if fn and fn not in seen:
             seen.add(fn)

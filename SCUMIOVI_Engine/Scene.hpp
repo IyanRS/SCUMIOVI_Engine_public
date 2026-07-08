@@ -48,8 +48,8 @@ public:
 	std::shared_ptr<GameObject> getGameObject(std::string);
 	void addDebugPoint(Vector2<>);
 	void addDebugLine(Vector2<>, Vector2<>);
-	std::list<Vector2<>> getDebugPoints();
-	std::list<std::array<Vector2<>, 2>> getDebugLines();
+	std::list<Vector2<>>& getDebugPoints();
+	std::list<std::array<Vector2<>, 2>>& getDebugLines();
 	// Called once per frame by the game loop
 	void update(float deltaTime);
 };

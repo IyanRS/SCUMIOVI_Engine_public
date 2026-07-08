@@ -11,6 +11,7 @@ GameObject::GameObject(
 	Vector2<> size) : movement(this), text(this), animator(this), graphics(this)
 {
 	this->name = name;
+	this->displayName = name;
 	this->position = position;
 	this->size = size;
 }
@@ -22,6 +23,7 @@ GameObject::GameObject(
 	std::shared_ptr<Texture> texture) : movement(this), text(this), animator(this), graphics(this) {
 
 	this->name = name;
+	this->displayName = name;
 	this->position = position;
 	this->size = size;
 
@@ -35,6 +37,7 @@ GameObject::GameObject(
 	Vector2<> size,
 	std::shared_ptr<Animation> animation) : movement(this), text(this), animator(this), graphics(this) {
 	this->name = name;
+	this->displayName = name;
 	this->position = position;
 	this->size = size;
 
@@ -225,6 +228,14 @@ bool GameObject::operator!=(const GameObject& o2) const {
 
 std::string& GameObject::getName() {
 	return name;
+}
+
+std::string& GameObject::getDisplayName() {
+	return displayName;
+}
+
+void GameObject::setDisplayName(const std::string& newDisplayName) {
+	displayName = newDisplayName;
 }
 
 void GameObject::setLayer(int layer) {

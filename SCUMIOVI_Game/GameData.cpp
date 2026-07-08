@@ -102,13 +102,13 @@ void ScriptLoader::loadGame(Game& game) {
 		Vector2<int>(36,9),
 		Vector2<int>(37,57)
     );
-    auto door_to_backroomTexture = std::make_shared<Texture>(
-        "door_to_backroom",
+    auto door_to_backroomOpenTexture = std::make_shared<Texture>(
+        "door_to_backroom_open",
         "door.png"
     );
-    auto door_to_barTexture = std::make_shared<Texture>(
-        "door_to_bar",
-        "door.png"
+    auto door_to_barOpenTexture = std::make_shared<Texture>(
+        "door_to_bar_open",
+        "room28_obj_13b_00.png"
     );
 
     // --- Text formats ---
@@ -191,17 +191,20 @@ void ScriptLoader::loadGame(Game& game) {
     );
 
     // Objects
-    auto door_to_bar = std::make_shared<GameObject>(
+    auto backroom_door_to_bar = std::make_shared<Door>(
         "door_to_bar",
         Vector2<>(60,100),
-        Vector2<>(-1.0f, -1.0f),
-        door_to_barTexture
+        nullptr,
+        door_to_barOpenTexture,
+        game.findScene("scummbar")
     );
+    backroom_door_to_bar->setDisplayName("Bar Door");
 
-    door_to_bar->moveToScene(backroom);
-    door_to_bar->setLayer(-1);
+    backroom_door_to_bar->moveToScene(backroom);
+    backroom_door_to_bar->setLayer(-1);
+    auto& door_to_bar = backroom_door_to_bar;
 
-    door_to_bar->setExamineText("The door back to the main bar.");
+    backroom_door_to_bar->setExamineText("The door back to the main bar.");
 
     // Players
     otis->moveToScene(backroom);
@@ -239,58 +242,81 @@ void ScriptLoader::loadGame(Game& game) {
     );
 
     // Objects
-    auto table = std::make_shared<GameObject>(
+    auto scummbar_table = std::make_shared<GameObject>(
         "table",
         Vector2<>(157,115),
         Vector2<>(-1.0f, -1.0f),
         tableTexture
     );
+    scummbar_table->setDisplayName("Table");
 
-    table->moveToScene(scummbar);
-    table->setLayer(1);
-    auto table2 = std::make_shared<GameObject>(
+    scummbar_table->moveToScene(scummbar);
+    scummbar_table->setLayer(1);
+    auto& table = scummbar_table;
+    auto scummbar_table2 = std::make_shared<GameObject>(
         "table2",
         Vector2<>(20,118),
         Vector2<>(-1.0f, -1.0f),
         table2Texture
     );
+    scummbar_table2->setDisplayName("Wooden Table");
 
-    table2->moveToScene(scummbar);
-    table2->setLayer(1);
-    auto mug = std::make_shared<Item>(
+    scummbar_table2->moveToScene(scummbar);
+    scummbar_table2->setLayer(1);
+    auto& table2 = scummbar_table2;
+    auto scummbar_mug = std::make_shared<Item>(
         "mug",
         Vector2<>(124,97),
         mugTexture,
         mugItemTexture
     );
+    scummbar_mug->setDisplayName("Mug");
 
-    mug->moveToScene(scummbar);
-    mug->setLayer(-1);
-    auto stan = std::make_shared<GameObject>(
+    scummbar_mug->moveToScene(scummbar);
+    scummbar_mug->setLayer(-1);
+    auto& mug = scummbar_mug;
+    auto scummbar_stan = std::make_shared<GameObject>(
         "stan",
         Vector2<>(155,68),
         Vector2<>(-1.0f, -1.0f),
         stanTexture
     );
+    scummbar_stan->setDisplayName("Stan");
 
-    stan->moveToScene(scummbar);
-    stan->setLayer(-1);
-    auto door_to_backroom = std::make_shared<GameObject>(
+    scummbar_stan->moveToScene(scummbar);
+    scummbar_stan->setLayer(-1);
+    auto& stan = scummbar_stan;
+    auto scummbar_door_to_backroom = std::make_shared<Door>(
         "door_to_backroom",
-        Vector2<>(280,68),
-        Vector2<>(-1.0f, -1.0f),
-        door_to_backroomTexture
+        Vector2<>(594,73),
+        nullptr,
+        door_to_backroomOpenTexture,
+        game.findScene("backroom")
     );
+    scummbar_door_to_backroom->setDisplayName("Backroom Door");
 
-    door_to_backroom->moveToScene(scummbar);
-    door_to_backroom->setLayer(-1);
+    scummbar_door_to_backroom->moveToScene(scummbar);
+    scummbar_door_to_backroom->setLayer(-1);
+    auto& door_to_backroom = scummbar_door_to_backroom;
+    auto scummbar_door_to_bar = std::make_shared<Door>(
+        "door_to_bar",
+        Vector2<>(32,72),
+        nullptr,
+        door_to_barOpenTexture,
+        game.findScene("scummbar")
+    );
+    scummbar_door_to_bar->setDisplayName("Bar Door");
 
-    table->setExamineText("It's a sturdy old table. I wonder how many drinks have been spilled on it.");
-    table2->setExamineText("Another table. It matches the first one.");
-    mug->setExamineText("A dented tin mug. It's empty.");
-    stan->setTextFormat(stan_text_formatFormat);
-    stan->setExamineText("A slick-looking salesman with an unnervingly wide smile.");
-    door_to_backroom->setExamineText("A heavy wooden door leading further into the bar.");
+    scummbar_door_to_bar->moveToScene(scummbar);
+    scummbar_door_to_bar->setLayer(-1);
+
+    scummbar_table->setExamineText("It's a sturdy old table. I wonder how many drinks have been spilled on it.");
+    scummbar_table2->setExamineText("Another table. It matches the first one.");
+    scummbar_mug->setExamineText("A dented tin mug. It's empty.");
+    scummbar_stan->setTextFormat(stan_text_formatFormat);
+    scummbar_stan->setExamineText("A slick-looking salesman with an unnervingly wide smile.");
+    scummbar_door_to_backroom->setExamineText("A heavy wooden door leading further into the bar.");
+    scummbar_door_to_bar->setExamineText("The door back to the main bar.");
 
     // Players
     guybrush->moveToScene(scummbar);
@@ -440,10 +466,9 @@ void ScriptLoader::loadGame(Game& game) {
     game.registerScript("push_stan", push_stan);
     game.registerScript("push_table", push_table);
     game.registerScript("pull_table2", pull_table2);
-    game.registerScript("go_to_backroom", go_to_backroom);
-    game.registerScript("go_to_bar", go_to_bar);
     game.registerScript("dialogue_script_test", dialogue_script_test);
     game.registerScript("use_mug_on_table", use_mug_on_table);
+    game.registerScript("show_debug", show_debug);
 
     stan->addVerbInteraction(game.getVerb("give"), "mug", game.scriptEvent("give_mug_stan"));
     stan->addVerbInteraction(game.getVerb("talk"), Event([=](EventInfo e) {
@@ -454,8 +479,6 @@ void ScriptLoader::loadGame(Game& game) {
     stan->addVerbInteraction(game.getVerb("push"), game.scriptEvent("push_stan"));
     table->addVerbInteraction(game.getVerb("push"), game.scriptEvent("push_table"));
     table2->addVerbInteraction(game.getVerb("pull"), game.scriptEvent("pull_table2"));
-    door_to_backroom->addVerbInteraction(game.getVerb("open"), game.scriptEvent("go_to_backroom"));
-    door_to_bar->addVerbInteraction(game.getVerb("open"), game.scriptEvent("go_to_bar"));
 
     // --- Item combinations ---
     game.addCombination("mug", "table", game.scriptEvent("use_mug_on_table"));

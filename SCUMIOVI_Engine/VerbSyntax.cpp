@@ -49,7 +49,7 @@ std::string VerbSyntax::getInfo(std::vector<std::shared_ptr<GameObject>> objects
 	}
 
 	for (int i = 0; i < nObjects; i++) {
-		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$object" + std::to_string(i)), nonNullObjects[i]->getName());
+		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$object" + std::to_string(i)), nonNullObjects[i]->getDisplayName());
 	}
 	return syntaxToUse;
 }
@@ -83,10 +83,10 @@ std::string VerbSyntax::getInfo(std::shared_ptr<GameObject> selected, std::share
 	}
 
 	if (selected) {
-		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$selected"), selected->getName());
+		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$selected"), selected->getDisplayName());
 	}
 	if (target) {
-		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$target"), target->getName());
+		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$target"), target->getDisplayName());
 	}
 	
 	return syntaxToUse;

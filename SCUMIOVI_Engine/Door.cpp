@@ -7,13 +7,17 @@ Door::Door(std::string name,
 	Vector2<> position,
 	std::shared_ptr<Texture> closedTexture, 
 	std::shared_ptr<Texture> openTexture,
-	std::shared_ptr<Scene> scene) : GameObject::GameObject(name, position, Vector2<>(-1, -1), closedTexture), 
+	std::shared_ptr<Scene> scene) : GameObject::GameObject(name, position, Vector2<>(-1, -1)), 
 	sceneTransition(name + "Transition", position, getSize(), scene) 
 {
-	addTexture(closedTexture);
 	addTexture(openTexture);
-
-	setTexture(closedTexture->getName());
+	if (closedTexture) {
+		addTexture(closedTexture);
+		setTexture(closedTexture->getName());
+	} else {
+		setTexture(openTexture->getName());
+		setVisible(false);
+	}
 	setState(CLOSED);
 
 	Game& game = Game::getInstance();
@@ -30,7 +34,11 @@ Door::Door(std::string name,
 		pos.x -= e.player.getSize().x * 0.5f;
 		pos.y -= e.player.getSize().y * 0.8f;
 		e.player.moveToAtSpeed(pos, 100, Event([this, closedTexture](EventInfo e) {
-			setTexture(closedTexture->getName());
+			if (closedTexture) {
+				setTexture(closedTexture->getName());
+			} else {
+				setVisible(false);
+			}
 			e.player.say(tr("Closed"));
 			Game& game = Game::getInstance();
 			setDefaultVerb(game.openVerb);
@@ -64,6 +72,7 @@ Door::Door(std::string name,
 		pos.y -= e.player.getSize().y * 0.8f;
 		e.player.moveToAtSpeed(pos, 100, Event([this, openTexture](EventInfo e) {
 			setTexture(openTexture->getName());
+			setVisible(true);
 			Game& game = Game::getInstance();
 			setDefaultVerb(game.closeVerb);
 			setState(OPEN);

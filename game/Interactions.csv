@@ -4,5 +4,3 @@ stan,talk,,dialogue(stan.txt)
 stan,push,,push_stan
 table,push,,push_table
 table2,pull,,pull_table2
-door_to_backroom,open,,go_to_backroom
-door_to_bar,open,,go_to_bar

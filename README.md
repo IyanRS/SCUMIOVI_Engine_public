@@ -314,6 +314,13 @@ python generate.py
 
 This requires Python 3 with Jinja2 (`pip install jinja2`).
 
+Custom scripts referenced by name (`{ "action": "script", "name": "..." }`)
+from `assets/keybindings.json` or any `assets/ui/*.json` layout are picked up
+by the same regeneration step — codegen scans those files for script
+references and declares/registers them in `interactions.h`/`GameData.cpp`
+alongside the ones referenced from `game/*.csv`. Regenerate after adding a
+new keybinding or UI button that points at a not-yet-declared script.
+
 ## Dependencies
 
 - [SDL3](https://www.libsdl.org/) — windowing, rendering, input, audio.

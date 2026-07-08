@@ -31,6 +31,7 @@ class GameObject : public Interactable, public std::enable_shared_from_this<Game
 	friend class GraphicsComponent;
 
 	std::string name;
+	std::string displayName;
 	Vector2<> position;
 	Vector2<> size;
 	bool interactable = true;
@@ -91,6 +92,8 @@ public:
 	void destroy();
 	bool isVisible();
 	std::string& getName();
+	std::string& getDisplayName();
+	void setDisplayName(const std::string& displayName);
 	bool operator==(const GameObject& p2) const;
 	bool operator!=(const GameObject& p2) const;
 	void setLayer(int layer);

@@ -75,11 +75,11 @@ void Scene::addDebugLine(Vector2<> p1, Vector2<> p2) {
 	debugLines.push_back({p1, p2});
 }
 
-std::list<Vector2<>> Scene::getDebugPoints() {
+std::list<Vector2<>>& Scene::getDebugPoints() {
 	return debugPoints;
 }
 
-std::list<std::array<Vector2<>, 2>> Scene::getDebugLines() {
+std::list<std::array<Vector2<>, 2>>& Scene::getDebugLines() {
 	return debugLines;
 }
 
