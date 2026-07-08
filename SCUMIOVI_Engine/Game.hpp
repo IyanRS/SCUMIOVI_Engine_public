@@ -95,7 +95,9 @@ public:
 
 	void startGame();
 	std::shared_ptr<Scene> getScene();
-	void changeScene(std::shared_ptr<Scene> newScene, float fadeDuration = 0.0f);
+	// callback fires once the transition is fully done — after the
+	// fade-from-black too, if fadeDuration > 0 — not just after the swap.
+	void changeScene(std::shared_ptr<Scene> newScene, float fadeDuration = 0.0f, Event callback = Event());
 	void setStartEvent(Event);
 	void setEndEvent(Event);
 	void setDefaultClickEvent(Event);

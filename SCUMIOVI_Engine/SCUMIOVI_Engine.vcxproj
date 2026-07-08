@@ -69,6 +69,8 @@
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="AnimationComponent.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Cutscene.cpp" />
+    <ClCompile Include="CutsceneLoader.cpp" />
     <ClCompile Include="Delay.cpp" />
     <ClCompile Include="Dialogue.cpp" />
     <ClCompile Include="DialogueNode.cpp" />
@@ -117,6 +119,8 @@
     <ClInclude Include="AnimationComponent.hpp" />
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="Common.hpp" />
+    <ClInclude Include="Cutscene.hpp" />
+    <ClInclude Include="CutsceneLoader.hpp" />
     <ClInclude Include="Dialogue.hpp" />
     <ClInclude Include="DialogueNode.hpp" />
     <ClInclude Include="DialogueOption.hpp" />

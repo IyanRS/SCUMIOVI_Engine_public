@@ -170,6 +170,61 @@ guybrush->setTalkAnimations(talkRight, talkLeft, nullptr, nullptr);
 guybrush->say("I'm looking for a three-headed monkey.");
 ```
 
+## Cutscenes
+
+Scripted, non-interactive sequences (camera pans, actor walks, dialogue,
+fades, scene changes) are built with `Cutscene`, a fluent builder that
+produces an ordinary `Event` — it doesn't introduce a new execution model,
+just automates the callback-nesting a sequence like this would otherwise
+require by hand:
+
+```cpp
+Cutscene()
+    .moveCamera(scene->getCamera(), pos, 2.0f)
+    .walk(guybrush, doorPos, 3.0f)
+    .say(guybrush, "Where's the map?")
+    .parallel({
+        Cutscene().walk(stan, spot1, 1.5f),
+        Cutscene().fadeToBlack(1.0f)
+    })
+    .changeScene(nextScene, 0.5f)
+    .disableMovementFor(guybrush)   // re-enabled automatically when it ends
+    .build();                       // -> Event
+```
+
+`.parallel()` runs several sub-sequences concurrently and only continues once
+every branch finishes. `Cutscene::requestSkip()` (wired to the `skipCutscene`
+UI/key-binding action) jumps a running cutscene straight to its end at the
+next step boundary — it won't cut a step already in progress short, but skips
+everything queued after it.
+
+The same step vocabulary is available as **data** via `CutsceneLoader`,
+mirroring how dialogue and UI are authored:
+
+```json
+{
+  "name": "intro_cutscene",
+  "disableMovementFor": "guybrush",
+  "steps": [
+    { "type": "walk", "object": "guybrush", "position": [120, 80], "seconds": 3.0 },
+    { "type": "say", "object": "guybrush", "text": "Where's the map?" },
+    { "type": "fadeToBlack", "seconds": 1.0 },
+    { "type": "changeScene", "scene": "nextRoom", "fadeDuration": 0.5 },
+    { "type": "script", "name": "someCustomEffect", "waitSeconds": 0.5 }
+  ]
+}
+```
+
+`object`/`scene` names resolve against the party and the current scene (see
+`CutsceneLoader.hpp` for the full step list, including `parallel`).
+`CutsceneLoader::loadAndRegister(game, path, name)` loads a file and registers
+it as a named script in one call, so it can be triggered from an object
+interaction or dialogue action exactly like any other script. A `script` step
+runs a `Game::registerScript`'d action and, since a plain script has no way to
+report "I'm done," an optional `waitSeconds` covers fixed-duration custom
+effects — a script whose duration isn't known up front should be composed
+with the C++ `Cutscene` builder instead.
+
 ## Key bindings
 
 What each key does is game data, not an engine `switch` statement. `assets/keybindings.json`

@@ -26,6 +26,8 @@
 #include "UILoader.hpp"
 #include "UIAction.hpp"
 #include "KeyBindings.hpp"
+#include "Cutscene.hpp"
+#include "CutsceneLoader.hpp"
 #include "DialogueNode.hpp"
 #include "DialogueOption.hpp"
 #include "Texture.hpp"

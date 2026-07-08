@@ -416,8 +416,13 @@ void Renderer::updateFade(float dt) {
 		if (fadeAlpha >= fadeTarget) {
 			fadeAlpha = fadeTarget;
 			fading = false;
-			fadeCompleteEvent.execute();
+			// Clear before running: if the callback starts a new fade (e.g.
+			// Game::changeScene's fade-to-black completion kicking off the
+			// fade-from-black), that assigns a new fadeCompleteEvent which
+			// must survive — clearing afterward would wipe it out again.
+			Event callback = fadeCompleteEvent;
 			fadeCompleteEvent = Event();
+			callback.execute();
 		}
 	}
 	else if (fadeAlpha > fadeTarget) {
@@ -425,8 +430,9 @@ void Renderer::updateFade(float dt) {
 		if (fadeAlpha <= fadeTarget) {
 			fadeAlpha = fadeTarget;
 			fading = false;
-			fadeCompleteEvent.execute();
+			Event callback = fadeCompleteEvent;
 			fadeCompleteEvent = Event();
+			callback.execute();
 		}
 	}
 }

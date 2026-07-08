@@ -174,14 +174,14 @@ std::shared_ptr<Scene> Game::getScene() {
 	return currentScene;
 }
 
-void Game::changeScene(std::shared_ptr<Scene> newScene, float fadeDuration) {
+void Game::changeScene(std::shared_ptr<Scene> newScene, float fadeDuration, Event callback) {
 	if (fadeDuration > 0.0f && !renderer.isFading()) {
-		renderer.fadeToBlack(fadeDuration, Event([this, newScene, fadeDuration]() {
+		renderer.fadeToBlack(fadeDuration, Event([this, newScene, fadeDuration, callback]() {
 			currentScene = newScene;
 			if (currentPlayer) {
 				currentPlayer->moveToScene(newScene);
 			}
-			renderer.fadeFromBlack(fadeDuration);
+			renderer.fadeFromBlack(fadeDuration, callback);
 		}));
 	}
 	else {
@@ -189,6 +189,7 @@ void Game::changeScene(std::shared_ptr<Scene> newScene, float fadeDuration) {
 		if (currentPlayer) {
 			currentPlayer->moveToScene(newScene);
 		}
+		callback.execute();
 	}
 }
 

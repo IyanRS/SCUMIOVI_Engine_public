@@ -1,6 +1,7 @@
 #include "UIAction.hpp"
 #include "Game.hpp"
 #include "UILayout.hpp"
+#include "Cutscene.hpp"
 
 #include <SDL3/SDL.h>
 
@@ -83,6 +84,11 @@ Event resolveUIAction(const json& actionJson) {
 		float fadeDuration = actionJson.value("fadeDuration", 0.0f);
 		return Event(std::function<void(EventInfo)>([fadeDuration](EventInfo e) {
 			e.game.switchToPreviousPlayer(fadeDuration);
+		}));
+	}
+	if (action == "skipCutscene") {
+		return Event(std::function<void(EventInfo)>([](EventInfo) {
+			Cutscene::requestSkip();
 		}));
 	}
 	if (action == "save") {
