@@ -81,12 +81,15 @@ public:
 	void addOverlapEvent(std::shared_ptr<GameObject> object, Event event);
 	std::map<std::shared_ptr<GameObject>, Event>& getOverlapEvents();
 	Vector2<> getDirectionVector();
+	Vector2<> getLastMovementDirection() const;
 	void moveToScene(std::shared_ptr<Scene> scene);
 	std::shared_ptr<Scene> getScene();
 	void setScene(std::shared_ptr<Scene> scene);
 	void moveTo(Vector2<> pos, float seconds = 0, Event callback = Event());
 	void moveToAtSpeed(Vector2<> pos, float speed, Event callback = Event());
 	void moveToAtSpeed(std::vector<Vector2<>> positions, float speed, std::vector<Event> = std::vector<Event>());
+	Vector2<> getMovementTarget() const;
+	void offsetMovementTarget(Vector2<> offset);
 	void toggleVisibility();
 	void setVisible(bool visible);
 	void destroy();

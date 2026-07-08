@@ -141,6 +141,15 @@ void ScriptLoader::loadGame(Game& game) {
     });
     {{ s.name }}->setWalkableArea(std::move({{ s.name }}Walk));
 
+    {% if s.zones %}
+    {{ s.name }}->getCamera().setZones({
+        {% for z in s.zones %}
+        { {{ z.minX }}.0f, {{ z.maxX }}.0f, Vector2<>({{ z.targetX }}.0f, {{ z.targetY }}.0f) },
+        {% endfor %}
+    });
+    {{ s.name }}->getCamera().setObjectToFollow({{ s.player.id }});
+    {% endif %}
+
     // Backgrounds
     {% for bg in s.bg %}
     auto {{ s.name }}Bg = {{ s.name }}->addBackground(
@@ -285,6 +294,7 @@ void ScriptLoader::loadGame(Game& game) {
         {% endfor %}
         {% if dlg.lines[-1].action %}
             {{ ' ' * (4 + 4 * dlg.lines|length) }}e.game.scriptEvent("{{ dlg.lines[-1].action }}").execute(e);
+            {{ ' ' * (4 + 4 * dlg.lines|length) }}{{ label }}Node->showOptions();
         {% else %}
             {{ ' ' * (4 + 4 * dlg.lines|length) }}{{ label }}Node->showOptions();
         {% endif %}

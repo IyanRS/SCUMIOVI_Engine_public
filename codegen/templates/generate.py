@@ -22,6 +22,7 @@ VALUES_SEPARATOR = ';'
 WALKABLE_AREA_FILE = 'WalkableArea.csv'
 BACKGROUND_FILE = 'Background.csv'
 SCENE_OBJECTS_FILE = 'GameObjects.csv'
+CAMERA_ZONES_FILE = 'CameraZones.csv'
 
 # --- Parsing helpers ---
 def parse_vector(coords, type_hint=""):
@@ -153,12 +154,27 @@ def parse_scene(scene_folder, player_ids):
                 else:
                     objects.append(entry)
 
+    # 4) camera zones (optional)
+    zones = []
+    zones_path = os.path.join(scene_folder, CAMERA_ZONES_FILE)
+    if os.path.exists(zones_path):
+        with open(zones_path, newline='') as f:
+            reader = csv.DictReader(f, delimiter=VALUES_SEPARATOR)
+            for row in reader:
+                zones.append({
+                    'minX': row['minX'].strip(),
+                    'maxX': row['maxX'].strip(),
+                    'targetX': row['targetX'].strip(),
+                    'targetY': row['targetY'].strip()
+                })
+
     return {
         'name':   scene_name,
         'walk':   walk,
         'bg':     bg,
         'player': player_obj,
-        'objects': objects
+        'objects': objects,
+        'zones':  zones
     }
 
 def find_script_action_names(obj, names):

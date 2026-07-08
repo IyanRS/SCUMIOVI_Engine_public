@@ -20,6 +20,7 @@ public:
 	}
 	Vector2<T> operator-(const Vector2<T>& v2) const { return Vector2(x - v2.x, y - v2.y); }
 	Vector2<T> operator+(const Vector2<T>& v2) const { return Vector2(x + v2.x, y + v2.y); }
+	Vector2<T>& operator+=(const Vector2<T>& v2) { x += v2.x; y += v2.y; return *this; }
 	Vector2<T> operator*(float value) const { return Vector2(x*value, y*value); }
 	Vector2<float> operator/(const float value) const { return Vector2(x / value, y / value); }
 	bool operator==(const Vector2<T>& v2) const { return x == v2.x && y == v2.y; }

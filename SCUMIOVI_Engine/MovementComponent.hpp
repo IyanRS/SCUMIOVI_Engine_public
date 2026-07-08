@@ -34,6 +34,8 @@ public:
 	// object doesn't keep interpolating toward a now-irrelevant destination.
 	void stop();
 	bool isMoving() const;
+	Vector2<> getTargetPosition() const;
+	void offsetTargetPosition(Vector2<> offset);
 
 	Vector2<> getDirectionVector();
 	Vector2<> getLastMovementDirection() const;

@@ -161,6 +161,14 @@ void GameObject::moveToAtSpeed(std::vector<Vector2<>> positions, float speed, st
 	movement.moveToAtSpeed(positions, speed, callbacks);
 }
 
+Vector2<> GameObject::getMovementTarget() const {
+	return movement.getTargetPosition();
+}
+
+void GameObject::offsetMovementTarget(Vector2<> offset) {
+	movement.offsetTargetPosition(offset);
+}
+
 void GameObject::say(Text& textToSay, float seconds, Event callback) {
 	text.say(textToSay, seconds, callback);
 }
@@ -179,6 +187,10 @@ std::map<std::shared_ptr<GameObject>, Event>& GameObject::getOverlapEvents() {
 
 Vector2<> GameObject::getDirectionVector() {
 	return movement.getDirectionVector();
+}
+
+Vector2<> GameObject::getLastMovementDirection() const {
+	return movement.getLastMovementDirection();
 }
 
 void GameObject::update(float deltaTime) {

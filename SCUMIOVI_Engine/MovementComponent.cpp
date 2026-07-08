@@ -82,6 +82,18 @@ Vector2<> MovementComponent::getDirectionVector() {
 	return (moveDest - owner->getPosition()).normalized();
 }
 
+Vector2<> MovementComponent::getTargetPosition() const {
+	if (moving) return moveDest;
+	return owner->getPosition();
+}
+
+void MovementComponent::offsetTargetPosition(Vector2<> offset) {
+	if (moving) {
+		moveStart += offset;
+		moveDest += offset;
+	}
+}
+
 Vector2<> MovementComponent::getLastMovementDirection() const {
 	return lastMovementDirection;
 }

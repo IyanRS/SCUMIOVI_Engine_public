@@ -185,6 +185,7 @@ void ScriptLoader::loadGame(Game& game) {
     });
     backroom->setWalkableArea(std::move(backroomWalk));
 
+
     // Backgrounds
     auto backroomBg = backroom->addBackground(
         "backroom.png", Vector2<int>(640,144)
@@ -235,6 +236,12 @@ void ScriptLoader::loadGame(Game& game) {
         Vector2<>(40,127), 
     });
     scummbar->setWalkableArea(std::move(scummbarWalk));
+
+    scummbar->getCamera().setZones({
+        { 0.0f, 320.0f, Vector2<>(0.0f, 0.0f) },
+        { 320.0f, 640.0f, Vector2<>(320.0f, 0.0f) },
+    });
+    scummbar->getCamera().setObjectToFollow(guybrush);
 
     // Backgrounds
     auto scummbarBg = scummbar->addBackground(
@@ -426,6 +433,7 @@ void ScriptLoader::loadGame(Game& game) {
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                         e.game.scriptEvent("dialogue_script_test").execute(e);
+                        scripttestNode->showOptions();
              })));  
     })));
 
