@@ -54,6 +54,7 @@ def parse_player(line):
 
 # Parse single object line into a dict
 def parse_object(line):
+    examine_text = line.get('examine_text', '').strip()
     if line['type'] == '':
         return {
             'id': line['id'].strip(),
@@ -61,7 +62,8 @@ def parse_object(line):
             'image': line['image'].strip(),
             'offset': line['offset'].strip(),
             'size': line['size'].strip(),
-            'text_format': line['text_format'].strip()
+            'text_format': line['text_format'].strip(),
+            'examine_text': examine_text
         }
     elif line['type'].split(VALUES_SEPARATOR)[0] == 'item':
         return {
@@ -71,7 +73,8 @@ def parse_object(line):
             'image': line['image'].strip(),
             'offset': line['offset'].strip(),
             'size': line['size'].strip(),
-            'text_format': line['text_format'].strip()
+            'text_format': line['text_format'].strip(),
+            'examine_text': examine_text
         }
 
 def parse_scene(scene_folder, player_ids):

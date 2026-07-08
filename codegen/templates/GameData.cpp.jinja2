@@ -100,9 +100,9 @@ void ScriptLoader::loadGame(Game& game) {
     {{ p.id }}->addAnimation({{ anim }});
     {% endfor %}
 
-    auto idleTexture = std::make_shared<Texture>({{p.animationMoveRight}}->getFrames()[0]);
-    idleTexture->setName("idle");
-    {{ p.id }}->addTexture(idleTexture);
+    auto {{ p.id }}IdleTexture = std::make_shared<Texture>({{p.animationMoveRight}}->getFrames()[0]);
+    {{ p.id }}IdleTexture->setName("idle");
+    {{ p.id }}->addTexture({{ p.id }}IdleTexture);
     {{ p.id }}->setTexture("idle");
 
     {{ p.id }}->setMovementAnimations(
@@ -123,6 +123,7 @@ void ScriptLoader::loadGame(Game& game) {
     // --- Scenes ---
     {% for s in scenes %}
     auto {{ s.name }} = std::make_shared<Scene>();
+    game.registerScene("{{ s.name }}", {{ s.name }});
     // Walkable area
     auto {{ s.name }}Walk = std::make_unique<WalkableArea>(std::initializer_list<Vector2<>>{
         {% for pt in s.walk %}
@@ -167,9 +168,15 @@ void ScriptLoader::loadGame(Game& game) {
     {{ o.id }}->setLayer({{ o.layer }});
     {% endfor %}
 
+    {% set scene_object_ids = s.objects | map(attribute='id') | list %}
     {% for obj in objects %}
+    {% if obj.id in scene_object_ids %}
     {% if obj.text_format %}
     {{obj.id}}->setTextFormat({{obj.text_format}}Format);
+    {% endif %}
+    {% if obj.examine_text %}
+    {{obj.id}}->setExamineText("{{ cpp_string(obj.examine_text) }}");
+    {% endif %}
     {% endif %}
     {% endfor %}
 
@@ -312,5 +319,12 @@ void ScriptLoader::loadGame(Game& game) {
 
     game.bindLeftClickToVerb(game.selectedVerb);
     game.bindRightClickToVerb(game.getDefaultVerb());
+
+    // --- Intro cutscene ---
+    // Optional: assets/cutscenes/intro.json is authored data, not engine or
+    // game logic; skip silently if the game doesn't ship one.
+    if (CutsceneLoader::loadAndRegister(game, ResourceManager::getCutscenesDirectory() + "intro.json", "introCutscene")) {
+        game.scriptEvent("introCutscene").execute();
+    }
 
     }

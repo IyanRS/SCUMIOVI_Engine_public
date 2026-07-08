@@ -245,6 +245,36 @@ The sample game's `assets/ui/pause.json` (Resume / Save-Load / Quit) and
 `assets/ui/saveload.json` (3 save slots) show the overlay pattern this enables:
 Escape pauses the scene and shows a menu built entirely from data.
 
+## Sample game
+
+`SCUMIOVI_Game` (the `game/` + `assets/` data driving it) is a small,
+deliberately minimal demo whose only job is to exercise every engine system
+end-to-end:
+
+- **Verbs**: all ten verbs from `Verbs.csv` are wired to at least one object
+  (`push`/`pull`/`open`/`close`/`lookat` were previously defined but unused).
+- **Examine text**: objects carry an `examine_text` column (`Objects.csv`)
+  resolved automatically by the `lookat` verb's default event.
+- **Dialogue with state**: `game/Dialogues/stan.txt` branches on a flag
+  (`if:gave_mug_to_stan`) set by the `give_mug_stan` interaction script.
+- **Item combinations**: `mug` used on `table` (`Combinations.csv`).
+- **Localization**: the pause menu has EN/ES buttons wired to `setLocale`.
+- **Multi-character party**: a second player, `otis`, is registered
+  (reusing Stan's existing sprite as a placeholder — no new art). **Tab**
+  switches the active party member via `switchToNextPlayer`.
+- **A second room**: `game/Scenes/backroom/` plus a `door_to_backroom` /
+  `door_to_bar` pair of objects (`open` verb) demonstrate `changeScene` with
+  a fade between two registered scenes.
+- **A cutscene**: `assets/cutscenes/intro.json` plays once at startup via
+  `CutsceneLoader`, showcasing camera movement, `say`, and fades together.
+  **Space** skips it (`skipCutscene`).
+
+**Placeholder assets you'll need to draw in:** `assets/textures/door.png`
+(used by both doors) and the `backroom.png` background referenced by
+`game/Scenes/backroom/Background.csv`. Missing textures are logged and
+skipped rather than crashing (`ResourceManager::loadTexture`), so the demo
+runs today with those two spots simply blank until real art is dropped in.
+
 ## Building
 
 ### Engine + sample game (Visual Studio)

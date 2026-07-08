@@ -1,0 +1,11 @@
+{
+  "name": "intro_cutscene",
+  "steps": [
+    { "type": "fadeToBlack", "seconds": 0.0 },
+    { "type": "fadeFromBlack", "seconds": 1.0 },
+    { "type": "say", "object": "guybrush", "text": "Hello world!", "seconds": 1.0 },
+    { "type": "moveCamera", "position": [320, 0], "seconds": 1.0 },
+    { "type": "wait", "seconds": 0.5 },
+    { "type": "moveCamera", "position": [0, 0], "seconds": 1.0 }
+  ]
+}

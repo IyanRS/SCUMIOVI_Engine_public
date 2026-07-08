@@ -70,6 +70,14 @@ void ScriptLoader::loadGame(Game& game) {
         1
     );
     auto guybrushIdleLeft = guybrushIdleRight->getMirrored("guybrushIdleLeft");
+    auto otisIdleRight = std::make_shared<Animation>(
+        "otisIdleRight",
+        "Stan_transparent.png",
+        Vector2<int>(36,9),
+        Vector2<int>(37,57),
+        1
+    );
+    auto otisIdleLeft = otisIdleRight->getMirrored("otisIdleLeft");
 
     // --- Textures for objects ---
     auto tableTexture = std::make_shared<Texture>(
@@ -93,6 +101,14 @@ void ScriptLoader::loadGame(Game& game) {
         "Stan_transparent.png",
 		Vector2<int>(36,9),
 		Vector2<int>(37,57)
+    );
+    auto door_to_backroomTexture = std::make_shared<Texture>(
+        "door_to_backroom",
+        "door.png"
+    );
+    auto door_to_barTexture = std::make_shared<Texture>(
+        "door_to_bar",
+        "door.png"
     );
 
     // --- Text formats ---
@@ -118,9 +134,9 @@ void ScriptLoader::loadGame(Game& game) {
     // --- Players ---
     auto guybrush = std::make_shared<Player>("guybrush", Vector2<>(0.0f, 0.0f));
 
-    auto idleTexture = std::make_shared<Texture>(guybrushWalkRight->getFrames()[0]);
-    idleTexture->setName("idle");
-    guybrush->addTexture(idleTexture);
+    auto guybrushIdleTexture = std::make_shared<Texture>(guybrushWalkRight->getFrames()[0]);
+    guybrushIdleTexture->setName("idle");
+    guybrush->addTexture(guybrushIdleTexture);
     guybrush->setTexture("idle");
 
     guybrush->setMovementAnimations(
@@ -136,9 +152,63 @@ void ScriptLoader::loadGame(Game& game) {
     guybrush->setTextFormat(defaultFormat);
 
     game.addPlayer(guybrush);
+    auto otis = std::make_shared<Player>("otis", Vector2<>(0.0f, 0.0f));
+
+    auto otisIdleTexture = std::make_shared<Texture>(otisIdleRight->getFrames()[0]);
+    otisIdleTexture->setName("idle");
+    otis->addTexture(otisIdleTexture);
+    otis->setTexture("idle");
+
+    otis->setMovementAnimations(
+        otisIdleRight,
+        otisIdleLeft,
+        nullptr,
+        nullptr,
+        otisIdleRight,
+        otisIdleLeft,
+        nullptr,
+        nullptr
+    );
+    otis->setTextFormat(stan_text_formatFormat);
+
+    game.addPlayer(otis);
 
     // --- Scenes ---
+    auto backroom = std::make_shared<Scene>();
+    game.registerScene("backroom", backroom);
+    // Walkable area
+    auto backroomWalk = std::make_unique<WalkableArea>(std::initializer_list<Vector2<>>{
+        Vector2<>(40,140), 
+        Vector2<>(40,90), 
+        Vector2<>(600,90), 
+        Vector2<>(600,140), 
+    });
+    backroom->setWalkableArea(std::move(backroomWalk));
+
+    // Backgrounds
+    auto backroomBg = backroom->addBackground(
+        "backroom.png", Vector2<int>(640,144)
+    );
+
+    // Objects
+    auto door_to_bar = std::make_shared<GameObject>(
+        "door_to_bar",
+        Vector2<>(60,100),
+        Vector2<>(-1.0f, -1.0f),
+        door_to_barTexture
+    );
+
+    door_to_bar->moveToScene(backroom);
+    door_to_bar->setLayer(-1);
+
+    door_to_bar->setExamineText("The door back to the main bar.");
+
+    // Players
+    otis->moveToScene(backroom);
+    otis->setPosition(Vector2<>(300,100));
+
     auto scummbar = std::make_shared<Scene>();
+    game.registerScene("scummbar", scummbar);
     // Walkable area
     auto scummbarWalk = std::make_unique<WalkableArea>(std::initializer_list<Vector2<>>{
         Vector2<>(100,113), 
@@ -205,8 +275,22 @@ void ScriptLoader::loadGame(Game& game) {
 
     stan->moveToScene(scummbar);
     stan->setLayer(-1);
+    auto door_to_backroom = std::make_shared<GameObject>(
+        "door_to_backroom",
+        Vector2<>(280,68),
+        Vector2<>(-1.0f, -1.0f),
+        door_to_backroomTexture
+    );
 
+    door_to_backroom->moveToScene(scummbar);
+    door_to_backroom->setLayer(-1);
+
+    table->setExamineText("It's a sturdy old table. I wonder how many drinks have been spilled on it.");
+    table2->setExamineText("Another table. It matches the first one.");
+    mug->setExamineText("A dented tin mug. It's empty.");
     stan->setTextFormat(stan_text_formatFormat);
+    stan->setExamineText("A slick-looking salesman with an unnervingly wide smile.");
+    door_to_backroom->setExamineText("A heavy wooden door leading further into the bar.");
 
     // Players
     guybrush->moveToScene(scummbar);
@@ -283,27 +367,15 @@ void ScriptLoader::loadGame(Game& game) {
              })));  
     })));
 
-        // --- DialogueNode for "label3" ---
+        // --- DialogueNode for "mugthanks" ---
 
-    auto label3Node = std::make_shared<DialogueNode>();
-    label3Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
+    auto mugthanksNode = std::make_shared<DialogueNode>();
+    mugthanksNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
-            tr("Are you ok?"),
+            tr("Best mug I've ever owned"),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
-                    label3Node->showOptions();
-             })));  
-    })));
-
-        // --- DialogueNode for "label4" ---
-
-    auto label4Node = std::make_shared<DialogueNode>();
-    label4Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
-            stan->say(
-            tr("..."),
-            0.0f,
-            Event(std::function<void(EventInfo)>([=](EventInfo e) {
-                    label4Node->showOptions();
+                    mugthanksNode->showOptions();
              })));  
     })));
 
@@ -324,7 +396,7 @@ void ScriptLoader::loadGame(Game& game) {
     auto scripttestNode = std::make_shared<DialogueNode>();
     scripttestNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
             stan->say(
-            tr("What do you want to try?"),
+            tr("Sure, go ahead!"),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                         e.game.scriptEvent("dialogue_script_test").execute(e);
@@ -337,34 +409,41 @@ void ScriptLoader::loadGame(Game& game) {
         label2Node
     );
     auto mainNodeOption2 = std::make_shared<DialogueOption>(
+        "About that mug...",
+        mugthanksNode
+    );
+    mainNodeOption2->setCondition([]() { return Game::getInstance().getGameState().getFlag("gave_mug_to_stan"); });
+    auto mainNodeOption3 = std::make_shared<DialogueOption>(
         "I need to go",
         byelabelNode
-    );
-    auto mainNodeOption3 = std::make_shared<DialogueOption>(
-        "AAAAa aAaAAaa",
-        label3Node
     );
     auto label2NodeOption1 = std::make_shared<DialogueOption>(
         "Well, I need to go",
         byelabelNode
     );
     auto label2NodeOption2 = std::make_shared<DialogueOption>(
-        "Let me test something",
+        "Let's try to execute a script",
         scripttestNode
     );
-    auto label3NodeOption1 = std::make_shared<DialogueOption>(
-        "AaaaAA aAAAAAAaa AAa",
-        label4Node
+    auto mugthanksNodeOption1 = std::make_shared<DialogueOption>(
+        "See you",
+        byelabelNode
     );
 
     mainNode->setOptions({ mainNodeOption1, mainNodeOption2, mainNodeOption3 });
     label2Node->setOptions({ label2NodeOption1, label2NodeOption2 });
-    label3Node->setOptions({ label3NodeOption1 });
+    mugthanksNode->setOptions({ mugthanksNodeOption1 });
 
 
     // --- Register named interaction scripts ---
     game.registerScript("give_mug_stan", give_mug_stan);
+    game.registerScript("push_stan", push_stan);
+    game.registerScript("push_table", push_table);
+    game.registerScript("pull_table2", pull_table2);
+    game.registerScript("go_to_backroom", go_to_backroom);
+    game.registerScript("go_to_bar", go_to_bar);
     game.registerScript("dialogue_script_test", dialogue_script_test);
+    game.registerScript("use_mug_on_table", use_mug_on_table);
 
     stan->addVerbInteraction(game.getVerb("give"), "mug", game.scriptEvent("give_mug_stan"));
     stan->addVerbInteraction(game.getVerb("talk"), Event([=](EventInfo e) {
@@ -372,10 +451,23 @@ void ScriptLoader::loadGame(Game& game) {
 		e.game.getUI().setLayout(e.game.getUI().getDialogueLayout()->getName());
 		mainNode->enterNode();
     }));
+    stan->addVerbInteraction(game.getVerb("push"), game.scriptEvent("push_stan"));
+    table->addVerbInteraction(game.getVerb("push"), game.scriptEvent("push_table"));
+    table2->addVerbInteraction(game.getVerb("pull"), game.scriptEvent("pull_table2"));
+    door_to_backroom->addVerbInteraction(game.getVerb("open"), game.scriptEvent("go_to_backroom"));
+    door_to_bar->addVerbInteraction(game.getVerb("open"), game.scriptEvent("go_to_bar"));
 
     // --- Item combinations ---
+    game.addCombination("mug", "table", game.scriptEvent("use_mug_on_table"));
 
     game.bindLeftClickToVerb(game.selectedVerb);
     game.bindRightClickToVerb(game.getDefaultVerb());
+
+    // --- Intro cutscene ---
+    // Optional: assets/cutscenes/intro.json is authored data, not engine or
+    // game logic; skip silently if the game doesn't ship one.
+    if (CutsceneLoader::loadAndRegister(game, ResourceManager::getCutscenesDirectory() + "intro.json", "introCutscene")) {
+        game.scriptEvent("introCutscene").execute();
+    }
 
     }

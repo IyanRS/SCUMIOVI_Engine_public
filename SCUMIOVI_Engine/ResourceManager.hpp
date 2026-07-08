@@ -22,6 +22,7 @@ public:
 	static const std::string& getLocalesDirectory();
 	static const std::string& getUIDirectory();
 	static const std::string& getKeybindingsPath();
+	static const std::string& getCutscenesDirectory();
 
 	std::map<std::string, SDL_Texture*> cachedTextures;
 	std::map<std::string, SDL_Surface*> cachedSurfaces;
@@ -39,4 +40,5 @@ private:
 	static std::string localesDirectory_;
 	static std::string uiDirectory_;
 	static std::string keybindingsPath_;
+	static std::string cutscenesDirectory_;
 };

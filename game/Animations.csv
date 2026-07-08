@@ -2,3 +2,5 @@ guybrushWalkRight,Guybrush_walk_side.png,0;0,32;47,6
 guybrushWalkLeft,mirror;guybrushWalkRight
 guybrushIdleRight,Guybrush_walk_side.png,0;0,32;47,1
 guybrushIdleLeft,mirror;guybrushIdleRight
+otisIdleRight,Stan_transparent.png,36;9,37;57,1
+otisIdleLeft,mirror;otisIdleRight

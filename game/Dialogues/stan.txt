@@ -2,20 +2,18 @@ main:
 	stan: "Hello Guybrush" (0.6)
 	player: "Hi" (0.2)
 	"How are you?": label2
+	"About that mug...": mugthanks if:gave_mug_to_stan
 	"I need to go": byelabel
-	"AAAAa aAaAAaa": label3
 label2:
 	stan: "I'm fine,\nwhat about you?"
 	player: "I'm fine too"
 	"Well, I need to go": byelabel
-	"Let me test something": scripttest
-label3:
-	stan: "Are you ok?"
-	"AaaaAA aAAAAAAaa AAa": label4
-label4:
-	stan: "..."
+	"Let's try to execute a script": scripttest
+mugthanks:
+	stan: "Best mug I've ever owned"
+	"See you": byelabel
 byelabel:
 	stan: "See you"
 scripttest:
-	stan: "What do you want to try?"
+	stan: "Sure, go ahead!"
 	execute(dialogue_script_test)

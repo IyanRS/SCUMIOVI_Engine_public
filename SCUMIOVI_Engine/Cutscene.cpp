@@ -5,6 +5,7 @@
 #include "Player.hpp"
 #include "Scene.hpp"
 #include "Delay.hpp"
+#include "Localization.hpp"
 
 namespace {
 	// Process-wide: cutscenes are one-at-a-time in practice (there's no
@@ -64,7 +65,7 @@ Cutscene& Cutscene::walkAtSpeed(std::shared_ptr<GameObject> object, Vector2<> po
 
 Cutscene& Cutscene::say(std::shared_ptr<GameObject> object, std::string text, float seconds) {
 	steps.push_back([object, text, seconds](Event next) {
-		object->say(text, seconds, next);
+		object->say(tr(text), seconds, next);
 	});
 	return *this;
 }
