@@ -31,6 +31,9 @@ void UI::openOverlay(std::string name, bool pauseGame) {
 		if (layout->getName() == name) {
 			overlayLayout = layout.get();
 			overlayPausesGame = pauseGame;
+			// Freshly-opened overlays show live state (save timestamps,
+			// localized labels) without waiting for the next updateUI.
+			overlayLayout->updateUI();
 			return;
 		}
 	}

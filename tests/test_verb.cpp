@@ -2,6 +2,7 @@
 #include "Verb.hpp"
 #include "VerbSyntax.hpp"
 #include "GameObject.hpp"
+#include "Localization.hpp"
 
 TEST_CASE("Verb default construction", "[verb]") {
     Verb v;
@@ -189,6 +190,22 @@ TEST_CASE("Fixed-case names work for proper nouns mid-sentence", "[verbsyntax][c
     stan->setDisplayName("=Stan");
 
     REQUIRE(vs.getInfo(mug, stan) == "Give mug to Stan");
+}
+
+TEST_CASE("VerbSyntax localizes display names before casing them", "[verbsyntax][casing][localization]") {
+    auto& loc = Localization::getInstance();
+    loc.setSourceLocale("en");
+    loc.addTranslation("es_verbsyntax_test", "Mug", "Taza");
+    loc.setLocale("es_verbsyntax_test");
+
+    VerbSyntax vs({ "Pick up", "Pick up $target" });
+    auto obj = std::make_shared<GameObject>("mug", Vector2<>(0, 0));
+    obj->setDisplayName("Mug");
+
+    // Translated first ("Mug" -> "Taza"), then cased for its position.
+    REQUIRE(vs.getInfo(nullptr, obj) == "Pick up taza");
+
+    loc.setLocale("en");
 }
 
 TEST_CASE("setDisplayName with explicit casing rule carries names between objects", "[verbsyntax][casing]") {

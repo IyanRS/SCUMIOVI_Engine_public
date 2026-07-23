@@ -78,17 +78,31 @@ public:
 	void refresh() override;
 };
 
+// A label that shows when a save slot was last written ("2026-07-23 14:33"),
+// or nothing while the slot is empty. Self-refreshing, so making a save while
+// the menu is open updates it immediately.
+class UISaveSlotLabel : public UIElement {
+	int slot;
+public:
+	UISaveSlotLabel(std::string name, Vector2<> position, Text format, int slot);
+	void refresh() override;
+};
+
 // A clickable element. onClick runs on any click (bound through the engine's
 // "any" verb); onHover runs on mouse-over. Both are ordinary Events, so they can
 // be a scriptEvent(name) from data.
 class UIButton : public UIElement {
 	std::string sourceText;
+	Event onHoverEvent;
 public:
 	UIButton(std::string name, Vector2<> position, Vector2<> size,
 		std::shared_ptr<Texture> texture, Text label,
 		Event onClick, Event onHover = Event());
 	// See UILabel::setLocalizedText.
 	void setLocalizedText(std::string text);
+	// Verb-button-style hover feedback: text turns white while the pointer
+	// is over the button and returns to its format colour on leave.
+	void setHoverHighlight(bool enabled);
 	void refresh() override;
 };
 

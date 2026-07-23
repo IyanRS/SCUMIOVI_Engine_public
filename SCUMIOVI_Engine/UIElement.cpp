@@ -69,10 +69,22 @@ void UILabel::refresh() {
 	}
 }
 
+// --- UISaveSlotLabel ---------------------------------------------------------
+UISaveSlotLabel::UISaveSlotLabel(std::string name, Vector2<> position, Text format, int slot)
+	: UIElement(name, position, Vector2<>(0, 0)), slot(slot) {
+	setTextOver(format);
+	setTextFormat(format);
+}
+
+void UISaveSlotLabel::refresh() {
+	UIElement::refresh();
+	setTextOver(Game::getInstance().getSaveTimestamp(slot));
+}
+
 // --- UIButton ----------------------------------------------------------------
 UIButton::UIButton(std::string name, Vector2<> position, Vector2<> size,
 	std::shared_ptr<Texture> texture, Text label, Event onClick, Event onHover)
-	: UIElement(name, position, size, texture) {
+	: UIElement(name, position, size, texture), onHoverEvent(onHover) {
 	setTextOver(label);
 	setTextFormat(label);
 
@@ -88,6 +100,27 @@ UIButton::UIButton(std::string name, Vector2<> position, Vector2<> size,
 void UIButton::setLocalizedText(std::string text) {
 	sourceText = text;
 	setTextOver(tr(text));
+}
+
+void UIButton::setHoverHighlight(bool enabled) {
+	if (!enabled) {
+		setMouseOverEvent(onHoverEvent);
+		setMouseNotOverEvent(Event());
+		return;
+	}
+
+	// Same treatment as UIVerbButton: white text while hovered, back to the
+	// format colour on leave.
+	setMouseOverEvent(onHoverEvent + Event([this] {
+		auto buttonText = getTextOver();
+		int highlightedColor[4] = { 255, 255, 255, 0xff };
+		Text highlightedText = Text(buttonText.toString(), buttonText.getSize(), highlightedColor,
+			buttonText.hasOutline(), buttonText.getTextOverMode(), buttonText.hasShadow());
+		setTextOver(highlightedText);
+	}));
+	setMouseNotOverEvent(Event([this] {
+		setTextOver(getTextOver().toString());
+	}));
 }
 
 void UIButton::refresh() {

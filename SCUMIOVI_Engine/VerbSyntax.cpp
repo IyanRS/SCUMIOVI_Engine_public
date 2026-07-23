@@ -10,8 +10,11 @@ namespace {
 // a sentence ("Give mug to"), capitalized at the start of one. Names whose
 // casing is fixed (a leading '=' in the data — see GameObject::setDisplayName)
 // are returned exactly as written, so "Stan" survives anywhere in the line.
+// Localized first (source-locale name is the translation key, e.g.
+// "Mug" -> "Taza"), then cased, so the casing rules apply to what the player
+// actually reads.
 std::string casedDisplayName(const std::shared_ptr<GameObject>& object, bool atSentenceStart) {
-	std::string name = object->getDisplayName();
+	std::string name = tr(object->getDisplayName());
 	if (object->hasFixedCaseDisplayName())
 		return name;
 

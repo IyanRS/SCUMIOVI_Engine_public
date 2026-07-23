@@ -116,9 +116,17 @@ namespace {
 			element = std::make_shared<UIImage>(name, position, size, resolveTexture(j, "texture"));
 		}
 		else if (type == "label") {
-			auto label = std::make_shared<UILabel>(name, position, buildTextFormat(j));
-			label->setLocalizedText(j.value("text", std::string()));
-			element = label;
+			// "saveSlot": N turns the label into a live save-timestamp
+			// display for that slot (empty while the slot has no save).
+			if (j.contains("saveSlot")) {
+				element = std::make_shared<UISaveSlotLabel>(name, position, buildTextFormat(j),
+					j.value("saveSlot", 0));
+			}
+			else {
+				auto label = std::make_shared<UILabel>(name, position, buildTextFormat(j));
+				label->setLocalizedText(j.value("text", std::string()));
+				element = label;
+			}
 		}
 		else if (type == "button") {
 			Event onClick = j.contains("onClick") ? resolveUIAction(j.at("onClick")) : Event();
@@ -126,6 +134,9 @@ namespace {
 			auto button = std::make_shared<UIButton>(name, position, size, resolveTexture(j, "texture"),
 				buildTextFormat(j), onClick, onHover);
 			button->setLocalizedText(j.value("text", std::string()));
+			if (j.value("hoverHighlight", false)) {
+				button->setHoverHighlight(true);
+			}
 			element = button;
 		}
 		else if (type == "panel") {

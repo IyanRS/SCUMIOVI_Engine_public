@@ -5,21 +5,31 @@
 
         { "type": "panel", "name": "saveLoadPanel", "anchor": "center", "size": [200, 130], "texture": [30, 10, 30, 255],
           "children": [
-            { "type": "label", "text": "Save / Load", "position": [100, 8], "textAlign": "center", "textColor": [255, 255, 255, 255], "textSize": 14 },
+            { "type": "label", "text": "Save / Load", "position": [100, 8], "textAlign": "center", "textColor": [255, 255, 255, 255], "textSize": 14, "textShadow": true },
 
-            { "type": "label", "text": "Slot 1", "position": [16, 34], "textAlign": "left", "textColor": [200, 200, 200, 255] },
-            { "type": "button", "text": "Save", "position": [110, 28], "size": [36, 16], "textAlign": "center", "onClick": { "action": "save", "slot": 0 } },
-            { "type": "button", "text": "Load", "position": [150, 28], "size": [36, 16], "textAlign": "center", "onClick": { "action": "load", "slot": 0 } },
+            { "type": "label", "text": "Slot 1", "position": [16, 30], "textAlign": "left", "textColor": [200, 200, 200, 255] },
+            { "type": "label", "saveSlot": 0, "position": [16, 40], "textAlign": "left", "textColor": [140, 140, 140, 255], "textSize": 8 },
+            { "type": "button", "text": "Save", "position": [110, 28], "size": [36, 16], "textAlign": "center",
+              "textColor": [125, 44, 125, 255], "textShadow": true, "hoverHighlight": true, "onClick": { "action": "save", "slot": 0 } },
+            { "type": "button", "text": "Load", "position": [150, 28], "size": [36, 16], "textAlign": "center",
+              "textColor": [125, 44, 125, 255], "textShadow": true, "hoverHighlight": true, "onClick": { "action": "load", "slot": 0 } },
 
-            { "type": "label", "text": "Slot 2", "position": [16, 58], "textAlign": "left", "textColor": [200, 200, 200, 255] },
-            { "type": "button", "text": "Save", "position": [110, 52], "size": [36, 16], "textAlign": "center", "onClick": { "action": "save", "slot": 1 } },
-            { "type": "button", "text": "Load", "position": [150, 52], "size": [36, 16], "textAlign": "center", "onClick": { "action": "load", "slot": 1 } },
+            { "type": "label", "text": "Slot 2", "position": [16, 54], "textAlign": "left", "textColor": [200, 200, 200, 255] },
+            { "type": "label", "saveSlot": 1, "position": [16, 64], "textAlign": "left", "textColor": [140, 140, 140, 255], "textSize": 8 },
+            { "type": "button", "text": "Save", "position": [110, 52], "size": [36, 16], "textAlign": "center",
+              "textColor": [125, 44, 125, 255], "textShadow": true, "hoverHighlight": true, "onClick": { "action": "save", "slot": 1 } },
+            { "type": "button", "text": "Load", "position": [150, 52], "size": [36, 16], "textAlign": "center",
+              "textColor": [125, 44, 125, 255], "textShadow": true, "hoverHighlight": true, "onClick": { "action": "load", "slot": 1 } },
 
-            { "type": "label", "text": "Slot 3", "position": [16, 82], "textAlign": "left", "textColor": [200, 200, 200, 255] },
-            { "type": "button", "text": "Save", "position": [110, 76], "size": [36, 16], "textAlign": "center", "onClick": { "action": "save", "slot": 2 } },
-            { "type": "button", "text": "Load", "position": [150, 76], "size": [36, 16], "textAlign": "center", "onClick": { "action": "load", "slot": 2 } },
+            { "type": "label", "text": "Slot 3", "position": [16, 78], "textAlign": "left", "textColor": [200, 200, 200, 255] },
+            { "type": "label", "saveSlot": 2, "position": [16, 88], "textAlign": "left", "textColor": [140, 140, 140, 255], "textSize": 8 },
+            { "type": "button", "text": "Save", "position": [110, 76], "size": [36, 16], "textAlign": "center",
+              "textColor": [125, 44, 125, 255], "textShadow": true, "hoverHighlight": true, "onClick": { "action": "save", "slot": 2 } },
+            { "type": "button", "text": "Load", "position": [150, 76], "size": [36, 16], "textAlign": "center",
+              "textColor": [125, 44, 125, 255], "textShadow": true, "hoverHighlight": true, "onClick": { "action": "load", "slot": 2 } },
 
             { "type": "button", "text": "Back", "position": [70, 108], "size": [60, 16], "textAlign": "center",
+              "textColor": [125, 44, 125, 255], "textShadow": true, "hoverHighlight": true,
               "onClick": { "action": "openOverlay", "name": "pauseMenu" } }
           ]
         }

@@ -158,6 +158,27 @@ TEST_CASE("Hovering a UIVerbButton highlights it and leaving restores it", "[ui]
     REQUIRE(player->getTargetObject() == nullptr);
 }
 
+TEST_CASE("UIButton hoverHighlight turns text white on hover and restores it on leave", "[ui]") {
+    Game& game = Game::getInstance();
+    auto player = std::make_shared<Player>("btn_hover_player", Vector2<>(0, 0), Vector2<>(10, 10));
+    game.addPlayer(player);
+    game.setCurrentPlayer(player);
+
+    int purple[4] = { 125, 44, 125, 255 };
+    auto btn = std::make_shared<UIButton>("hlBtn", Vector2<>(0, 0), Vector2<>(36, 16),
+        nullptr, Text("Save", 11, purple, false, TEXT_CENTERED, true), Event());
+    btn->setHoverHighlight(true);
+
+    int color[4];
+    btn->onMouseOver(Vector2<>(5, 5));
+    btn->getTextOver().getColor(color);
+    REQUIRE(color[0] == 255);
+
+    btn->onMouseNotOver(Vector2<>(50, 50));
+    btn->getTextOver().getColor(color);
+    REQUIRE(color[0] == 125);
+}
+
 TEST_CASE("UIInventoryGrid places items into slots using its own configured geometry", "[ui]") {
     Game& game = Game::getInstance();
     auto player = std::make_shared<Player>("inv_grid_player", Vector2<>(0, 0), Vector2<>(10, 10));

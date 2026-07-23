@@ -1,10 +1,12 @@
 #include "Game.hpp"
 
 #include <SDL3/SDL.h>
+#include <ctime>
 #include <memory>
 #include <algorithm>
 #include <fstream>
 #include "GameObject.hpp"
+#include "Item.hpp"
 #include "Localization.hpp"
 #include "json.hpp"
 
@@ -363,6 +365,14 @@ std::string Game::getSavePath(int slotIndex) {
 bool Game::saveGame(int slotIndex) {
 	nlohmann::json data;
 
+	// When this save was made — shown in the save/load menu.
+	std::time_t now = std::time(nullptr);
+	std::tm local {};
+	localtime_s(&local, &now);
+	char stamp[32];
+	std::strftime(stamp, sizeof(stamp), "%Y-%m-%d %H:%M", &local);
+	data["savedAt"] = stamp;
+
 	// Game state
 	data["gameState"] = gameState.to_json();
 
@@ -404,6 +414,11 @@ bool Game::saveGame(int slotIndex) {
 			nlohmann::json objData;
 			objData["state"] = obj->getState();
 			objData["visible"] = obj->isVisible();
+			// Interactability travels with visibility: a picked-up item is
+			// hidden AND non-interactable, and restoring one without the
+			// other would leave a visible-but-dead (or invisible-but-
+			// clickable) object after load.
+			objData["interactable"] = obj->isInteractable();
 			objData["position"]["x"] = obj->getPosition().x;
 			objData["position"]["y"] = obj->getPosition().y;
 			objectsData[obj->getName()] = objData;
@@ -419,7 +434,29 @@ bool Game::saveGame(int slotIndex) {
 		return false;
 	file << data.dump(4);
 	file.close();
+
+	saveTimestamps[slotIndex] = stamp;
 	return true;
+}
+
+std::string Game::getSaveTimestamp(int slotIndex) {
+	auto it = saveTimestamps.find(slotIndex);
+	if (it != saveTimestamps.end())
+		return it->second;
+
+	// First query for this slot: read it off the save file once, then cache
+	// (an empty string caches "no save / no timestamp" too).
+	std::string stamp;
+	std::ifstream file(getSavePath(slotIndex));
+	if (file.is_open()) {
+		try {
+			nlohmann::json data;
+			file >> data;
+			stamp = data.value("savedAt", std::string());
+		} catch (...) {}
+	}
+	saveTimestamps[slotIndex] = stamp;
+	return stamp;
 }
 
 bool Game::loadGame(int slotIndex) {
@@ -514,6 +551,8 @@ void Game::applyObjectStates(const nlohmann::json& scenesJson) {
 				obj->setState(objData["state"].get<int>());
 			if (objData.contains("visible"))
 				obj->setVisible(objData["visible"].get<bool>());
+			if (objData.contains("interactable"))
+				obj->setInteractable(objData["interactable"].get<bool>());
 			if (objData.contains("position")) {
 				float x = objData["position"]["x"].get<float>();
 				float y = objData["position"]["y"].get<float>();
@@ -533,6 +572,18 @@ void Game::applyInventory(std::shared_ptr<Player> player, const std::vector<std:
 			auto clone = std::make_shared<GameObject>(name, Vector2<>(), Vector2<>(-1, -1), proto->getTexture());
 			clone->addTag("item");
 			inventory.addItem(clone);
+			continue;
+		}
+
+		// No registered prototype: picked-up Items are hidden in their scene
+		// rather than destroyed, so find the original and let it rebuild its
+		// own inventory form (texture, display name, give behaviour).
+		for (auto& [sceneName, scene] : sceneRegistry) {
+			auto item = std::dynamic_pointer_cast<Item>(scene->getGameObject(name));
+			if (item) {
+				inventory.addItem(item->createInventoryObject());
+				break;
+			}
 		}
 	}
 }

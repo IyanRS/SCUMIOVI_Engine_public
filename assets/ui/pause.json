@@ -5,22 +5,27 @@
 
         { "type": "panel", "name": "pausePanel", "anchor": "center", "size": [140, 132], "texture": [30, 10, 30, 255],
           "children": [
-            { "type": "label", "text": "Paused", "position": [70, 10], "textAlign": "center", "textColor": [255, 255, 255, 255], "textSize": 14 },
+            { "type": "label", "text": "Paused", "position": [70, 10], "textAlign": "center", "textColor": [255, 255, 255, 255], "textSize": 14, "textShadow": true },
 
             { "type": "button", "name": "resumeBtn", "text": "Resume", "position": [20, 32], "size": [100, 16],
-              "textAlign": "center", "onClick": { "action": "closeOverlay" } },
+              "textAlign": "center", "textColor": [125, 44, 125, 255], "textShadow": true, "hoverHighlight": true,
+              "onClick": { "action": "closeOverlay" } },
 
             { "type": "button", "name": "saveLoadBtn", "text": "Save / Load Game", "position": [20, 54], "size": [100, 16],
-              "textAlign": "center", "onClick": { "action": "openOverlay", "name": "saveLoadMenu" } },
+              "textAlign": "center", "textColor": [125, 44, 125, 255], "textShadow": true, "hoverHighlight": true,
+              "onClick": { "action": "openOverlay", "name": "saveLoadMenu" } },
 
             { "type": "button", "name": "langEnBtn", "text": "EN", "position": [20, 76], "size": [48, 16],
-              "textAlign": "center", "onClick": { "action": "setLocale", "locale": "en" } },
+              "textAlign": "center", "textColor": [125, 44, 125, 255], "textShadow": true, "hoverHighlight": true,
+              "onClick": { "action": "setLocale", "locale": "en" } },
 
             { "type": "button", "name": "langEsBtn", "text": "ES", "position": [72, 76], "size": [48, 16],
-              "textAlign": "center", "onClick": { "action": "setLocale", "locale": "es" } },
+              "textAlign": "center", "textColor": [125, 44, 125, 255], "textShadow": true, "hoverHighlight": true,
+              "onClick": { "action": "setLocale", "locale": "es" } },
 
             { "type": "button", "name": "quitBtn", "text": "Quit Game", "position": [20, 98], "size": [100, 16],
-              "textAlign": "center", "onClick": { "action": "quit" } }
+              "textAlign": "center", "textColor": [125, 44, 125, 255], "textShadow": true, "hoverHighlight": true,
+              "onClick": { "action": "quit" } }
           ]
         }
     ]

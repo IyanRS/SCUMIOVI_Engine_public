@@ -48,6 +48,8 @@ protected:
 
 	// Inventory item prototypes for save/load reconstruction
 	std::unordered_map<std::string, std::shared_ptr<GameObject>> inventoryItemPrototypes;
+	// Per-slot save timestamps; see getSaveTimestamp().
+	std::unordered_map<int, std::string> saveTimestamps;
 
 public:
 	// Standard Engine Verbs
@@ -152,6 +154,10 @@ public:
 	bool saveGame(int slotIndex);
 	bool loadGame(int slotIndex);
 	static std::string getSavePath(int slotIndex);
+	// Human-readable "when was this slot saved" (e.g. "2026-07-23 14:33");
+	// empty if the slot has no save. Cached — reads the file at most once
+	// per slot, and saving refreshes the cache.
+	std::string getSaveTimestamp(int slotIndex);
 
 	// Quick load after scene objects are created
 	void applyObjectStates(const nlohmann::json& scenesJson);

@@ -3,7 +3,9 @@
 #include "GameState.hpp"
 #include "Scene.hpp"
 #include "GameObject.hpp"
+#include "Item.hpp"
 #include "Player.hpp"
+#include "UIElement.hpp"
 #include "json.hpp"
 #include <fstream>
 
@@ -202,6 +204,88 @@ TEST_CASE("applyInventory restores items from prototypes", "[saveload][game]") {
 
 	// Clear for other tests
 	player->getInventory().getItems().clear();
+}
+
+TEST_CASE("Item pickup hides the scene object; loading restores either side of it", "[saveload][item]") {
+	drainPendingEvents();
+	Game& game = Game::getInstance();
+
+	auto scene = std::make_shared<Scene>();
+	scene->setName("item_save_scene");
+	game.registerScene("item_save_scene", scene);
+
+	auto player = std::make_shared<Player>("item_save_player", Vector2<>(0, 0), Vector2<>(10, 10));
+	game.addPlayer(player);
+	game.setCurrentPlayer(player);
+	player->moveToScene(scene);
+	game.changeScene(scene, 0.0f);
+	drainPendingEvents();
+
+	auto item = std::make_shared<Item>("save_mug", Vector2<>(5, 5), nullptr, nullptr);
+	item->setDisplayName("Mug");
+	item->moveToScene(scene);
+
+	// Save while the mug is still on the floor.
+	REQUIRE(game.saveGame(97));
+
+	// Pick it up: hidden and inert, but still registered in the scene.
+	item->interact(Vector2<>(5, 5), game.pickupVerb);
+	REQUIRE_FALSE(item->isVisible());
+	REQUIRE_FALSE(item->isInteractable());
+	REQUIRE(scene->getGameObject("save_mug") != nullptr);
+	REQUIRE(player->getInventory().getItems().size() == 1);
+
+	// Load the pre-pickup save: back in the scene, out of the inventory.
+	REQUIRE(game.loadGame(97));
+	REQUIRE(item->isVisible());
+	REQUIRE(item->isInteractable());
+	REQUIRE(player->getInventory().getItems().empty());
+
+	// Pick it up again and save AFTER the pickup this time.
+	item->interact(Vector2<>(5, 5), game.pickupVerb);
+	REQUIRE(game.saveGame(96));
+
+	// Wreck the state, then load: the inventory entry is rebuilt from the
+	// hidden scene Item (no prototype registered for "save_mug"), complete
+	// with its display name and give behaviour.
+	player->getInventory().getItems().clear();
+	item->setVisible(true);
+	item->setInteractable(true);
+
+	REQUIRE(game.loadGame(96));
+	REQUIRE_FALSE(item->isVisible());
+	REQUIRE_FALSE(item->isInteractable());
+	auto& items = player->getInventory().getItems();
+	REQUIRE(items.size() == 1);
+	REQUIRE(items[0]->getName() == "save_mug");
+	REQUIRE(items[0]->getDisplayName() == "Mug");
+	REQUIRE(items[0]->hasVerbInteraction(game.giveVerb));
+
+	player->getInventory().getItems().clear();
+	std::remove("save_97.json");
+	std::remove("save_96.json");
+}
+
+TEST_CASE("saveGame stamps the slot and getSaveTimestamp reports it", "[saveload][game]") {
+	drainPendingEvents();
+	Game& game = Game::getInstance();
+
+	REQUIRE(game.saveGame(95));
+	std::string stamp = game.getSaveTimestamp(95);
+	REQUIRE_FALSE(stamp.empty());
+	// "YYYY-MM-DD HH:MM"
+	REQUIRE(stamp.size() == 16);
+
+	// A slot with no save has no timestamp.
+	REQUIRE(game.getSaveTimestamp(9998).empty());
+
+	// A UISaveSlotLabel shows the stamp after refresh.
+	int color[4] = { 140, 140, 140, 255 };
+	UISaveSlotLabel label("slotStamp", Vector2<>(0, 0), Text("", 8, color, false, TEXT_TO_LEFT), 95);
+	label.refresh();
+	REQUIRE(label.getTextOver().toString() == stamp);
+
+	std::remove("save_95.json");
 }
 
 TEST_CASE("quitGame stops the game loop", "[saveload][game]") {

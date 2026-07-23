@@ -22,6 +22,12 @@
   "Pull": "Tirar de",
   "Pull $target": "Tirar de $target",
 
+  "Mug": "Taza",
+  "Table": "Mesa",
+  "Wooden Table": "Mesa de madera",
+  "Backroom Door": "Puerta de la trastienda",
+  "Bar Door": "Puerta del bar",
+
   "I don't see anything special.": "No veo nada especial.",
   "I can't move that.": "No puedo mover eso.",
   "I can't do that": "No puedo hacer eso",

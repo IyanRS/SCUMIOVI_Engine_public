@@ -4,6 +4,7 @@
 #include <memory>
 #include "Game.hpp"
 #include "Cutscene.hpp"
+#include "UILayout.hpp"
 
 Vector2<> InputManager::getClickPosition(Camera& camera) {
 	float xMouse;
@@ -26,6 +27,10 @@ bool InputManager::checkObjectClicked(float xMouse, float yMouse, std::shared_pt
 		return false;
 	}
 
+	// Invisible objects (hidden picked-up items, hidden UI) aren't there as
+	// far as the mouse is concerned.
+	if (!object->isVisible()) return false;
+
 	if (xMouse >= object->getPosition().x && xMouse < object->getPosition().x + object->getSize().x &&
 		yMouse >= object->getPosition().y && yMouse < object->getPosition().y + object->getSize().y) {
 		return object->onClick(Vector2<>(xMouse, yMouse), verb);
@@ -39,7 +44,11 @@ void InputManager::checkMouseOverObject(float xMouse, float yMouse, std::shared_
 		return;
 	}
 
-	if (xMouse >= object->getPosition().x && xMouse < object->getPosition().x + object->getSize().x &&
+	// An invisible object can't be hovered — and if it turns invisible while
+	// hovered (e.g. an item picked up under the cursor), the else branch
+	// below runs its mouse-out so hover state doesn't stick.
+	if (object->isVisible() &&
+		xMouse >= object->getPosition().x && xMouse < object->getPosition().x + object->getSize().x &&
 		yMouse >= object->getPosition().y && yMouse < object->getPosition().y + object->getSize().y) {
 		if (!currentlyMouseOver.contains(object)) {
 			currentlyMouseOver.insert(object);
@@ -66,7 +75,12 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 	xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
 	yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
-	auto uiElements = ui.getRenderElements();
+	// Mirror the click gating: during a cutscene only an overlay gets hover
+	// state, so the held-back verb bar doesn't light up under the pointer.
+	auto uiElements = Cutscene::isPlaying()
+		? (ui.getOverlay() ? ui.getOverlay()->getRenderElements()
+		                   : std::vector<std::shared_ptr<GameObject>>())
+		: ui.getRenderElements();
 	for (int i = (int)uiElements.size() - 1; i >= 0; i--) {
 		checkMouseOverObject(xMouse, yMouse, uiElements[i]);
 	}
@@ -74,6 +88,7 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 	// A pausing overlay (see UI::openOverlay) keeps the scene from receiving
 	// hover state while it's shown, matching the click-blocking below.
 	if (ui.isGamePaused()) return;
+	if (Cutscene::isPlaying()) return;
 
 	Camera& camera = scene.getCamera();
 	xMouse += camera.getPosition().x;
@@ -95,7 +110,14 @@ bool InputManager::click(UI& ui, Scene& scene, std::shared_ptr<Verb> verb) {
 		xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
 		yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
 
-		auto uiElements = ui.getRenderElements();
+		// While a cutscene plays, the base layout (verbs, inventory) is on
+		// hold along with the world — but an overlay (the Esc menu) opened
+		// on top of it still works. Keys are never held back, so the skip
+		// binding and the menu binding keep working during the intro.
+		auto uiElements = Cutscene::isPlaying()
+			? (ui.getOverlay() ? ui.getOverlay()->getRenderElements()
+			                   : std::vector<std::shared_ptr<GameObject>>())
+			: ui.getRenderElements();
 		for (int i = (int)uiElements.size() - 1; i >= 0; i--) {
 			if (checkObjectClicked(xMouse, yMouse, uiElements[i], verb)) {
 				return true;
@@ -106,6 +128,9 @@ bool InputManager::click(UI& ui, Scene& scene, std::shared_ptr<Verb> verb) {
 	// While a pausing overlay is active, only UI (base layout + overlay)
 	// receives clicks — the world underneath is frozen and shouldn't react.
 	if (ui.isGamePaused()) return false;
+
+	// The world is on rails during a cutscene: no walking, no object clicks.
+	if (Cutscene::isPlaying()) return false;
 
 	Camera& camera = scene.getCamera();
 	xMouse += camera.getPosition().x;
@@ -132,11 +157,6 @@ void InputManager::handleInput(SDL_Event& event, UI& ui, Scene& scene) {
 		keyBindings.handleKeyDown(event.key.key);
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
-		// While a cutscene plays, the world is on rails: no walking, no verb
-		// clicks, no object interactions. Keys are NOT held back — the skip
-		// binding (see "skipCutscene" in the game's keybindings) must work.
-		if (Cutscene::isPlaying())
-			break;
 		SDL_MouseButtonFlags mouseButtonFlags = SDL_GetMouseState(nullptr, nullptr);
 		switch (mouseButtonFlags) {
 		case 0:

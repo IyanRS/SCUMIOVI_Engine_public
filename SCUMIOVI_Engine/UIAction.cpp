@@ -95,12 +95,16 @@ Event resolveUIAction(const json& actionJson) {
 		int slot = actionJson.value("slot", 0);
 		return Event(std::function<void(EventInfo)>([slot](EventInfo e) {
 			e.game.saveGame(slot);
+			// Refresh so the slot's timestamp label shows the new save
+			// immediately — that's the player's confirmation it worked.
+			e.game.getUI().updateUI();
 		}));
 	}
 	if (action == "load") {
 		int slot = actionJson.value("slot", 0);
 		return Event(std::function<void(EventInfo)>([slot](EventInfo e) {
 			e.game.loadGame(slot);
+			e.game.getUI().updateUI();
 		}));
 	}
 	if (action == "quit") {

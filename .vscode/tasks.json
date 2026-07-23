@@ -4,7 +4,7 @@
     {
       "label": "Compile Engine",
       "type": "shell",
-      "command": "msbuild SCUMIOVI_Engine\\SCUMIOVI_Engine.vcxproj /p:Configuration=Debug /p:Platform=x64 /m",
+      "command": ".\\build.bat SCUMIOVI_Engine\\SCUMIOVI_Engine.vcxproj /p:Configuration=Debug /p:Platform=x64 /m",
       "group": "build",
       "presentation": {
         "reveal": "always",
@@ -15,7 +15,7 @@
     {
       "label": "Compile Game",
       "type": "shell",
-      "command": "msbuild SCUMIOVI_Game\\SCUMIOVI_Game.vcxproj /p:Configuration=Debug /p:Platform=x64 /m",
+      "command": ".\\build.bat SCUMIOVI_Game\\SCUMIOVI_Game.vcxproj /p:Configuration=Debug /p:Platform=x64 /m",
       "group": "build",
       "dependsOn": ["Compile Engine"],
       "presentation": {
@@ -27,7 +27,7 @@
     {
       "label": "Compile All",
       "type": "shell",
-      "command": "msbuild SCUMIOVI_Engine.sln /p:Configuration=Debug /p:Platform=x64 /m",
+      "command": ".\\build.bat SCUMIOVI_Engine.sln /p:Configuration=Debug /p:Platform=x64 /m",
       "group": {
         "kind": "build",
         "isDefault": true

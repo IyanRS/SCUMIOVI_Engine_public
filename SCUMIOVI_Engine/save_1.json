@@ -1,0 +1,136 @@
+{
+    "currentPlayerName": "guybrush",
+    "currentScene": "scummbar",
+    "gameState": {
+        "counters": {},
+        "flags": {}
+    },
+    "players": {
+        "guybrush": {
+            "inventory": [
+                "mug"
+            ],
+            "position": {
+                "x": 80.0,
+                "y": 80.0
+            },
+            "scene": "scummbar",
+            "verb": "walk"
+        },
+        "otis": {
+            "inventory": [],
+            "position": {
+                "x": 300.0,
+                "y": 100.0
+            },
+            "scene": "backroom",
+            "verb": ""
+        }
+    },
+    "savedAt": "2026-07-23 18:35",
+    "scenes": {
+        "backroom": {
+            "background": {
+                "interactable": false,
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "state": 0,
+                "visible": true
+            },
+            "door_to_bar": {
+                "interactable": true,
+                "position": {
+                    "x": 60.0,
+                    "y": 100.0
+                },
+                "state": 1,
+                "visible": false
+            },
+            "otis": {
+                "interactable": true,
+                "position": {
+                    "x": 300.0,
+                    "y": 100.0
+                },
+                "state": 0,
+                "visible": true
+            }
+        },
+        "scummbar": {
+            "background": {
+                "interactable": false,
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "state": 0,
+                "visible": true
+            },
+            "door_to_backroom": {
+                "interactable": true,
+                "position": {
+                    "x": 594.0,
+                    "y": 73.0
+                },
+                "state": 1,
+                "visible": false
+            },
+            "door_to_bar": {
+                "interactable": true,
+                "position": {
+                    "x": 32.0,
+                    "y": 72.0
+                },
+                "state": 1,
+                "visible": false
+            },
+            "guybrush": {
+                "interactable": true,
+                "position": {
+                    "x": 80.0,
+                    "y": 80.0
+                },
+                "state": 0,
+                "visible": true
+            },
+            "mug": {
+                "interactable": false,
+                "position": {
+                    "x": 124.0,
+                    "y": 97.0
+                },
+                "state": 0,
+                "visible": false
+            },
+            "stan": {
+                "interactable": true,
+                "position": {
+                    "x": 155.0,
+                    "y": 68.0
+                },
+                "state": 0,
+                "visible": true
+            },
+            "table": {
+                "interactable": true,
+                "position": {
+                    "x": 157.0,
+                    "y": 115.0
+                },
+                "state": 0,
+                "visible": true
+            },
+            "table2": {
+                "interactable": true,
+                "position": {
+                    "x": 20.0,
+                    "y": 118.0
+                },
+                "state": 0,
+                "visible": true
+            }
+        }
+    }
+}
