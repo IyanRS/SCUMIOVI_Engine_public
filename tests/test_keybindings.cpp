@@ -137,6 +137,23 @@ TEST_CASE("resolveUIAction: quit sets the game to stop running", "[keybindings][
     // loop; there's no public getter, so we only assert it doesn't throw.
 }
 
+TEST_CASE("resolveUIAction: toggleFullscreen flips the renderer's fullscreen state", "[keybindings][uiaction]") {
+    Game& game = Game::getInstance();
+    auto player = std::make_shared<Player>("kb_fs_player", Vector2<>(0, 0), Vector2<>(10, 10));
+    game.addPlayer(player);
+    game.setCurrentPlayer(player);
+
+    Event toggle = resolveUIAction(nlohmann::json{ {"action", "toggleFullscreen"} });
+
+    bool before = game.getRenderer().isFullscreen();
+    REQUIRE_NOTHROW(toggle.execute());
+    REQUIRE(game.getRenderer().isFullscreen() != before);
+
+    // Toggle back so the test leaves the window as it found it.
+    toggle.execute();
+    REQUIRE(game.getRenderer().isFullscreen() == before);
+}
+
 TEST_CASE("resolveUIAction: unknown action string is a safe no-op", "[keybindings][uiaction]") {
     Event unknown = resolveUIAction(nlohmann::json{ {"action", "definitely_not_a_real_action"} });
     REQUIRE_NOTHROW(unknown.execute());

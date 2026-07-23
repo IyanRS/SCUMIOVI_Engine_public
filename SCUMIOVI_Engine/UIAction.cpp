@@ -53,6 +53,11 @@ Event resolveUIAction(const json& actionJson) {
 			e.game.getUI().closeOverlay();
 		}));
 	}
+	if (action == "toggleFullscreen") {
+		return Event(std::function<void(EventInfo)>([](EventInfo e) {
+			e.game.getRenderer().toggleFullscreen();
+		}));
+	}
 	if (action == "setLocale") {
 		std::string locale = actionJson.value("locale", std::string("en"));
 		return Event(std::function<void(EventInfo)>([locale](EventInfo e) {

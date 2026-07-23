@@ -12,8 +12,9 @@ Vector2<> InputManager::getClickPosition(Camera& camera) {
 
 	SDL_GetMouseState(&xMouse, &yMouse);
 
-	xMouse /= WINDOW_WIDTH / camera.getSize().x;
-	yMouse /= WINDOW_HEIGHT / camera.getSize().y;
+	Vector2<> windowSize = Game::getInstance().getRenderer().getWindowSize();
+	xMouse /= windowSize.x / camera.getSize().x;
+	yMouse /= windowSize.y / camera.getSize().y;
 
 	xMouse += camera.getPosition().x;
 	yMouse += camera.getPosition().y;
@@ -76,8 +77,9 @@ void InputManager::mouseOver(UI& ui, Scene& scene) {
 
 	SDL_GetMouseState(&xMouse, &yMouse);
 
-	xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
-	yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
+	Vector2<> windowSize = Game::getInstance().getRenderer().getWindowSize();
+	xMouse /= windowSize.x / scene.getCamera().getSize().x;
+	yMouse /= windowSize.y / scene.getCamera().getSize().y;
 
 	// Mirror the click gating: during a cutscene only an overlay gets hover
 	// state, so the held-back verb bar doesn't light up under the pointer.
@@ -111,8 +113,9 @@ bool InputManager::click(UI& ui, Scene& scene, std::shared_ptr<Verb> verb) {
 	SDL_GetMouseState(&xMouse, &yMouse);
 
 	if (ui.getLayout() != nullptr) {
-		xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
-		yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
+		Vector2<> windowSize = Game::getInstance().getRenderer().getWindowSize();
+		xMouse /= windowSize.x / scene.getCamera().getSize().x;
+		yMouse /= windowSize.y / scene.getCamera().getSize().y;
 
 		// While a cutscene plays, the base layout (verbs, inventory) is on
 		// hold along with the world — but an overlay (the Esc menu) opened

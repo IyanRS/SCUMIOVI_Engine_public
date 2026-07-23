@@ -51,6 +51,15 @@ public:
 	// Overrides the window title set at construction; games set their own via
 	// Settings.csv's "window_title" key (see GameData.cpp.jinja2).
 	void setWindowTitle(const std::string& title);
+	// Toggles borderless-fullscreen (desktop-fullscreen: the window fills the
+	// display at its current resolution, no mode switch). Returns the new
+	// state — true if now fullscreen.
+	bool toggleFullscreen();
+	bool isFullscreen() const;
+	// The window's current pixel size. Differs from the fixed WINDOW_WIDTH/
+	// HEIGHT once fullscreen, so mouse-to-world mapping must use this, not
+	// the compile-time constants.
+	Vector2<> getWindowSize() const;
 	void fadeToBlack(float duration, Event callback = Event());
 	void fadeFromBlack(float duration, Event callback = Event());
 	bool isFading() const;

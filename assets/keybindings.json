@@ -4,5 +4,6 @@
   "F9": { "action": "load", "slot": 0 },
   "Tab": { "action": "switchToNextPlayer", "fadeDuration": 0.4 },
   "Space": { "action": "skipCutscene" },
-  "F3": { "action": "script", "name": "show_debug" }
+  "F3": { "action": "script", "name": "show_debug" },
+  "F11": { "action": "toggleFullscreen" }
 }

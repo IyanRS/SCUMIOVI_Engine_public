@@ -43,6 +43,28 @@ void Renderer::setWindowTitle(const std::string& title) {
 	}
 }
 
+bool Renderer::toggleFullscreen() {
+	if (!sdlWindow) return false;
+	bool goFullscreen = !isFullscreen();
+	// SDL3 borderless "desktop fullscreen": no exclusive video-mode switch,
+	// so it behaves like a maximized borderless window. The renderer's own
+	// logical-size scaling already maps the fixed RENDER_WIDTH/HEIGHT to
+	// whatever the window ends up being, so nothing else needs to change.
+	SDL_SetWindowFullscreen(sdlWindow, goFullscreen);
+	return goFullscreen;
+}
+
+bool Renderer::isFullscreen() const {
+	if (!sdlWindow) return false;
+	return (SDL_GetWindowFlags(sdlWindow) & SDL_WINDOW_FULLSCREEN) != 0;
+}
+
+Vector2<> Renderer::getWindowSize() const {
+	int w = WINDOW_WIDTH, h = WINDOW_HEIGHT;
+	if (sdlWindow) SDL_GetWindowSize(sdlWindow, &w, &h);
+	return Vector2<>((float)w, (float)h);
+}
+
 Renderer::~Renderer() {
 	if (sdlRenderer) SDL_DestroyRenderer(sdlRenderer);
 	if (sdlWindow) SDL_DestroyWindow(sdlWindow);
@@ -346,8 +368,9 @@ void Renderer::render(Scene& scene, UI& ui) {
 		float yMouse;
 		SDL_GetMouseState(&xMouse, &yMouse);
 
-		xMouse /= WINDOW_WIDTH / scene.getCamera().getSize().x;
-		yMouse /= WINDOW_HEIGHT / scene.getCamera().getSize().y;
+		Vector2<> windowSize = getWindowSize();
+		xMouse /= windowSize.x / scene.getCamera().getSize().x;
+		yMouse /= windowSize.y / scene.getCamera().getSize().y;
 
 		xMouse -= mouseHotspot.x;
 		yMouse -= mouseHotspot.y;
