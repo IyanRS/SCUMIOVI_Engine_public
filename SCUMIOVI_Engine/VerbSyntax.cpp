@@ -1,8 +1,39 @@
 #include "VerbSyntax.hpp"
-#include <regex>
+#include <cctype>
 #include <memory>
 #include "GameObject.hpp"
 #include "Localization.hpp"
+
+namespace {
+
+// Auto-cases a display name for the position it lands in: lowercase inside
+// a sentence ("Give mug to"), capitalized at the start of one. Names whose
+// casing is fixed (a leading '=' in the data — see GameObject::setDisplayName)
+// are returned exactly as written, so "Stan" survives anywhere in the line.
+std::string casedDisplayName(const std::shared_ptr<GameObject>& object, bool atSentenceStart) {
+	std::string name = object->getDisplayName();
+	if (object->hasFixedCaseDisplayName())
+		return name;
+
+	for (char& c : name)
+		c = (char)std::tolower((unsigned char)c);
+	if (atSentenceStart && !name.empty())
+		name[0] = (char)std::toupper((unsigned char)name[0]);
+	return name;
+}
+
+// Replaces every occurrence of placeholder with the object's display name,
+// cased for where it lands in the (already localized) syntax line.
+void substitutePlaceholder(std::string& text, const std::string& placeholder, const std::shared_ptr<GameObject>& object) {
+	std::string::size_type pos = 0;
+	while ((pos = text.find(placeholder, pos)) != std::string::npos) {
+		std::string name = casedDisplayName(object, pos == 0);
+		text.replace(pos, placeholder.length(), name);
+		pos += name.length();
+	}
+}
+
+} // namespace
 
 VerbSyntax::VerbSyntax(const VerbSyntax& obj) {
 	this->syntaxStrings = obj.syntaxStrings;
@@ -49,7 +80,7 @@ std::string VerbSyntax::getInfo(std::vector<std::shared_ptr<GameObject>> objects
 	}
 
 	for (int i = 0; i < nObjects; i++) {
-		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$object" + std::to_string(i)), nonNullObjects[i]->getDisplayName());
+		substitutePlaceholder(syntaxToUse, "$object" + std::to_string(i), nonNullObjects[i]);
 	}
 	return syntaxToUse;
 }
@@ -83,12 +114,12 @@ std::string VerbSyntax::getInfo(std::shared_ptr<GameObject> selected, std::share
 	}
 
 	if (selected) {
-		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$selected"), selected->getDisplayName());
+		substitutePlaceholder(syntaxToUse, "$selected", selected);
 	}
 	if (target) {
-		syntaxToUse = std::regex_replace(syntaxToUse, std::regex("\\$target"), target->getDisplayName());
+		substitutePlaceholder(syntaxToUse, "$target", target);
 	}
-	
+
 	return syntaxToUse;
 }
 

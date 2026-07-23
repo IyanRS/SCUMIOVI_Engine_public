@@ -20,10 +20,19 @@ namespace {
 		}
 		return false;
 	}
+
+	// Counts built cutscenes currently between "started playing" and their
+	// onDone. A counter (not a bool) so a cutscene that triggers another one
+	// doesn't unlock input when only the inner one finishes.
+	int activeCutscenes_ = 0;
 }
 
 void Cutscene::requestSkip() {
 	skipRequested_ = true;
+}
+
+bool Cutscene::isPlaying() {
+	return activeCutscenes_ > 0;
 }
 
 Event Cutscene::chain(const std::vector<Step>& stepsToRun, Event onDone) {
@@ -147,20 +156,20 @@ Cutscene& Cutscene::disableMovementFor(std::shared_ptr<Player> player) {
 Event Cutscene::build() {
 	auto player = movementDisabledFor;
 
-	Event onDone;
-	if (player) {
-		onDone = Event(std::function<void()>([player]() {
-			player->enableMovement();
-		}));
-	}
+	// Every built cutscene tracks its playback window (isPlaying()), so the
+	// input manager can hold back world/verb clicks for its whole duration —
+	// both ends run exactly once per playback: onDone is the tail of the
+	// chain, reached at the natural end or via a skip.
+	Event onDone(std::function<void()>([player]() {
+		if (activeCutscenes_ > 0) activeCutscenes_--;
+		if (player) player->enableMovement();
+	}));
 
 	Event fullChain = chain(steps, onDone);
 
-	if (player) {
-		return Event(std::function<void()>([player, fullChain]() mutable {
-			player->disableMovement();
-			fullChain.execute();
-		}));
-	}
-	return fullChain;
+	return Event(std::function<void()>([player, fullChain]() mutable {
+		activeCutscenes_++;
+		if (player) player->disableMovement();
+		fullChain.execute();
+	}));
 }

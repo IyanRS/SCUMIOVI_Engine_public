@@ -36,6 +36,9 @@ std::shared_ptr<GameObject> Scene::addBackground(std::string source, Vector2<int
 	std::shared_ptr<Texture> backgroundTexture = std::make_shared<Texture>("background", source, Vector2<int>(0, 0), size);
 	std::shared_ptr<GameObject> background = std::make_shared<GameObject>("background", Vector2<float>(0, 0), Vector2<float>((float)size.x, (float)size.y), backgroundTexture);
 	background->setLayer(-100);
+	// Scenery: never named in the verb sentence line (clicks still fall
+	// through to it, which is how walking works).
+	background->setInteractable(false);
 	addGameObject(background);
 	return background;
 }

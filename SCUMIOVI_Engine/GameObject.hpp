@@ -32,6 +32,11 @@ class GameObject : public Interactable, public std::enable_shared_from_this<Game
 
 	std::string name;
 	std::string displayName;
+	// True when the display name's casing must be shown exactly as written
+	// (proper nouns, acronyms — "Stan") instead of being
+	// auto-cased by verb syntax lines. Set via a leading '=' in the name
+	// passed to setDisplayName.
+	bool fixedCaseDisplayName = false;
 	Vector2<> position;
 	Vector2<> size;
 	bool interactable = true;
@@ -96,7 +101,18 @@ public:
 	bool isVisible();
 	std::string& getName();
 	std::string& getDisplayName();
+	// A leading '=' marks the name's casing as fixed (stored stripped).
 	void setDisplayName(const std::string& displayName);
+	// Sets the name verbatim with an explicit casing rule (used to carry a
+	// display name from one object to another, e.g. scene item -> inventory).
+	void setDisplayName(const std::string& displayName, bool fixedCase);
+	bool hasFixedCaseDisplayName() const;
+	// Scenery flag. Non-interactable objects (backgrounds, decorations) are
+	// never named in the verb sentence line on hover. Clicks still pass
+	// through them, though — an "empty" click on the background is what
+	// routes to the current verb's default event (e.g. walking there).
+	void setInteractable(bool interactable);
+	bool isInteractable() const;
 	bool operator==(const GameObject& p2) const;
 	bool operator!=(const GameObject& p2) const;
 	void setLayer(int layer);

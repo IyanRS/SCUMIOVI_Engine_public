@@ -3,6 +3,7 @@
 #include "Common.hpp"
 #include <memory>
 #include "Game.hpp"
+#include "Cutscene.hpp"
 
 Vector2<> InputManager::getClickPosition(Camera& camera) {
 	float xMouse;
@@ -131,6 +132,11 @@ void InputManager::handleInput(SDL_Event& event, UI& ui, Scene& scene) {
 		keyBindings.handleKeyDown(event.key.key);
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
+		// While a cutscene plays, the world is on rails: no walking, no verb
+		// clicks, no object interactions. Keys are NOT held back — the skip
+		// binding (see "skipCutscene" in the game's keybindings) must work.
+		if (Cutscene::isPlaying())
+			break;
 		SDL_MouseButtonFlags mouseButtonFlags = SDL_GetMouseState(nullptr, nullptr);
 		switch (mouseButtonFlags) {
 		case 0:

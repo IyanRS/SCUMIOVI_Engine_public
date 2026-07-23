@@ -87,4 +87,9 @@ public:
 	// Requests that the currently-playing cutscene (if any) skip its
 	// remaining steps. Consumed by the next step boundary it reaches.
 	static void requestSkip();
+
+	// True while any built cutscene is playing. The input manager uses this
+	// to hold back mouse input (walking, verbs, object clicks) until the
+	// cutscene is over; key bindings stay live so skipping keeps working.
+	static bool isPlaying();
 };

@@ -125,6 +125,39 @@ TEST_CASE("UIVerbGrid highlights the button matching the layout's highlighted ve
     REQUIRE(walkColor[0] != 255);
 }
 
+TEST_CASE("Hovering a UIVerbButton highlights it and leaving restores it", "[ui]") {
+    Game& game = Game::getInstance();
+    auto player = std::make_shared<Player>("verb_hover_player", Vector2<>(0, 0), Vector2<>(10, 10));
+    game.addPlayer(player);
+    game.setCurrentPlayer(player);
+
+    UI& ui = game.getUI();
+    ui.createLayout("verbhover_test");
+    ui.setLayout("verbhover_test");
+    UILayout& layout = *ui.getLayout();
+
+    auto grid = std::make_shared<UIVerbGrid>("grid", Vector2<>(0, 0));
+    auto pushButton = std::make_shared<UIVerbButton>(game.pushVerb, Vector2<>(0, 0), Vector2<>(20, 10), nullptr);
+    grid->addButton(pushButton);
+    layout.addUIElement(grid);
+
+    // The full hover path (onMouseOver, not highlight() directly): the
+    // button's own highlight must survive whatever else the composed hover
+    // event does — a layout repaint from here once wiped it immediately.
+    pushButton->onMouseOver(Vector2<>(5, 5));
+    int color[4];
+    pushButton->getTextOver().getColor(color);
+    REQUIRE(color[0] == 255); // highlighted -> white
+
+    pushButton->onMouseNotOver(Vector2<>(50, 50));
+    pushButton->getTextOver().getColor(color);
+    REQUIRE(color[0] != 255); // back to its format color
+
+    // Hovering the button never makes it the sentence target either.
+    pushButton->onMouseOver(Vector2<>(5, 5));
+    REQUIRE(player->getTargetObject() == nullptr);
+}
+
 TEST_CASE("UIInventoryGrid places items into slots using its own configured geometry", "[ui]") {
     Game& game = Game::getInstance();
     auto player = std::make_shared<Player>("inv_grid_player", Vector2<>(0, 0), Vector2<>(10, 10));

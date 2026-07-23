@@ -10,6 +10,7 @@
 #include "Item.hpp"
 #include "DialogueNode.hpp"
 #include "DialogueOption.hpp"
+#include "Scene.hpp"
 #include "SceneTransitionObject.hpp"
 
 // ---------------------------------------------------------------------------
@@ -374,6 +375,95 @@ TEST_CASE("Gameplay logic", "[gameplay]") {
         player->disableMovement();
         node->showOptions();
         REQUIRE(player->canMove() == true);
+    }
+
+    // -----------------------------------------------------------------------
+    // HOVER TARGET — the object named in the verb sentence line
+    // -----------------------------------------------------------------------
+    SECTION("Hovering a scene object targets it even without a default verb") {
+        auto scene = std::make_shared<Scene>();
+        game.changeScene(scene, 0.0f);
+
+        // An NPC like Stan: interactions but no default verb.
+        auto npc = std::make_shared<GameObject>("hover_npc", Vector2<>(0, 0), Vector2<>(10, 10));
+        npc->addVerbInteraction(game.pickupVerb, Event([](EventInfo) {}));
+        scene->addGameObject(npc);
+
+        npc->onMouseOver(Vector2<>(5, 5));
+        REQUIRE(player->getTargetObject() == npc);
+
+        npc->onMouseNotOver(Vector2<>(50, 50));
+        REQUIRE(player->getTargetObject() == nullptr);
+    }
+
+    SECTION("Hovering an object with no interactions at all still targets it") {
+        auto scene = std::make_shared<Scene>();
+        game.changeScene(scene, 0.0f);
+
+        auto prop = std::make_shared<GameObject>("hover_prop", Vector2<>(0, 0), Vector2<>(10, 10));
+        scene->addGameObject(prop);
+
+        prop->onMouseOver(Vector2<>(5, 5));
+        REQUIRE(player->getTargetObject() == prop);
+
+        prop->onMouseNotOver(Vector2<>(50, 50));
+        REQUIRE(player->getTargetObject() == nullptr);
+    }
+
+    SECTION("Hovering scenery marked non-interactable does not target it") {
+        auto scene = std::make_shared<Scene>();
+        game.changeScene(scene, 0.0f);
+
+        auto decoration = std::make_shared<GameObject>("hover_decoration", Vector2<>(0, 0), Vector2<>(10, 10));
+        decoration->setInteractable(false);
+        scene->addGameObject(decoration);
+
+        decoration->onMouseOver(Vector2<>(5, 5));
+        REQUIRE(player->getTargetObject() == nullptr);
+    }
+
+    SECTION("Scene backgrounds are scenery: hovering them does not target them") {
+        auto scene = std::make_shared<Scene>();
+        game.changeScene(scene, 0.0f);
+
+        auto background = scene->addBackground("missing_bg.png", Vector2<int>(640, 144));
+        REQUIRE_FALSE(background->isInteractable());
+
+        background->onMouseOver(Vector2<>(100, 100));
+        REQUIRE(player->getTargetObject() == nullptr);
+    }
+
+    SECTION("Hovering an object outside any scene does not target it") {
+        auto floating = std::make_shared<GameObject>("hover_floating", Vector2<>(0, 0), Vector2<>(10, 10));
+
+        floating->onMouseOver(Vector2<>(5, 5));
+        REQUIRE(player->getTargetObject() == nullptr);
+    }
+
+    SECTION("Hovering the current player does not target them") {
+        auto scene = std::make_shared<Scene>();
+        game.changeScene(scene, 0.0f);
+        scene->addGameObject(player);
+
+        player->onMouseOver(Vector2<>(5, 5));
+        REQUIRE(player->getTargetObject() == nullptr);
+    }
+
+    SECTION("Leaving one object does not clear a target set by another") {
+        auto scene = std::make_shared<Scene>();
+        game.changeScene(scene, 0.0f);
+
+        auto first = std::make_shared<GameObject>("hover_first", Vector2<>(0, 0), Vector2<>(10, 10));
+        auto second = std::make_shared<GameObject>("hover_second", Vector2<>(10, 0), Vector2<>(10, 10));
+        scene->addGameObject(first);
+        scene->addGameObject(second);
+
+        // Pointer slides from first onto second; depending on iteration order
+        // second's mouse-over can fire before first's mouse-not-over.
+        first->onMouseOver(Vector2<>(5, 5));
+        second->onMouseOver(Vector2<>(15, 5));
+        first->onMouseNotOver(Vector2<>(15, 5));
+        REQUIRE(player->getTargetObject() == second);
     }
 
     // -----------------------------------------------------------------------

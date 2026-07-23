@@ -288,7 +288,7 @@ void ScriptLoader::loadGame(Game& game) {
         Vector2<>(-1.0f, -1.0f),
         stanTexture
     );
-    scummbar_stan->setDisplayName("Stan");
+    scummbar_stan->setDisplayName("=Stan");
 
     scummbar_stan->moveToScene(scummbar);
     scummbar_stan->setLayer(-1);

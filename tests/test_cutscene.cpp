@@ -118,6 +118,10 @@ TEST_CASE("Cutscene::say sets the object's displayed text", "[cutscene]") {
 
     cs.execute();
     REQUIRE(obj->getTextOver().toString() == "Hello");
+
+    // Let the say run out so the cutscene actually finishes — a playback
+    // left hanging would keep Cutscene::isPlaying() true for later tests.
+    obj->update(1.1f);
 }
 
 TEST_CASE("Cutscene::changeScene switches the active scene and continues once done", "[cutscene]") {
@@ -283,6 +287,34 @@ TEST_CASE("Cutscene skip flag does not leak into a later cutscene", "[cutscene]"
     REQUIRE(order == std::vector<int>{1}); // not skipped this time
 }
 
+TEST_CASE("Cutscene::isPlaying is true exactly while a cutscene runs", "[cutscene]") {
+    drainPendingEvents();
+    ensureCurrentPlayer();
+    REQUIRE_FALSE(Cutscene::isPlaying());
+
+    Event cs = Cutscene().wait(1.0f).build();
+    cs.execute();
+    REQUIRE(Cutscene::isPlaying());
+
+    Event::tick(0.5f);
+    REQUIRE(Cutscene::isPlaying());
+
+    Event::tick(0.6f);
+    REQUIRE_FALSE(Cutscene::isPlaying());
+}
+
+TEST_CASE("Cutscene::isPlaying clears when a cutscene is skipped", "[cutscene]") {
+    drainPendingEvents();
+    ensureCurrentPlayer();
+    Event cs = Cutscene().wait(1.0f).wait(1.0f).build();
+    cs.execute();
+    REQUIRE(Cutscene::isPlaying());
+
+    Cutscene::requestSkip();
+    Event::tick(1.1f); // the in-flight wait finishes; the skip fires at the boundary
+    REQUIRE_FALSE(Cutscene::isPlaying());
+}
+
 // --- CutsceneLoader ---------------------------------------------------------
 
 TEST_CASE("CutsceneLoader builds a linear cutscene from JSON", "[cutscene][loader]") {
@@ -317,6 +349,10 @@ TEST_CASE("CutsceneLoader builds a linear cutscene from JSON", "[cutscene][loade
     REQUIRE(actor->getPosition().x == 15);
     REQUIRE(actor->getPosition().y == 25);
     REQUIRE(actor->getTextOver().toString() == "Hi there");
+
+    // Let the say run out so the playback finishes cleanly (see
+    // Cutscene::isPlaying()).
+    for (int i = 0; i < 12; i++) actor->update(0.05f);
 
     std::remove(path);
 }

@@ -132,20 +132,33 @@ void Interactable::removeInteraction(std::string verbName) {
 }
 
 Event& Interactable::getMouseOverEvent() {
-	if (defaultVerb && defaultVerb->getName() != "any") {
-		Event highlightDefaultVerbEvent = Event([this](EventInfo e) {
-			e.game.getUI().setHighlightedVerb(getDefaultVerb());
-			if (e.player.getVerb() && e.interactable.hasVerbInteraction(e.player.getVerb())) {
-				GameObject* go = dynamic_cast<GameObject*>(&e.interactable);
-				if (go) e.player.setTargetObject(go->shared_from_this());
-			}
-			e.game.getUI().updateUI();
-		});
+	Event hoverInfoEvent = Event([this](EventInfo e) {
+		// Scene objects only. UI elements are GameObjects too, but they own
+		// their hover visuals (a verb button highlights its own text) — a
+		// blanket updateUI() from here would repaint the layout from the
+		// highlighted-verb state and immediately undo them.
+		GameObject* go = dynamic_cast<GameObject*>(&e.interactable);
+		if (!go || go->getScene() == nullptr) return;
 
-		mouseOverEventPlusHighlight = mouseOverEvent + highlightDefaultVerbEvent;
-		return mouseOverEventPlusHighlight;
-	}
-	return mouseOverEvent;
+		// Naming the hovered object in the sentence line ("Talk to Stan")
+		// must not depend on it having a default verb or an interaction for
+		// the current verb — unmatched verbs fall back to their default
+		// message when clicked, so the label should still name the object.
+		// Scenery (backgrounds, decorations — see
+		// GameObject::setInteractable) stays unnamed, and the player doesn't
+		// name themselves. setTargetObject refreshes the UI itself.
+		if (go->isInteractable() && go != e.game.getCurrentPlayer().get()) {
+			e.player.setTargetObject(go->shared_from_this());
+		}
+
+		if (defaultVerb && defaultVerb->getName() != "any") {
+			e.game.getUI().setHighlightedVerb(getDefaultVerb());
+			e.game.getUI().updateUI();
+		}
+	});
+
+	mouseOverEventPlusHighlight = mouseOverEvent + hoverInfoEvent;
+	return mouseOverEventPlusHighlight;
 }
 
 void Interactable::setMouseOverEvent(Event event) {
@@ -153,17 +166,27 @@ void Interactable::setMouseOverEvent(Event event) {
 }
 
 Event& Interactable::getMouseNotOverEvent() {
-	if (defaultVerb && defaultVerb->getName() != "any") {
-		Event dontHighlightDefaultVerbEvent = Event([this](EventInfo e) {
-			e.game.getUI().setHighlightedVerb(nullptr);
-			e.player.setTargetObject(nullptr);
-			e.game.getUI().updateUI();
-		});
+	Event clearInfoEvent = Event([this](EventInfo e) {
+		// Scene objects only — see getMouseOverEvent.
+		GameObject* go = dynamic_cast<GameObject*>(&e.interactable);
+		if (!go || go->getScene() == nullptr) return;
 
-		mouseNotOverEventPlusNoHighlight = mouseNotOverEvent + dontHighlightDefaultVerbEvent;
-		return mouseNotOverEventPlusNoHighlight;
-	}
-	return mouseNotOverEvent;
+		// Only clear the target if it's still this object — over/not-over
+		// events for different objects can fire in the same frame (pointer
+		// sliding from one object straight onto another), and this object's
+		// exit must not wipe the target the other object just set.
+		if (e.player.getTargetObject().get() == go) {
+			e.player.setTargetObject(nullptr);
+		}
+
+		if (defaultVerb && defaultVerb->getName() != "any") {
+			e.game.getUI().setHighlightedVerb(nullptr);
+			e.game.getUI().updateUI();
+		}
+	});
+
+	mouseNotOverEventPlusNoHighlight = mouseNotOverEvent + clearInfoEvent;
+	return mouseNotOverEventPlusNoHighlight;
 }
 
 void Interactable::setMouseNotOverEvent(Event event) {

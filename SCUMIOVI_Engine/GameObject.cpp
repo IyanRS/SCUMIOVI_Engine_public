@@ -246,8 +246,33 @@ std::string& GameObject::getDisplayName() {
 	return displayName;
 }
 
+// A leading '=' in game data (e.g. "=Stan") declares the
+// display name's casing as fixed: verb syntax lines insert it exactly as
+// written instead of auto-casing it to its position in the sentence.
+constexpr char FIXED_CASE_MARKER = '=';
+
 void GameObject::setDisplayName(const std::string& newDisplayName) {
+	if (!newDisplayName.empty() && newDisplayName.front() == FIXED_CASE_MARKER)
+		setDisplayName(newDisplayName.substr(1), true);
+	else
+		setDisplayName(newDisplayName, false);
+}
+
+void GameObject::setDisplayName(const std::string& newDisplayName, bool fixedCase) {
 	displayName = newDisplayName;
+	fixedCaseDisplayName = fixedCase;
+}
+
+bool GameObject::hasFixedCaseDisplayName() const {
+	return fixedCaseDisplayName;
+}
+
+void GameObject::setInteractable(bool newInteractable) {
+	interactable = newInteractable;
+}
+
+bool GameObject::isInteractable() const {
+	return interactable;
 }
 
 void GameObject::setLayer(int layer) {

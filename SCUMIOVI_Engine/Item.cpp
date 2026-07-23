@@ -20,10 +20,17 @@ Item::Item(std::string name,
 			else
 				currentPlayer->playAnimation("interactLeft");
 			
+			// Read before destroy(): the inventory copy must keep the scene
+			// object's display name (and its casing rule), not fall back to
+			// the id — that's what made "Pick up Mug" turn into "Give mug to".
+			std::string carriedDisplayName = getDisplayName();
+			bool carriedFixedCase = hasFixedCaseDisplayName();
+
 			shared_from_this()->destroy();
-			
+
 			auto itemInInventory = std::make_shared<GameObject>(name, Vector2<>(), Vector2<>(-1, -1), inventoryTexture);
 			itemInInventory->addTag("item");
+			itemInInventory->setDisplayName(carriedDisplayName, carriedFixedCase);
 			
 			Game& internalGame = Game::getInstance();
 			itemInInventory->addVerbInteraction(internalGame.giveVerb, Event([](EventInfo e) {

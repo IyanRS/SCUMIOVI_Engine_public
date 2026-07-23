@@ -1,5 +1,6 @@
 {
   "name": "intro_cutscene",
+  "disableMovementFor": "guybrush",
   "steps": [
     { "type": "fadeToBlack", "seconds": 0.0 },
     { "type": "fadeFromBlack", "seconds": 1.0 },

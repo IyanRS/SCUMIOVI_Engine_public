@@ -135,3 +135,70 @@ TEST_CASE("VerbSyntax copy construction", "[verbsyntax]") {
     VerbSyntax copy(original);
     REQUIRE(copy.getStringsCount() == 2);
 }
+
+// ---------------------------------------------------------------------------
+// Display-name auto-casing in syntax lines
+// ---------------------------------------------------------------------------
+
+TEST_CASE("VerbSyntax lowercases display names inside a sentence", "[verbsyntax][casing]") {
+    VerbSyntax vs({ "Pick up", "Pick up $target" });
+    auto obj = std::make_shared<GameObject>("mug", Vector2<>(0, 0));
+    obj->setDisplayName("Mug");
+
+    // Scene object says "Mug", inventory copy says "mug" — both must render
+    // the same mid-sentence.
+    REQUIRE(vs.getInfo(nullptr, obj) == "Pick up mug");
+}
+
+TEST_CASE("VerbSyntax lowercases every word of a multi-word name", "[verbsyntax][casing]") {
+    VerbSyntax vs({ "Push", "Push $target" });
+    auto obj = std::make_shared<GameObject>("table2", Vector2<>(0, 0));
+    obj->setDisplayName("Wooden Table");
+
+    REQUIRE(vs.getInfo(nullptr, obj) == "Push wooden table");
+}
+
+TEST_CASE("VerbSyntax capitalizes a name at the start of a sentence", "[verbsyntax][casing]") {
+    VerbSyntax vs({ "$target looks heavy" });
+    auto obj = std::make_shared<GameObject>("table2", Vector2<>(0, 0));
+    obj->setDisplayName("Wooden Table");
+
+    REQUIRE(vs.getInfo(nullptr, obj) == "Wooden table looks heavy");
+}
+
+TEST_CASE("A '=' prefix keeps a display name's casing everywhere", "[verbsyntax][casing]") {
+    auto robot = std::make_shared<GameObject>("robot", Vector2<>(0, 0));
+    robot->setDisplayName("=R.O.B.O.T 3000");
+
+    // The marker is data-only: it never shows up in the name itself.
+    REQUIRE(robot->getDisplayName() == "R.O.B.O.T 3000");
+    REQUIRE(robot->hasFixedCaseDisplayName());
+
+    VerbSyntax mid({ "Pick up", "Pick up $target" });
+    REQUIRE(mid.getInfo(nullptr, robot) == "Pick up R.O.B.O.T 3000");
+
+    VerbSyntax start({ "$target beeps" });
+    REQUIRE(start.getInfo(nullptr, robot) == "R.O.B.O.T 3000 beeps");
+}
+
+TEST_CASE("Fixed-case names work for proper nouns mid-sentence", "[verbsyntax][casing]") {
+    VerbSyntax vs({ "Give", "Give $selected to $target" });
+    auto mug = std::make_shared<GameObject>("mug", Vector2<>(0, 0));
+    mug->setDisplayName("Mug");
+    auto stan = std::make_shared<GameObject>("stan", Vector2<>(0, 0));
+    stan->setDisplayName("=Stan");
+
+    REQUIRE(vs.getInfo(mug, stan) == "Give mug to Stan");
+}
+
+TEST_CASE("setDisplayName with explicit casing rule carries names between objects", "[verbsyntax][casing]") {
+    auto sceneItem = std::make_shared<GameObject>("robot", Vector2<>(0, 0));
+    sceneItem->setDisplayName("=R.O.B.O.T 3000");
+
+    // The scene item -> inventory item handoff (see Item.cpp).
+    auto inventoryItem = std::make_shared<GameObject>("robot", Vector2<>(0, 0));
+    inventoryItem->setDisplayName(sceneItem->getDisplayName(), sceneItem->hasFixedCaseDisplayName());
+
+    REQUIRE(inventoryItem->getDisplayName() == "R.O.B.O.T 3000");
+    REQUIRE(inventoryItem->hasFixedCaseDisplayName());
+}
