@@ -257,6 +257,39 @@ TEST_CASE("Gameplay logic", "[gameplay]") {
     }
 
     // -----------------------------------------------------------------------
+    // SAY — callback chaining
+    // -----------------------------------------------------------------------
+    SECTION("Consecutive say callbacks chain without dropping one") {
+        // Regression: the say timer used to clear its callback AFTER running
+        // it, wiping the callback the callback itself had just installed —
+        // so a chain of say()s silently stopped after the second line.
+        auto obj = std::make_shared<GameObject>("talker", Vector2<>(0, 0), Vector2<>(10, 10));
+        std::vector<int> said;
+
+        obj->say("One", 0.5f, Event([&said, obj]() {
+            said.push_back(1);
+            obj->say("Two", 0.5f, Event([&said, obj]() {
+                said.push_back(2);
+                obj->say("Three", 0.5f, Event([&said]() {
+                    said.push_back(3);
+                }));
+            }));
+        }));
+
+        for (int i = 0; i < 60 && said.size() < 3; i++) obj->update(0.05f);
+        REQUIRE(said == std::vector<int>{1, 2, 3});
+    }
+
+    SECTION("A say callback that starts nothing new leaves no callback behind") {
+        auto obj = std::make_shared<GameObject>("talker2", Vector2<>(0, 0), Vector2<>(10, 10));
+        int fired = 0;
+        obj->say("Once", 0.5f, Event([&fired]() { fired++; }));
+
+        for (int i = 0; i < 40; i++) obj->update(0.05f);
+        REQUIRE(fired == 1); // not re-fired on later frames
+    }
+
+    // -----------------------------------------------------------------------
     // EVENT — execution with callbacks
     // -----------------------------------------------------------------------
     SECTION("Event execute fires void lambda") {

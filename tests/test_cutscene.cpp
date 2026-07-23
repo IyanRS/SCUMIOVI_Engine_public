@@ -287,6 +287,67 @@ TEST_CASE("Cutscene skip flag does not leak into a later cutscene", "[cutscene]"
     REQUIRE(order == std::vector<int>{1}); // not skipped this time
 }
 
+TEST_CASE("A walk-then-say chain runs to completion in order", "[cutscene]") {
+    drainPendingEvents();
+    auto player = ensureCurrentPlayer();
+    player->setPosition(Vector2<>(0, 0));
+
+    Event cs = Cutscene()
+        .disableMovementFor(player)
+        .walk(player, Vector2<>(100, 100), 2.0f)
+        .say(player, "First line")
+        .say(player, "Second line")
+        .build();
+
+    cs.execute();
+    REQUIRE_FALSE(player->canMove());
+
+    // The walk: nothing said yet.
+    for (int i = 0; i < 41; i++) player->update(0.05f); // ~2.05s
+    REQUIRE(player->getPosition().x == 100);
+    REQUIRE(player->getPosition().y == 100);
+    REQUIRE(player->getTextOver().toString() == "First line");
+
+    // "First line" is 10 chars -> 1.0s; run it out and the next one starts.
+    for (int i = 0; i < 21; i++) player->update(0.05f);
+    REQUIRE(player->getTextOver().toString() == "Second line");
+
+    // Run well past the end; movement coming back is the chain's own signal
+    // that every step finished.
+    for (int i = 0; i < 100 && !player->canMove(); i++) player->update(0.05f);
+    REQUIRE(player->canMove());
+}
+
+TEST_CASE("A click-driven walk can't hijack a cutscene's pending callback", "[cutscene]") {
+    drainPendingEvents();
+    auto player = ensureCurrentPlayer();
+    player->setPosition(Vector2<>(0, 0));
+
+    Event cs = Cutscene()
+        .disableMovementFor(player)
+        .walk(player, Vector2<>(100, 0), 1.0f)
+        .say(player, "Made it")
+        .build();
+
+    cs.execute();
+
+    // Mid-walk, a stray click-to-walk arrives. Game code guards on
+    // canMove() (see ScriptLoader's walk event), and the cutscene has it
+    // disabled — without that guard this moveToAtSpeed would overwrite the
+    // pending move callback and the rest of the chain would never run.
+    for (int i = 0; i < 10; i++) player->update(0.05f);
+    if (player->canMove()) {
+        player->moveToAtSpeed(Vector2<>(300, 0), 100.0f);
+    }
+
+    for (int i = 0; i < 15; i++) player->update(0.05f);
+    REQUIRE(player->getPosition().x == 100);
+    REQUIRE(player->getTextOver().toString() == "Made it");
+
+    // Let it finish so the playback doesn't leak into later tests.
+    for (int i = 0; i < 100 && !player->canMove(); i++) player->update(0.05f);
+}
+
 TEST_CASE("Cutscene::isPlaying is true exactly while a cutscene runs", "[cutscene]") {
     drainPendingEvents();
     ensureCurrentPlayer();

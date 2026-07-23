@@ -13,8 +13,14 @@ void TextComponent::update(float deltaTime) {
 			Text empty;
 			setTextOver(empty);
 			owner->animator.stopTalking();
-			sayCallback.execute();
-			sayCallback = Event();  // clear to avoid double-fire
+
+			// Take the callback and clear the member BEFORE running it. A
+			// callback that chains another say() installs its own callback
+			// while executing; clearing afterwards would wipe that fresh one
+			// and silently end the chain at the second line.
+			Event callback = sayCallback;
+			sayCallback = Event();  // cleared first, so no double-fire either
+			callback.execute();
 		}
 	}
 }

@@ -1,35 +1,38 @@
 {
     "currentPlayerName": "guybrush",
-    "currentScene": "scummbar",
+    "currentScene": "backroom",
     "gameState": {
         "counters": {},
-        "flags": {}
+        "flags": {
+            "gave_mug_to_stan": true
+        }
     },
     "players": {
         "guybrush": {
             "inventory": [],
             "position": {
-                "x": 244.0,
-                "y": 87.05000305175781
+                "x": 196.5,
+                "y": 100.05000305175781
             },
-            "scene": "scummbar",
+            "scene": "backroom",
             "verb": "walk"
         },
         "otis": {
             "inventory": [],
             "position": {
-                "x": 300.0,
-                "y": 100.0
+                "x": 267.0,
+                "y": 74.05000305175781
             },
             "scene": "backroom",
-            "verb": ""
+            "verb": "walk"
         }
     },
-    "savedAt": "2026-07-23 21:53",
+    "savedAt": "2026-07-23 23:01",
     "scenes": {
         "backroom": {
             "background": {
                 "interactable": false,
+                "layer": -100,
                 "position": {
                     "x": 0.0,
                     "y": 0.0
@@ -39,6 +42,7 @@
             },
             "door_to_bar": {
                 "interactable": true,
+                "layer": -1,
                 "position": {
                     "x": 60.0,
                     "y": 100.0
@@ -46,11 +50,22 @@
                 "state": 1,
                 "visible": false
             },
+            "guybrush": {
+                "interactable": true,
+                "layer": 0,
+                "position": {
+                    "x": 196.5,
+                    "y": 100.05000305175781
+                },
+                "state": 0,
+                "visible": true
+            },
             "otis": {
                 "interactable": true,
+                "layer": 0,
                 "position": {
-                    "x": 300.0,
-                    "y": 100.0
+                    "x": 267.0,
+                    "y": 74.05000305175781
                 },
                 "state": 0,
                 "visible": true
@@ -59,6 +74,7 @@
         "scummbar": {
             "background": {
                 "interactable": false,
+                "layer": -100,
                 "position": {
                     "x": 0.0,
                     "y": 0.0
@@ -68,42 +84,37 @@
             },
             "door_to_backroom": {
                 "interactable": true,
+                "layer": -1,
                 "position": {
                     "x": 594.0,
                     "y": 73.0
                 },
-                "state": 1,
-                "visible": false
+                "state": 0,
+                "visible": true
             },
             "door_to_bar": {
                 "interactable": true,
+                "layer": -1,
                 "position": {
                     "x": 32.0,
                     "y": 72.0
-                },
-                "state": 1,
-                "visible": false
-            },
-            "guybrush": {
-                "interactable": true,
-                "position": {
-                    "x": 244.0,
-                    "y": 87.05000305175781
                 },
                 "state": 0,
                 "visible": true
             },
             "mug": {
-                "interactable": true,
+                "interactable": false,
+                "layer": 2,
                 "position": {
-                    "x": 124.0,
-                    "y": 97.0
+                    "x": 194.0,
+                    "y": 109.0
                 },
                 "state": 0,
-                "visible": true
+                "visible": false
             },
             "stan": {
                 "interactable": true,
+                "layer": -1,
                 "position": {
                     "x": 155.0,
                     "y": 68.0
@@ -113,6 +124,7 @@
             },
             "table": {
                 "interactable": true,
+                "layer": 1,
                 "position": {
                     "x": 157.0,
                     "y": 115.0
@@ -122,6 +134,7 @@
             },
             "table2": {
                 "interactable": true,
+                "layer": 1,
                 "position": {
                     "x": 20.0,
                     "y": 118.0

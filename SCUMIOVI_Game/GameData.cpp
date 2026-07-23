@@ -70,14 +70,14 @@ void ScriptLoader::loadGame(Game& game) {
         1
     );
     auto guybrushIdleLeft = guybrushIdleRight->getMirrored("guybrushIdleLeft");
-    auto otisIdleRight = std::make_shared<Animation>(
-        "otisIdleRight",
-        "Stan_transparent.png",
-        Vector2<int>(36,9),
-        Vector2<int>(37,57),
+    auto otisIdleLeft = std::make_shared<Animation>(
+        "otisIdleLeft",
+        "LeChuck.png",
+        Vector2<int>(0,0),
+        Vector2<int>(32,58),
         1
     );
-    auto otisIdleLeft = otisIdleRight->getMirrored("otisIdleLeft");
+    auto otisIdleRight = otisIdleLeft->getMirrored("otisIdleRight");
 
     // --- Textures for objects ---
     auto tableTexture = std::make_shared<Texture>(
