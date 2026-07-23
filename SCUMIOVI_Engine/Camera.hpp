@@ -7,6 +7,7 @@
 #include <vector>
 
 class GameObject;
+class Player;
 #include "GameObject.hpp"
 
 class Camera {
@@ -22,16 +23,26 @@ class Camera {
 	float moveDuration = 0.0f;  // total seconds for this move
 	float moveElapsed  = 0.0f;  // seconds elapsed so far
 	Event moveCallback;
+	// Starts a move unconditionally (no duplicate-target guard) — the guard
+	// in moveTo() must never eat a zone transition's pan.
+	void startMove(Vector2<> pos, float seconds, Event callback);
 
 	// Camera zones (optional — replaces followObject per-zone)
 	std::vector<CameraZone> zones;
 	int currentZoneIndex = -1;
 	bool useZones = false;
 	// True for the whole duration of a zone crossing (camera pan + forced
-	// nudge walk + player input lock) — while true, zones aren't
-	// re-evaluated, so a crossing can't retrigger itself mid-flight.
+	// walk-in + player input lock) — while true, zones aren't re-evaluated,
+	// so a crossing can't retrigger or reverse itself mid-flight.
 	bool zoneTransitioning = false;
+	// Seconds until the crossing ends. The transition finishes on this
+	// timer — never on a movement callback, which could be dropped and
+	// leave the player's input locked forever.
+	float zoneTransitionTimeLeft = 0.0f;
+	// Player whose input was locked by the crossing, to re-enable on end.
+	std::weak_ptr<Player> transitionPlayer;
 	void beginZoneTransition(std::shared_ptr<GameObject> target, int newZoneIndex, float direction);
+	void endZoneTransition();
 
 public:
 	Camera();
