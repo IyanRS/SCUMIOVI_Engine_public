@@ -97,6 +97,9 @@ def parse_object(line):
             'image': close_image if close_image else image,
             'open_image': open_image,
             'target_scene': target_scene,
+            # Optional "x;y": where the player stands after walking through.
+            # Empty means they keep their previous position.
+            'entry_pos': (line.get('entry_pos') or '').strip(),
             'offset': line['offset'].strip(),
             'size': line['size'].strip(),
             'text_format': line['text_format'].strip(),
@@ -487,19 +490,6 @@ def collect_data():
         reader = csv.DictReader(f)
         for row in reader:
             interactions.append(parse_interaction(row))
-    # Combinations — item-to-item (useVerb with selected object)
-    combinations = []
-    combos_path = os.path.join(GAME_FILES_FOLDER, 'Combinations.csv')
-    if os.path.exists(combos_path):
-        with open(combos_path) as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                combinations.append({
-                    'item': row['item'].strip(),
-                    'target': row['target'].strip(),
-                    'script': row['script'].strip(),
-                    'function_name': row['script'].strip()
-                })
     player_ids = { p['id'] for p in players }
     # Scenes
     scenes_dir = os.path.join(GAME_FILES_FOLDER, 'Scenes')
@@ -524,7 +514,7 @@ def collect_data():
     # Scripts referenced only from keybindings.json / ui/*.json (the "script"
     # UIAction) — not declared anywhere in game/*.csv.
     ui_scripts = [{'function_name': name} for name in collect_ui_script_names()]
-    return {'verbs': verbs, 'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'combinations': combinations, 'text_formats': text_formats, 'dialogues': dialogues, 'dialogue_scripts': dialogue_scripts, 'ui_scripts': ui_scripts}
+    return {'verbs': verbs, 'animations': animations, 'players': players, 'scenes': scenes, 'config': settings, 'objects': objects, 'interactions': interactions, 'text_formats': text_formats, 'dialogues': dialogues, 'dialogue_scripts': dialogue_scripts, 'ui_scripts': ui_scripts}
 
 # --- Main: generate via Jinja2 and compile ---
 def main():
@@ -532,18 +522,16 @@ def main():
 
     # Generate stand-alone interaction .cpp / .h files (intellisense-friendly)
     all_scripts = list(data['dialogue_scripts'])
-    for combo in data['combinations']:
-        all_scripts.append({'function_name': combo['function_name']})
     all_scripts.extend(data['ui_scripts'])
     generate_interaction_files(data['interactions'], all_scripts)
 
     # Deduplicated list of named interaction scripts (object interactions,
-    # dialogue actions, combinations, and scripts referenced only from
-    # keybindings/UI JSON) to register with the runtime script registry so
-    # data can invoke them by name.
+    # dialogue actions, and scripts referenced only from keybindings/UI JSON)
+    # to register with the runtime script registry so data can invoke them by
+    # name.
     seen = set()
     script_names = []
-    for entry in list(data['interactions']) + list(data['dialogue_scripts']) + list(data['combinations']) + list(data['ui_scripts']):
+    for entry in list(data['interactions']) + list(data['dialogue_scripts']) + list(data['ui_scripts']):
         fn = entry.get('function_name', '')
         if fn and fn not in seen:
             seen.add(fn)

@@ -158,7 +158,7 @@ void ScriptLoader::loadGame(Game& game) {
     {% endfor %}
 
     // Objects
-    {% set ns = namespace(objType="", doorTargetScene="", objHasImage=false, objDisplayName="") %}
+    {% set ns = namespace(objType="", doorTargetScene="", doorEntryPos="", objHasImage=false, objDisplayName="") %}
     {% for o in s.objects %}
     {% set varName = s.name + "_" + o.id %}
     {% for obj in objects %}
@@ -166,6 +166,7 @@ void ScriptLoader::loadGame(Game& game) {
         {% set ns.objType = obj.type %}
         {% if obj.type == 'door' %}
             {% set ns.doorTargetScene = obj.target_scene %}
+            {% set ns.doorEntryPos = obj.entry_pos %}
         {% endif %}
         {% set ns.objHasImage = obj.image | length > 0 %}
         {% set ns.objDisplayName = obj.display_name %}
@@ -199,8 +200,12 @@ void ScriptLoader::loadGame(Game& game) {
     );
     {% endif %}
     {{ varName }}->setDisplayName("{{ cpp_string(ns.objDisplayName) }}");
+    {% if ns.doorEntryPos %}
+    {{ varName }}->setEntryPosition({{ parse_vector(ns.doorEntryPos, type_hint='') }});
+    {% endif %}
     {% set ns.objType = "" %}
     {% set ns.doorTargetScene = "" %}
+    {% set ns.doorEntryPos = "" %}
     {% set ns.objHasImage = false %}
     {% set ns.objDisplayName = "" %}
 
@@ -355,11 +360,6 @@ void ScriptLoader::loadGame(Game& game) {
     }));
     {% endif %}
     {% endif %}
-    {% endfor %}
-
-    // --- Item combinations ---
-    {% for combo in combinations %}
-    game.addCombination("{{ combo.item }}", "{{ combo.target }}", game.scriptEvent("{{ combo.function_name }}"));
     {% endfor %}
 
     game.bindLeftClickToVerb(game.selectedVerb);

@@ -55,7 +55,9 @@ Door::Door(std::string name,
 		pos.y -= e.player.getSize().y * 0.8f;
 		e.player.moveToAtSpeed(pos, 100, Event([this](EventInfo e) {
 			if (getState() == OPEN) {
-				e.game.changeScene(sceneTransition.getTargetScene());
+				// Goes through the transition object so a declared entry
+				// position is applied (see SceneTransitionObject::transition).
+				sceneTransition.transition();
 			}
 		}));
 	}));
@@ -79,4 +81,12 @@ Door::Door(std::string name,
 			e.player.say(tr("Opened"));
 		}));
 	}));
+}
+
+void Door::setEntryPosition(Vector2<> position) {
+	sceneTransition.setEntryPosition(position);
+}
+
+const std::optional<Vector2<>>& Door::getEntryPosition() const {
+	return sceneTransition.getEntryPosition();
 }

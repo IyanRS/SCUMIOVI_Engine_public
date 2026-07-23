@@ -3,4 +3,5 @@ stan,give,mug,give_mug_stan
 stan,talk,,dialogue(stan.txt)
 stan,push,,push_stan
 table,push,,push_table
+table,use,mug,use_mug_on_table
 table2,pull,,pull_table2

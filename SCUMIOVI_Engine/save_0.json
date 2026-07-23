@@ -9,8 +9,8 @@
         "guybrush": {
             "inventory": [],
             "position": {
-                "x": 137.0,
-                "y": 100.05000305175781
+                "x": 244.0,
+                "y": 87.05000305175781
             },
             "scene": "scummbar",
             "verb": "walk"
@@ -25,7 +25,7 @@
             "verb": ""
         }
     },
-    "savedAt": "2026-07-23 18:35",
+    "savedAt": "2026-07-23 21:53",
     "scenes": {
         "backroom": {
             "background": {
@@ -87,8 +87,8 @@
             "guybrush": {
                 "interactable": true,
                 "position": {
-                    "x": 137.0,
-                    "y": 100.05000305175781
+                    "x": 244.0,
+                    "y": 87.05000305175781
                 },
                 "state": 0,
                 "visible": true

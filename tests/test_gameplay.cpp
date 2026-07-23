@@ -12,6 +12,7 @@
 #include "DialogueOption.hpp"
 #include "Scene.hpp"
 #include "SceneTransitionObject.hpp"
+#include "Door.hpp"
 
 // ---------------------------------------------------------------------------
 // Helper: drain any leftover pending events from previous sections
@@ -157,6 +158,68 @@ TEST_CASE("Gameplay logic", "[gameplay]") {
         REQUIRE(player->getSelectedObject() == obj);
     }
 
+    SECTION("A two-object verb selects an object that has no interaction for it") {
+        // The mug case: the scene object only knows about "pick up", but
+        // "Use" on it must still make it the source of the sentence — that's
+        // the only way "use mug on table" can ever be started.
+        auto mug = std::make_shared<GameObject>("mug", Vector2<>(0, 0), Vector2<>(10, 10));
+        mug->addVerbInteraction(game.pickupVerb, Event([](EventInfo) {}));
+        player->setVerb(game.useVerb);
+
+        bool consumed = mug->interact(Vector2<>(5, 5), game.useVerb);
+        REQUIRE(consumed);
+        REQUIRE(player->getSelectedObject() == mug);
+        // The verb is NOT reset: the sentence stays on "Use ... on" waiting
+        // for the second half, rather than falling back to walk.
+        REQUIRE(player->getVerb() == game.useVerb);
+    }
+
+    SECTION("Clicking the selected object again cancels the selection") {
+        auto mug = std::make_shared<GameObject>("mug", Vector2<>(0, 0), Vector2<>(10, 10));
+        mug->interact(Vector2<>(5, 5), game.useVerb);
+        REQUIRE(player->getSelectedObject() == mug);
+
+        mug->interact(Vector2<>(5, 5), game.useVerb);
+        REQUIRE(player->getSelectedObject() == nullptr);
+    }
+
+    SECTION("Scenery can't become the source of a two-object verb") {
+        auto background = std::make_shared<GameObject>("background", Vector2<>(0, 0), Vector2<>(320, 200));
+        background->setInteractable(false);
+
+        background->interact(Vector2<>(5, 5), game.useVerb);
+        REQUIRE(player->getSelectedObject() == nullptr);
+    }
+
+    SECTION("Full use-X-on-Y flow reaches the target's interaction") {
+        auto mug = std::make_shared<GameObject>("mug", Vector2<>(0, 0), Vector2<>(10, 10));
+        auto table = std::make_shared<GameObject>("table", Vector2<>(20, 0), Vector2<>(10, 10));
+        bool used = false;
+        // Authored the Interactions.csv way: "table,use,mug,use_mug_on_table"
+        table->addVerbInteraction(game.useVerb, "mug", Event([&used](EventInfo) { used = true; }));
+
+        mug->interact(Vector2<>(5, 5), game.useVerb);     // pick the source
+        REQUIRE(player->getSelectedObject() == mug);
+
+        table->interact(Vector2<>(25, 5), game.useVerb);  // apply it
+        REQUIRE(used);
+        REQUIRE(player->getSelectedObject() == nullptr);
+    }
+
+    SECTION("Using the wrong source on a target falls back to the default response") {
+        auto rock = std::make_shared<GameObject>("rock", Vector2<>(0, 0), Vector2<>(10, 10));
+        auto table = std::make_shared<GameObject>("table", Vector2<>(20, 0), Vector2<>(10, 10));
+        bool used = false;
+        table->addVerbInteraction(game.useVerb, "mug", Event([&used](EventInfo) { used = true; }));
+
+        rock->interact(Vector2<>(5, 5), game.useVerb);
+        table->interact(Vector2<>(25, 5), game.useVerb);
+
+        REQUIRE_FALSE(used);
+        // Sentence is reset so the player isn't stranded mid-phrase.
+        REQUIRE(player->getSelectedObject() == nullptr);
+    }
+
     SECTION("interact with requiresSelectedObject and correct name fires event") {
         auto obj = std::make_shared<GameObject>("box", Vector2<>(0, 0), Vector2<>(10, 10));
         bool fired = false;
@@ -181,62 +244,16 @@ TEST_CASE("Gameplay logic", "[gameplay]") {
         REQUIRE(fired == false);
     }
 
-    // -----------------------------------------------------------------------
-    // COMBINATIONS — useVerb combination registry
-    // -----------------------------------------------------------------------
-    SECTION("combination registry fires when matching pair used") {
-        auto apple = std::make_shared<GameObject>("apple", Vector2<>(0, 0), Vector2<>(5, 5));
-        auto key = std::make_shared<GameObject>("key", Vector2<>(0, 0), Vector2<>(5, 5));
-        bool fired = false;
-        game.addCombination("apple", "key", Event([&fired](EventInfo) { fired = true; }));
-        player->setSelectedObject(apple);
-        key->interact(Vector2<>(5, 5), game.useVerb);
-        REQUIRE(fired == true);
-    }
-
-    SECTION("combination registry does not fire for wrong target") {
+    SECTION("Applying a valid source to an unrelated object does not fire it") {
         auto apple = std::make_shared<GameObject>("apple", Vector2<>(0, 0), Vector2<>(5, 5));
         auto key = std::make_shared<GameObject>("key", Vector2<>(0, 0), Vector2<>(5, 5));
         auto rock = std::make_shared<GameObject>("rock", Vector2<>(0, 0), Vector2<>(5, 5));
         bool fired = false;
-        game.addCombination("apple", "key", Event([&fired](EventInfo) { fired = true; }));
-        player->setSelectedObject(apple);
-        rock->interact(Vector2<>(5, 5), game.useVerb);
+        key->addVerbInteraction(game.useVerb, "apple", Event([&fired](EventInfo) { fired = true; }));
+
+        apple->interact(Vector2<>(2, 2), game.useVerb);   // apple is the source
+        rock->interact(Vector2<>(2, 2), game.useVerb);    // ...applied to the wrong thing
         REQUIRE(fired == false);
-    }
-
-    SECTION("combination registry does not fire for wrong selected item") {
-        auto apple = std::make_shared<GameObject>("apple", Vector2<>(0, 0), Vector2<>(5, 5));
-        auto key = std::make_shared<GameObject>("key", Vector2<>(0, 0), Vector2<>(5, 5));
-        bool fired = false;
-        game.addCombination("apple", "key", Event([&fired](EventInfo) { fired = true; }));
-        player->setSelectedObject(key);
-        key->interact(Vector2<>(5, 5), game.useVerb);
-        REQUIRE(fired == false);
-    }
-
-    SECTION("combination registry fires and clears selected object") {
-        auto apple = std::make_shared<GameObject>("apple", Vector2<>(0, 0), Vector2<>(5, 5));
-        auto key = std::make_shared<GameObject>("key", Vector2<>(0, 0), Vector2<>(5, 5));
-        bool fired = false;
-        game.addCombination("apple", "key", Event([&fired](EventInfo) { fired = true; }));
-        player->setSelectedObject(apple);
-        key->interact(Vector2<>(5, 5), game.useVerb);
-        REQUIRE(fired == true);
-        REQUIRE(player->getSelectedObject() == nullptr);
-    }
-
-    SECTION("per-object useVerb interaction takes priority over combination") {
-        auto apple = std::make_shared<GameObject>("apple", Vector2<>(0, 0), Vector2<>(5, 5));
-        auto key = std::make_shared<GameObject>("key", Vector2<>(0, 0), Vector2<>(5, 5));
-        bool perObjFired = false;
-        bool comboFired = false;
-        key->addVerbInteraction(game.useVerb, "apple", Event([&perObjFired](EventInfo) { perObjFired = true; }));
-        game.addCombination("apple", "key", Event([&comboFired](EventInfo) { comboFired = true; }));
-        player->setSelectedObject(apple);
-        key->interact(Vector2<>(5, 5), game.useVerb);
-        REQUIRE(perObjFired == true);
-        REQUIRE(comboFired == false);
     }
 
     // -----------------------------------------------------------------------
@@ -722,6 +739,88 @@ TEST_CASE("Gameplay logic", "[gameplay]") {
         transition->interact(Vector2<>(5, 5), game.walkVerb);
         REQUIRE(game.getScene() == sceneB);
         REQUIRE(player->getScene() == sceneB);
+    }
+
+    SECTION("A transition without an entry position leaves the player where they were") {
+        auto sceneA = std::make_shared<Scene>();
+        auto sceneB = std::make_shared<Scene>();
+        player->moveToScene(sceneA);
+        game.changeScene(sceneA);
+        player->setPosition(Vector2<>(123, 45));
+
+        auto transition = std::make_shared<SceneTransitionObject>(
+            "plain_door", Vector2<>(0, 0), Vector2<>(10, 10), sceneB
+        );
+        REQUIRE_FALSE(transition->getEntryPosition().has_value());
+
+        transition->interact(Vector2<>(5, 5), game.walkVerb);
+        REQUIRE(game.getScene() == sceneB);
+        REQUIRE(player->getPosition().x == 123);
+        REQUIRE(player->getPosition().y == 45);
+    }
+
+    SECTION("A transition with an entry position places the player on arrival") {
+        auto sceneA = std::make_shared<Scene>();
+        auto sceneB = std::make_shared<Scene>();
+        player->moveToScene(sceneA);
+        game.changeScene(sceneA);
+        player->setPosition(Vector2<>(123, 45));
+
+        auto transition = std::make_shared<SceneTransitionObject>(
+            "placing_door", Vector2<>(0, 0), Vector2<>(10, 10), sceneB
+        );
+        transition->setEntryPosition(Vector2<>(560, 80));
+
+        transition->interact(Vector2<>(5, 5), game.walkVerb);
+        REQUIRE(game.getScene() == sceneB);
+        REQUIRE(player->getScene() == sceneB);
+        REQUIRE(player->getPosition().x == 560);
+        REQUIRE(player->getPosition().y == 80);
+    }
+
+    SECTION("Arriving cancels a walk in flight so it can't drag the player away") {
+        auto sceneA = std::make_shared<Scene>();
+        auto sceneB = std::make_shared<Scene>();
+        player->moveToScene(sceneA);
+        game.changeScene(sceneA);
+        player->setPosition(Vector2<>(0, 0));
+
+        auto transition = std::make_shared<SceneTransitionObject>(
+            "walking_door", Vector2<>(0, 0), Vector2<>(10, 10), sceneB
+        );
+        transition->setEntryPosition(Vector2<>(200, 100));
+
+        // Mid-walk toward somewhere in the OLD room when the transition fires.
+        player->moveToAtSpeed(Vector2<>(300, 0), 100.0f);
+        transition->interact(Vector2<>(5, 5), game.walkVerb);
+
+        REQUIRE(player->getPosition().x == 200);
+        REQUIRE(player->getPosition().y == 100);
+
+        // Ticking must not resume the old walk.
+        player->update(0.5f);
+        REQUIRE(player->getPosition().x == 200);
+        REQUIRE(player->getPosition().y == 100);
+    }
+
+    SECTION("A Door carries an entry position through to its scene transition") {
+        auto sceneB = std::make_shared<Scene>();
+
+        // A Door always needs an open texture (it reads its name to select
+        // the texture); the closed one is optional — that's the "door drawn
+        // by the background art" case.
+        int doorColor[4] = { 120, 80, 40, 255 };
+        auto openTexture = std::make_shared<Texture>("entry_door_open", doorColor);
+
+        auto door = std::make_shared<Door>(
+            "entry_door", Vector2<>(0, 0), nullptr, openTexture, sceneB
+        );
+        REQUIRE_FALSE(door->getEntryPosition().has_value());
+
+        door->setEntryPosition(Vector2<>(90, 85));
+        REQUIRE(door->getEntryPosition().has_value());
+        REQUIRE(door->getEntryPosition()->x == 90);
+        REQUIRE(door->getEntryPosition()->y == 85);
     }
 
     // -----------------------------------------------------------------------

@@ -44,21 +44,10 @@ std::shared_ptr<GameObject> Item::createInventoryObject() {
 	// sentences read the same before and after pickup.
 	itemInInventory->setDisplayName(getDisplayName(), hasFixedCaseDisplayName());
 
-	Game& game = Game::getInstance();
-	itemInInventory->addVerbInteraction(game.giveVerb, Event([](EventInfo e) {
-		auto interactableObj = std::dynamic_pointer_cast<GameObject>(static_cast<GameObject&>(e.interactable).shared_from_this());
-		auto player = e.game.getCurrentPlayer();
-		if (player) {
-			if (player->getSelectedObject() == nullptr) {
-				player->setSelectedObject(interactableObj);
-				player->say(tr("Test1"));
-			}
-			else {
-				player->setSelectedObject(nullptr);
-				player->say(tr("Test2"));
-			}
-		}
-	}));
+	// No verb interactions are registered here: selecting an inventory item as
+	// the source of a two-object verb ("Give mug to ...", "Use mug on ...") is
+	// handled generically for every interactable object by
+	// Interactable::interact, for every such verb rather than just "give".
 
 	return itemInInventory;
 }

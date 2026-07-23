@@ -259,11 +259,79 @@ TEST_CASE("Item pickup hides the scene object; loading restores either side of i
 	REQUIRE(items.size() == 1);
 	REQUIRE(items[0]->getName() == "save_mug");
 	REQUIRE(items[0]->getDisplayName() == "Mug");
-	REQUIRE(items[0]->hasVerbInteraction(game.giveVerb));
+	// Selecting an inventory item as the source of "give"/"use" is handled
+	// generically by Interactable::interact, so a restored item needs no
+	// per-item interaction registered to behave correctly.
+	REQUIRE(items[0]->isInteractable());
 
 	player->getInventory().getItems().clear();
 	std::remove("save_97.json");
 	std::remove("save_96.json");
+}
+
+TEST_CASE("An item can be picked up, put back into the scene, and taken again", "[item]") {
+	drainPendingEvents();
+	Game& game = Game::getInstance();
+
+	auto scene = std::make_shared<Scene>();
+	scene->setName("putdown_scene");
+	game.registerScene("putdown_scene", scene);
+
+	auto player = std::make_shared<Player>("putdown_player", Vector2<>(0, 0), Vector2<>(10, 10));
+	game.addPlayer(player);
+	game.setCurrentPlayer(player);
+	player->moveToScene(scene);
+	game.changeScene(scene, 0.0f);
+	drainPendingEvents();
+
+	auto item = std::make_shared<Item>("putdown_mug", Vector2<>(5, 5), nullptr, nullptr);
+	item->moveToScene(scene);
+
+	// Take it: the scene object is hidden, not destroyed.
+	item->interact(Vector2<>(5, 5), game.pickupVerb);
+	REQUIRE(player->getInventory().getItems().size() == 1);
+	REQUIRE_FALSE(item->isVisible());
+
+	// Put it back (what use_mug_on_table does): drop the inventory copy and
+	// restore the scene object at a new spot.
+	auto carried = player->getInventory().getItems()[0];
+	player->getInventory().removeItem(carried);
+	item->setPosition(Vector2<>(160, 100));
+	item->setVisible(true);
+	item->setInteractable(true);
+
+	REQUIRE(player->getInventory().getItems().empty());
+	REQUIRE(item->isVisible());
+
+	// ...and take it again — the pickup interaction survived the round trip.
+	item->interact(Vector2<>(160, 100), game.pickupVerb);
+	REQUIRE(player->getInventory().getItems().size() == 1);
+	REQUIRE_FALSE(item->isVisible());
+	REQUIRE_FALSE(item->isInteractable());
+
+	player->getInventory().getItems().clear();
+}
+
+TEST_CASE("Object layer survives a save/load round trip", "[saveload][game]") {
+	drainPendingEvents();
+	Game& game = Game::getInstance();
+
+	auto scene = std::make_shared<Scene>();
+	scene->setName("layer_scene");
+	auto obj = std::make_shared<GameObject>("layer_obj", Vector2<>(0, 0), Vector2<>(10, 10));
+	obj->setLayer(-1);
+	scene->addGameObject(obj);
+	game.registerScene("layer_scene", scene);
+
+	// A script re-layers it (mug placed in front of the tabletop).
+	obj->setLayer(2);
+	REQUIRE(game.saveGame(94));
+
+	obj->setLayer(-1);
+	REQUIRE(game.loadGame(94));
+	REQUIRE(obj->getLayer() == 2);
+
+	std::remove("save_94.json");
 }
 
 TEST_CASE("saveGame stamps the slot and getSaveTimestamp reports it", "[saveload][game]") {

@@ -176,21 +176,39 @@ std::shared_ptr<Scene> Game::getScene() {
 	return currentScene;
 }
 
+// Moves the current player into the new scene, optionally placing them at a
+// declared entry position. Runs at the instant of the swap — behind the fade,
+// if there is one — so the player is never drawn at their old coordinates in
+// the new room. Any walk still in flight is cancelled first, or it would keep
+// interpolating toward a destination in the room they just left.
+void Game::swapScene(std::shared_ptr<Scene> newScene, const std::optional<Vector2<>>& playerPosition) {
+	currentScene = newScene;
+	if (!currentPlayer) return;
+
+	currentPlayer->moveToScene(newScene);
+	if (playerPosition) {
+		currentPlayer->stopCurrentAction();
+		currentPlayer->setPosition(*playerPosition);
+	}
+}
+
 void Game::changeScene(std::shared_ptr<Scene> newScene, float fadeDuration, Event callback) {
+	changeScene(newScene, std::nullopt, fadeDuration, callback);
+}
+
+void Game::changeScene(std::shared_ptr<Scene> newScene, Vector2<> playerPosition, float fadeDuration, Event callback) {
+	changeScene(newScene, std::optional<Vector2<>>(playerPosition), fadeDuration, callback);
+}
+
+void Game::changeScene(std::shared_ptr<Scene> newScene, const std::optional<Vector2<>>& playerPosition, float fadeDuration, Event callback) {
 	if (fadeDuration > 0.0f && !renderer.isFading()) {
-		renderer.fadeToBlack(fadeDuration, Event([this, newScene, fadeDuration, callback]() {
-			currentScene = newScene;
-			if (currentPlayer) {
-				currentPlayer->moveToScene(newScene);
-			}
+		renderer.fadeToBlack(fadeDuration, Event([this, newScene, playerPosition, fadeDuration, callback]() {
+			swapScene(newScene, playerPosition);
 			renderer.fadeFromBlack(fadeDuration, callback);
 		}));
 	}
 	else {
-		currentScene = newScene;
-		if (currentPlayer) {
-			currentPlayer->moveToScene(newScene);
-		}
+		swapScene(newScene, playerPosition);
 		callback.execute();
 	}
 }
@@ -273,17 +291,6 @@ void Game::setLocale(const std::string& locale) {
 
 const std::string& Game::getLocale() const {
 	return Localization::getInstance().getLocale();
-}
-
-void Game::addCombination(const std::string& itemName, const std::string& targetName, Event event) {
-	combinations[{itemName, targetName}] = event;
-}
-
-Event* Game::findCombination(const std::string& itemName, const std::string& targetName) {
-	auto it = combinations.find({itemName, targetName});
-	if (it != combinations.end())
-		return &it->second;
-	return nullptr;
 }
 
 // ---------------------------------------------------------------------------
@@ -419,6 +426,10 @@ bool Game::saveGame(int slotIndex) {
 			// other would leave a visible-but-dead (or invisible-but-
 			// clickable) object after load.
 			objData["interactable"] = obj->isInteractable();
+			// Scripts can re-layer an object (e.g. putting the mug down on
+			// the table has to draw it in front of the tabletop), so the
+			// layer is part of the saved state too.
+			objData["layer"] = obj->getLayer();
 			objData["position"]["x"] = obj->getPosition().x;
 			objData["position"]["y"] = obj->getPosition().y;
 			objectsData[obj->getName()] = objData;
@@ -553,6 +564,8 @@ void Game::applyObjectStates(const nlohmann::json& scenesJson) {
 				obj->setVisible(objData["visible"].get<bool>());
 			if (objData.contains("interactable"))
 				obj->setInteractable(objData["interactable"].get<bool>());
+			if (objData.contains("layer"))
+				obj->setLayer(objData["layer"].get<int>());
 			if (objData.contains("position")) {
 				float x = objData["position"]["x"].get<float>();
 				float y = objData["position"]["y"].get<float>();

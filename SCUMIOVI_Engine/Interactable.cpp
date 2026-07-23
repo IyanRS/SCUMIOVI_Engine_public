@@ -35,38 +35,47 @@ bool Interactable::interact(Vector2<> clickPos, std::shared_ptr<Verb> verb) {
 	}
 
 	Game& game = Game::getInstance();
-	EventInfo e = EventInfo(clickPos, *game.getCurrentPlayer(), *this);
+	auto player = game.getCurrentPlayer();
+	EventInfo e = EventInfo(clickPos, *player, *this);
+	GameObject* go = dynamic_cast<GameObject*>(this);
+
+	// --- Two-object verbs ("Use X on Y", "Give X to Y") ---------------------
+	// The first click only picks the source object and builds the sentence
+	// ("Use mug on ..."); the actual interaction resolves on the second click.
+	// This is deliberately independent of whether the object has its own
+	// interaction for the verb — any interactable object can be the source of
+	// a two-object verb, which is what makes "use mug on table" reachable at
+	// all. Scenery (see GameObject::setInteractable) can't be picked up as a
+	// source, so clicking the background still falls through to the verb's
+	// default response.
+	if (verb->RequiresSelectedObject() && go && go->isInteractable()
+		&& player->getSelectedObject() == nullptr) {
+		player->setSelectedObject(go->shared_from_this());
+		return true;
+	}
 
 	auto it = interactions.find(verb->getName());
 	if (it != interactions.end()) {
+		// A two-object verb only resolves against the object it was authored
+		// for (Interactions.csv's other_object_id); a mismatch falls through
+		// to the verb's default response.
+		bool matchesSelection = true;
 		if (verb->RequiresSelectedObject()) {
-			if (game.getCurrentPlayer()->getSelectedObject() == nullptr) {
-				GameObject* go = dynamic_cast<GameObject*>(this);
-				if (go)
-					game.getCurrentPlayer()->setSelectedObject(go->shared_from_this());
-			}
-			else {
-				auto it1 = interactionsSelectedObjects.find(verb->getName());
-				if (it1 != interactionsSelectedObjects.end()) {
-					if (game.getCurrentPlayer()->getSelectedObject()->getName() == it1->second) {
-						verb->getBeforeActualEvent().execute(e);
-						it->second.execute(e);
-						verb->getAfterActualEvent().execute(e);
-						game.changeToDefaultVerb();
-						game.getCurrentPlayer()->setSelectedObject(nullptr);
-					}
-				}
-			}
+			auto it1 = interactionsSelectedObjects.find(verb->getName());
+			auto selected = player->getSelectedObject();
+			matchesSelection = it1 != interactionsSelectedObjects.end()
+				&& selected != nullptr
+				&& selected->getName() == it1->second;
 		}
-		else {
+
+		if (matchesSelection) {
 			verb->getBeforeActualEvent().execute(e);
 			it->second.execute(e);
 			verb->getAfterActualEvent().execute(e);
 			game.changeToDefaultVerb();
-			game.getCurrentPlayer()->setSelectedObject(nullptr);
+			player->setSelectedObject(nullptr);
+			return true;
 		}
-		
-		return true;
 	}
 	else {
 		it = interactions.find("any");
@@ -76,23 +85,14 @@ bool Interactable::interact(Vector2<> clickPos, std::shared_ptr<Verb> verb) {
 		}
 	}
 
-	// Combination registry: useVerb with selected object
-	if (verb && verb->getName() == "use" && verb->RequiresSelectedObject()) {
-		auto selected = game.getCurrentPlayer()->getSelectedObject();
-		if (selected) {
-			GameObject* go = dynamic_cast<GameObject*>(this);
-			if (go) {
-				Event* combo = game.findCombination(selected->getName(), go->getName());
-				if (combo) {
-					verb->getBeforeActualEvent().execute(e);
-					combo->execute(e);
-					verb->getAfterActualEvent().execute(e);
-					game.changeToDefaultVerb();
-					game.getCurrentPlayer()->setSelectedObject(nullptr);
-					return true;
-				}
-			}
-		}
+	// Clicking the source object again, with nothing authored for that pair,
+	// cancels the selection instead of scolding the player — a mis-click
+	// shouldn't strand them mid-sentence. Checked after the lookups above so
+	// it can never shadow an authored interaction.
+	if (verb->RequiresSelectedObject() && go && player->getSelectedObject().get() == go) {
+		player->setSelectedObject(nullptr);
+		game.changeToDefaultVerb();
+		return true;
 	}
 
 	// No matching interaction: the verb's default response ("I can't do

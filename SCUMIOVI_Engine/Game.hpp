@@ -3,6 +3,7 @@
 #include <list>
 #include <string>
 #include <map>
+#include <optional>
 #include <unordered_map>
 #include <functional>
 #include "Player.hpp"
@@ -33,7 +34,6 @@ protected:
 	GameState gameState;
 
 	Event defaultClickEvent; // When the player clicks but no object interaction is found
-	std::map<std::pair<std::string, std::string>, Event> combinations;
 
 	// Named interaction scripts, referenceable by name from data-driven UI,
 	// object interactions and dialogue.
@@ -50,6 +50,9 @@ protected:
 	std::unordered_map<std::string, std::shared_ptr<GameObject>> inventoryItemPrototypes;
 	// Per-slot save timestamps; see getSaveTimestamp().
 	std::unordered_map<int, std::string> saveTimestamps;
+
+	// Performs the actual scene swap for changeScene (see its comment).
+	void swapScene(std::shared_ptr<Scene> newScene, const std::optional<Vector2<>>& playerPosition);
 
 public:
 	// Standard Engine Verbs
@@ -100,6 +103,15 @@ public:
 	// callback fires once the transition is fully done — after the
 	// fade-from-black too, if fadeDuration > 0 — not just after the swap.
 	void changeScene(std::shared_ptr<Scene> newScene, float fadeDuration = 0.0f, Event callback = Event());
+	// Same, but also places the current player at `playerPosition` in the new
+	// scene. The move happens at the instant of the swap (behind the fade, if
+	// there is one), so the player is never seen at their old coordinates in
+	// the new room. Used by scene transitions/doors that declare an entry
+	// position (see SceneTransitionObject::setEntryPosition).
+	void changeScene(std::shared_ptr<Scene> newScene, Vector2<> playerPosition, float fadeDuration = 0.0f, Event callback = Event());
+	// Shared implementation; an unset position leaves the player wherever
+	// they were, which is the historical behaviour.
+	void changeScene(std::shared_ptr<Scene> newScene, const std::optional<Vector2<>>& playerPosition, float fadeDuration, Event callback);
 	void setStartEvent(Event);
 	void setEndEvent(Event);
 	void setDefaultClickEvent(Event);
@@ -127,8 +139,6 @@ public:
 	// text resolved through tr() picks up the change; see Localization.hpp.
 	void setLocale(const std::string& locale);
 	const std::string& getLocale() const;
-	void addCombination(const std::string& itemName, const std::string& targetName, Event event);
-	Event* findCombination(const std::string& itemName, const std::string& targetName);
 
 	// -- Named script registry -----------------------------------------------
 	// Register a developer script under a name so data (UI actions, object and

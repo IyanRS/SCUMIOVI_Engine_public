@@ -12,10 +12,26 @@ SceneTransitionObject::SceneTransitionObject(
 ) : GameObject(name, position, size), targetScene(targetScene) {
 	Game& game = Game::getInstance();
 	addVerbInteraction(game.walkVerb, Event([this](EventInfo e) {
-		e.game.changeScene(this->targetScene);
+		transition();
 	}));
 }
 
 std::shared_ptr<Scene> SceneTransitionObject::getTargetScene() {
 	return targetScene;
+}
+
+void SceneTransitionObject::setEntryPosition(Vector2<> position) {
+	entryPosition = position;
+}
+
+void SceneTransitionObject::clearEntryPosition() {
+	entryPosition.reset();
+}
+
+const std::optional<Vector2<>>& SceneTransitionObject::getEntryPosition() const {
+	return entryPosition;
+}
+
+void SceneTransitionObject::transition(float fadeDuration) const {
+	Game::getInstance().changeScene(targetScene, entryPosition, fadeDuration, Event());
 }

@@ -125,6 +125,19 @@ TEST_CASE("VerbSyntax getInfo with only selected", "[verbsyntax]") {
     REQUIRE(info == "Give apple");
 }
 
+TEST_CASE("Use reads as a half-finished sentence once a source is picked", "[verbsyntax]") {
+    // Matches game/Verbs.csv: without the "$selected on" variant, picking a
+    // source with nothing hovered would render "Couldn't find syntax".
+    VerbSyntax vs({ "Use", "Use $target", "Use $selected on", "Use $selected on $target" });
+    auto mug = std::make_shared<GameObject>("mug", Vector2<>(0, 0));
+    mug->setDisplayName("Mug");
+    auto table = std::make_shared<GameObject>("table", Vector2<>(0, 0));
+    table->setDisplayName("Table");
+
+    REQUIRE(vs.getInfo(mug, nullptr) == "Use mug on");
+    REQUIRE(vs.getInfo(mug, table) == "Use mug on table");
+}
+
 TEST_CASE("VerbSyntax getInfo with no matching syntax", "[verbsyntax]") {
     VerbSyntax vs({ "Push $object0", "Push $object0 $object1" });
     std::string info = vs.getInfo({});

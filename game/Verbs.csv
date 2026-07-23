@@ -6,6 +6,6 @@ open,openVerb,Open,Open;Open $target,false,,false
 talk,talkVerb,Talk to,Talk to;Talk to $target,false,,false
 give,giveVerb,Give,Give;Give $target;Give $selected to;Give $selected to $target,true,,false
 pickup,pickupVerb,Pick up,Pick up;Pick up $target,false,,false
-use,useVerb,Use,Use;Use $target;Use $selected on $target,true,,false
+use,useVerb,Use,Use;Use $target;Use $selected on;Use $selected on $target,true,,false
 lookat,lookAtVerb,Look at,Look at;Look at $target,false,I don't see anything special.,true
 pull,pullVerb,Pull,Pull;Pull $target,false,I can't move that.,false

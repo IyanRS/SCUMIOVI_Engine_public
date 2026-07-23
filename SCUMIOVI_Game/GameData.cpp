@@ -30,7 +30,7 @@ void ScriptLoader::loadGame(Game& game) {
     game.addVerb(game.giveVerb);
     game.pickupVerb = std::make_shared<Verb>("pickup", "Pick up", VerbSyntax({ "Pick up", "Pick up $target" }));
     game.addVerb(game.pickupVerb);
-    game.useVerb = std::make_shared<Verb>("use", "Use", VerbSyntax({ "Use", "Use $target", "Use $selected on $target" }), true);
+    game.useVerb = std::make_shared<Verb>("use", "Use", VerbSyntax({ "Use", "Use $target", "Use $selected on", "Use $selected on $target" }), true);
     game.addVerb(game.useVerb);
     game.lookAtVerb = std::make_shared<Verb>("lookat", "Look at", VerbSyntax({ "Look at", "Look at $target" }));
     game.addVerb(game.lookAtVerb);
@@ -200,6 +200,7 @@ void ScriptLoader::loadGame(Game& game) {
         game.findScene("scummbar")
     );
     backroom_door_to_bar->setDisplayName("Bar Door");
+    backroom_door_to_bar->setEntryPosition(Vector2<>(560,80));
 
     backroom_door_to_bar->moveToScene(backroom);
     backroom_door_to_bar->setLayer(-1);
@@ -301,6 +302,7 @@ void ScriptLoader::loadGame(Game& game) {
         game.findScene("backroom")
     );
     scummbar_door_to_backroom->setDisplayName("Backroom Door");
+    scummbar_door_to_backroom->setEntryPosition(Vector2<>(90,85));
 
     scummbar_door_to_backroom->moveToScene(scummbar);
     scummbar_door_to_backroom->setLayer(-1);
@@ -313,6 +315,7 @@ void ScriptLoader::loadGame(Game& game) {
         game.findScene("scummbar")
     );
     scummbar_door_to_bar->setDisplayName("Bar Door");
+    scummbar_door_to_bar->setEntryPosition(Vector2<>(560,80));
 
     scummbar_door_to_bar->moveToScene(scummbar);
     scummbar_door_to_bar->setLayer(-1);
@@ -473,9 +476,9 @@ void ScriptLoader::loadGame(Game& game) {
     game.registerScript("give_mug_stan", give_mug_stan);
     game.registerScript("push_stan", push_stan);
     game.registerScript("push_table", push_table);
+    game.registerScript("use_mug_on_table", use_mug_on_table);
     game.registerScript("pull_table2", pull_table2);
     game.registerScript("dialogue_script_test", dialogue_script_test);
-    game.registerScript("use_mug_on_table", use_mug_on_table);
     game.registerScript("show_debug", show_debug);
 
     stan->addVerbInteraction(game.getVerb("give"), "mug", game.scriptEvent("give_mug_stan"));
@@ -486,10 +489,8 @@ void ScriptLoader::loadGame(Game& game) {
     }));
     stan->addVerbInteraction(game.getVerb("push"), game.scriptEvent("push_stan"));
     table->addVerbInteraction(game.getVerb("push"), game.scriptEvent("push_table"));
+    table->addVerbInteraction(game.getVerb("use"), "mug", game.scriptEvent("use_mug_on_table"));
     table2->addVerbInteraction(game.getVerb("pull"), game.scriptEvent("pull_table2"));
-
-    // --- Item combinations ---
-    game.addCombination("mug", "table", game.scriptEvent("use_mug_on_table"));
 
     game.bindLeftClickToVerb(game.selectedVerb);
     game.bindRightClickToVerb(game.getDefaultVerb());
