@@ -99,9 +99,34 @@ TEST_CASE("Gameplay logic", "[gameplay]") {
         REQUIRE(anyFired == true);
     }
 
-    SECTION("Interactable interact returns false when no match and no default") {
+    SECTION("Interact with no match consumes the click when the verb has a default response") {
         auto obj = std::make_shared<GameObject>("box", Vector2<>(0, 0), Vector2<>(10, 10));
+        // pushVerb's default says "I can't move that." — that response IS
+        // the handling of this click. If it weren't consumed, the click
+        // loop would pass the click on to the background, which re-resolves
+        // the just-reset current verb (walk) and walks the player while the
+        // message is still up.
         bool result = obj->interact(Vector2<>(5, 5), game.pushVerb);
+        REQUIRE(result == true);
+    }
+
+    SECTION("Interact with no match resets the verb so the NEXT click walks") {
+        auto previousDefault = game.getDefaultVerb();
+        game.setDefaultVerb(game.walkVerb);
+
+        auto obj = std::make_shared<GameObject>("box", Vector2<>(0, 0), Vector2<>(10, 10));
+        player->setVerb(game.pushVerb);
+        obj->interact(Vector2<>(5, 5), game.pushVerb);
+        REQUIRE(player->getVerb() == game.walkVerb);
+
+        game.setDefaultVerb(previousDefault);
+    }
+
+    SECTION("Interact with no match and a truly empty default does not consume the click") {
+        auto obj = std::make_shared<GameObject>("box", Vector2<>(0, 0), Vector2<>(10, 10));
+        auto silentVerb = std::make_shared<Verb>("silent");
+        silentVerb->setDefaultEvent(Event());
+        bool result = obj->interact(Vector2<>(5, 5), silentVerb);
         REQUIRE(result == false);
     }
 

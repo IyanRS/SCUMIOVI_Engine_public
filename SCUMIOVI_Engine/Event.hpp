@@ -28,6 +28,8 @@ public:
   void execute();
   void execute(EventInfo eventInfo);
   void addAction(Action action);
+  // True if executing this event actually does something.
+  bool hasActions() const;
 
   // Called once per frame by the game loop. Advances delay timers
   // and fires events whose timers have expired.

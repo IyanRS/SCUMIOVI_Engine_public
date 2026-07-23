@@ -95,10 +95,18 @@ bool Interactable::interact(Vector2<> clickPos, std::shared_ptr<Verb> verb) {
 		}
 	}
 
-	verb->getDefaultEvent().execute(e);
+	// No matching interaction: the verb's default response ("I can't do
+	// that") handles the click, so the click must be consumed. Returning
+	// false here would let the still-running click loop pass the click to
+	// whatever sits underneath (usually the background) — which re-resolves
+	// the just-reset current verb and walks the player mid-message. The verb
+	// reset means the NEXT click walks, matching the SCUMM feel.
+	Event defaultEvent = verb->getDefaultEvent();
+	bool handled = defaultEvent.hasActions();
+	defaultEvent.execute(e);
 	game.changeToDefaultVerb();
 	game.getCurrentPlayer()->setSelectedObject(nullptr);
-	return false;
+	return handled;
 }
 
 void Interactable::setDefaultVerb(std::shared_ptr<Verb> verb) {

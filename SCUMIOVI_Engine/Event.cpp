@@ -122,6 +122,10 @@ void Event::addAction(Action action) {
 	actions.push_back(action);
 }
 
+bool Event::hasActions() const {
+	return !actions.empty();
+}
+
 Event Event::operator+(const Event& e2) {
 	Event addedEvents;
 
