@@ -321,7 +321,7 @@ void ScriptLoader::loadGame(Game& game) {
     scummbar_table2->setExamineText("Another table. It matches the first one.");
     scummbar_mug->setExamineText("A dented tin mug. It's empty.");
     scummbar_stan->setTextFormat(stan_text_formatFormat);
-    scummbar_stan->setExamineText("A slick-looking salesman with an unnervingly wide smile.");
+    scummbar_stan->setExamineText("A slick-looking salesman with\nan unnervingly wide smile.");
     scummbar_door_to_backroom->setExamineText("A heavy wooden door leading further into the bar.");
     scummbar_door_to_bar->setExamineText("The door back to the main bar.");
 

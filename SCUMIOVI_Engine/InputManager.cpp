@@ -27,9 +27,11 @@ bool InputManager::checkObjectClicked(float xMouse, float yMouse, std::shared_pt
 		return false;
 	}
 
-	// Invisible objects (hidden picked-up items, hidden UI) aren't there as
-	// far as the mouse is concerned.
-	if (!object->isVisible()) return false;
+	// "Invisible AND non-interactable" means absent (a picked-up item):
+	// the mouse ignores it. Invisible but still interactable means the
+	// object is merely not drawn — like a closed door whose art is part of
+	// the background — and it must keep taking clicks and hovers.
+	if (!object->isVisible() && !object->isInteractable()) return false;
 
 	if (xMouse >= object->getPosition().x && xMouse < object->getPosition().x + object->getSize().x &&
 		yMouse >= object->getPosition().y && yMouse < object->getPosition().y + object->getSize().y) {
@@ -44,10 +46,12 @@ void InputManager::checkMouseOverObject(float xMouse, float yMouse, std::shared_
 		return;
 	}
 
-	// An invisible object can't be hovered — and if it turns invisible while
-	// hovered (e.g. an item picked up under the cursor), the else branch
-	// below runs its mouse-out so hover state doesn't stick.
-	if (object->isVisible() &&
+	// Absent objects (invisible AND non-interactable — picked-up items)
+	// can't be hovered; if one goes absent while hovered (picked up under
+	// the cursor), the else branch runs its mouse-out so hover state doesn't
+	// stick. Invisible-but-interactable objects (closed doors drawn by the
+	// background) hover normally.
+	if ((object->isVisible() || object->isInteractable()) &&
 		xMouse >= object->getPosition().x && xMouse < object->getPosition().x + object->getSize().x &&
 		yMouse >= object->getPosition().y && yMouse < object->getPosition().y + object->getSize().y) {
 		if (!currentlyMouseOver.contains(object)) {

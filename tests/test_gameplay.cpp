@@ -492,6 +492,51 @@ TEST_CASE("Gameplay logic", "[gameplay]") {
     }
 
     // -----------------------------------------------------------------------
+    // MOUSE PRESENCE — invisible objects vs absent objects
+    // -----------------------------------------------------------------------
+    SECTION("An invisible but interactable object still takes clicks and hovers") {
+        // A closed door whose art is part of the background: the object
+        // renders nothing but is very much there.
+        auto scene = std::make_shared<Scene>();
+        game.changeScene(scene, 0.0f);
+
+        auto door = std::make_shared<GameObject>("hidden_door", Vector2<>(0, 0), Vector2<>(10, 10));
+        bool opened = false;
+        door->addVerbInteraction(game.pushVerb, Event([&opened](EventInfo) { opened = true; }));
+        door->setVisible(false);
+        scene->addGameObject(door);
+
+        auto& input = game.getInputManager();
+        REQUIRE(input.checkObjectClicked(5, 5, door, game.pushVerb));
+        REQUIRE(opened);
+
+        input.checkMouseOverObject(5, 5, door);
+        REQUIRE(player->getTargetObject() == door);
+        input.checkMouseOverObject(50, 50, door);
+        REQUIRE(player->getTargetObject() == nullptr);
+    }
+
+    SECTION("An invisible AND non-interactable object is absent to the mouse") {
+        // A picked-up item: hidden and inert until a load restores it.
+        auto scene = std::make_shared<Scene>();
+        game.changeScene(scene, 0.0f);
+
+        auto taken = std::make_shared<GameObject>("taken_item", Vector2<>(0, 0), Vector2<>(10, 10));
+        bool fired = false;
+        taken->addVerbInteraction(game.pickupVerb, Event([&fired](EventInfo) { fired = true; }));
+        taken->setVisible(false);
+        taken->setInteractable(false);
+        scene->addGameObject(taken);
+
+        auto& input = game.getInputManager();
+        REQUIRE_FALSE(input.checkObjectClicked(5, 5, taken, game.pickupVerb));
+        REQUIRE_FALSE(fired);
+
+        input.checkMouseOverObject(5, 5, taken);
+        REQUIRE(player->getTargetObject() == nullptr);
+    }
+
+    // -----------------------------------------------------------------------
     // PLAYER
     // -----------------------------------------------------------------------
     SECTION("Player canMove starts enabled") {
