@@ -45,3 +45,12 @@ UIVerbButton::UIVerbButton(std::shared_ptr<Verb> verb, Vector2<> position, Vecto
 std::shared_ptr<Verb> UIVerbButton::getVerb() {
 	return verb;
 }
+
+void UIVerbButton::refresh() {
+	UIElement::refresh();
+	// Verb::getDisplayName() runs through tr(), so this picks up the active
+	// locale. setTextOver(string) re-renders with the stored text format;
+	// UIVerbGrid::refresh re-applies the highlight afterwards, so the
+	// highlighted button doesn't lose its white text to this reset.
+	setTextOver(verb->getDisplayName());
+}

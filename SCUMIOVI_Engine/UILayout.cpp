@@ -134,39 +134,25 @@ void UILayout::createDialogueOptions(DialogueNode& dialogueNode) {
 }
 
 std::vector<std::shared_ptr<UIVerbButton>> UILayout::createVerbsMatrix(Vector2<> position, std::vector<std::vector<std::shared_ptr<Verb>>> verbs, std::shared_ptr<Texture> verbBackground) {
-	int height = 14;
-	std::vector<int> columnLengths;
-
 	std::vector<std::shared_ptr<UIVerbButton>> buttons;
 
 	int columns = (int)verbs[0].size();
 	int rows = (int)verbs.size();
 
-	for (int i = 0; i < columns; i++) {
-		int maxLengthColumn = 0;
-		for (int j = 0; j < rows; j++) {
-			if (verbs[j][i]->getDisplayName().length() > maxLengthColumn) {
-				maxLengthColumn = (int)verbs[j][i]->getDisplayName().length();
-			}
-		}
-		columnLengths.push_back(maxLengthColumn);
-	}
-
+	// The grid owns the geometry (column widths derived from the current
+	// labels): setGridShape lays the buttons out now, and every refresh
+	// re-measures — so a locale switch resizes the columns to fit the
+	// translated labels. Buttons are added column-major, the order
+	// UIVerbGrid::layoutButtons expects.
 	auto grid = std::make_shared<UIVerbGrid>("verbGrid", position);
-
 	for (int i = 0; i < columns; i++) {
 		for (int j = 0; j < rows; j++) {
-			// Positions are relative to the grid; the grid itself carries `position`.
-			Vector2<> buttonPos = Vector2<>(0.0f, (float)((height + 2) * j));
-			for (int k = 0; k < i; k++) {
-				buttonPos.x += columnLengths[k] * 7;
-				buttonPos.x += 2;
-			}
-			auto button = std::make_shared<UIVerbButton>(verbs[j][i], buttonPos, Vector2<>((float)(columnLengths[i] * 7), (float)height), verbBackground);
+			auto button = std::make_shared<UIVerbButton>(verbs[j][i], Vector2<>(0, 0), Vector2<>(0, 0), verbBackground);
 			grid->addButton(button);
 			buttons.push_back(button);
 		}
 	}
+	grid->setGridShape(rows, columns);
 
 	addUIElement(grid);
 	return buttons;

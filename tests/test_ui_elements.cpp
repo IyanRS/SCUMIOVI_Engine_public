@@ -7,6 +7,7 @@
 #include "Game.hpp"
 #include "Player.hpp"
 #include "Text.hpp"
+#include "Localization.hpp"
 
 TEST_CASE("UIPanel stores children", "[ui]") {
     auto panel = std::make_shared<UIPanel>("panel", Vector2<>(0, 0), Vector2<>(100, 50));
@@ -156,6 +157,76 @@ TEST_CASE("Hovering a UIVerbButton highlights it and leaving restores it", "[ui]
     // Hovering the button never makes it the sentence target either.
     pushButton->onMouseOver(Vector2<>(5, 5));
     REQUIRE(player->getTargetObject() == nullptr);
+}
+
+TEST_CASE("UIVerbButton retitles itself on refresh when the locale changes", "[ui][localization]") {
+    Game& game = Game::getInstance();
+    UI& ui = game.getUI();
+    ui.createLayout("verblocale_test");
+    ui.setLayout("verblocale_test");
+    UILayout& layout = *ui.getLayout();
+
+    auto grid = std::make_shared<UIVerbGrid>("grid", Vector2<>(0, 0));
+    auto walkButton = std::make_shared<UIVerbButton>(game.walkVerb, Vector2<>(0, 0), Vector2<>(20, 10), nullptr);
+    auto talkButton = std::make_shared<UIVerbButton>(game.talkVerb, Vector2<>(0, 10), Vector2<>(20, 10), nullptr);
+    grid->addButton(walkButton);
+    grid->addButton(talkButton);
+    layout.addUIElement(grid);
+
+    auto& loc = Localization::getInstance();
+    loc.setSourceLocale("en");
+    loc.addTranslation("es_verbbutton_test", "Walk to", "Caminar a");
+    loc.setLocale("es_verbbutton_test");
+
+    // Keep a highlight active during the refresh: the retitle must not
+    // knock the white text off the highlighted button.
+    layout.setHighlightedVerb(game.talkVerb);
+    grid->refresh();
+
+    REQUIRE(walkButton->getTextOver().toString() == "Caminar a");
+    int talkColor[4];
+    talkButton->getTextOver().getColor(talkColor);
+    REQUIRE(talkColor[0] == 255); // still highlighted
+
+    // Switching back restores the source labels on the next refresh.
+    loc.setLocale("en");
+    layout.setHighlightedVerb(nullptr);
+    grid->refresh();
+    REQUIRE(walkButton->getTextOver().toString() == "Walk to");
+}
+
+TEST_CASE("Verb grid recomputes column widths when the locale changes the labels", "[ui][localization]") {
+    Game& game = Game::getInstance();
+    UI& ui = game.getUI();
+    ui.createLayout("verbgridlocale_test");
+    ui.setLayout("verbgridlocale_test");
+    UILayout& layout = *ui.getLayout();
+
+    // One row, two columns: "Walk to" (7 chars) then "Push" (4 chars).
+    auto buttons = layout.createVerbsMatrix(Vector2<>(0, 0), { { game.walkVerb, game.pushVerb } }, nullptr);
+    REQUIRE(buttons.size() == 2);
+    REQUIRE(buttons[0]->getSize().x == 7 * 7);
+    REQUIRE(buttons[1]->getOffset().x == 7 * 7 + 2);
+
+    // "Caminar a" (9 chars) must widen column 0 and push column 1 across.
+    auto& loc = Localization::getInstance();
+    loc.setSourceLocale("en");
+    loc.addTranslation("es_verbgrid_test", "Walk to", "Caminar a");
+    loc.setLocale("es_verbgrid_test");
+
+    auto grid = std::dynamic_pointer_cast<UIVerbGrid>(layout.getUIElement("verbGrid"));
+    REQUIRE(grid != nullptr);
+    grid->refresh();
+
+    REQUIRE(buttons[0]->getTextOver().toString() == "Caminar a");
+    REQUIRE(buttons[0]->getSize().x == 9 * 7);
+    REQUIRE(buttons[1]->getOffset().x == 9 * 7 + 2);
+
+    // And back again.
+    loc.setLocale("en");
+    grid->refresh();
+    REQUIRE(buttons[0]->getSize().x == 7 * 7);
+    REQUIRE(buttons[1]->getOffset().x == 7 * 7 + 2);
 }
 
 TEST_CASE("UIButton hoverHighlight turns text white on hover and restores it on leave", "[ui]") {
