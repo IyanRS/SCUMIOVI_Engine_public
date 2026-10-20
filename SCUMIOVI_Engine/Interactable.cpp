@@ -148,7 +148,7 @@ Event& Interactable::getMouseOverEvent() {
 		GameObject* go = dynamic_cast<GameObject*>(&e.interactable);
 		if (!go || go->getScene() == nullptr) return;
 
-		// Naming the hovered object in the sentence line ("Talk to Stan")
+		// Naming the hovered object in the sentence line ("Talk to Vince")
 		// must not depend on it having a default verb or an interaction for
 		// the current verb — unmatched verbs fall back to their default
 		// message when clicked, so the label should still name the object.

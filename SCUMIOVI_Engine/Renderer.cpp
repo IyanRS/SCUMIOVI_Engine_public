@@ -146,7 +146,7 @@ void Renderer::renderTTFText(Vector2<> pos, Vector2<> size, TTF_Font* font, cons
 }
 
 void Renderer::renderText(Vector2<> position, Text& text, Camera& camera, bool hasOutline) {
-	TTF_Font* font = resourceManager.loadFont("arial.ttf", text.getSize());
+	TTF_Font* font = resourceManager.loadFont("DejaVuSans.ttf", text.getSize());
 
 	if (text.hasShadow()) {
 		int color[] = { 0x40, 0x0, 0x40 };

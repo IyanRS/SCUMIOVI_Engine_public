@@ -2,6 +2,6 @@ id,display_name,type,image,offset,size,text_format,examine_text,entry_pos
 table,Table,,table.png,,,,"It's a sturdy old table. I wonder how many drinks have been spilled on it.",
 table2,Wooden Table,,table2.png,,,,"Another table. It matches the first one.",
 mug,Mug,item;mug_item.png,mug.png,,,,"A dented tin mug. It's empty.",
-stan,=Stan,,Stan_transparent.png,36;9,37;57,stan_text_format,"A slick-looking salesman with\nan unnervingly wide smile.",
+merchant,=Vince,,merchant.png,,,merchant_text_format,"A slick-looking salesman with\nan unnervingly wide smile.",
 door_to_backroom,Backroom Door,door;door.png;backroom,,,,,"A heavy wooden door leading further into the bar.",90;85
-door_to_bar,Bar Door,door;room28_obj_13b_00.png;scummbar,,,,,"The door back to the main bar.",560;80
+door_to_bar,Bar Door,door;bar_door.png;tavern,,,,,"The door back to the main bar.",560;80

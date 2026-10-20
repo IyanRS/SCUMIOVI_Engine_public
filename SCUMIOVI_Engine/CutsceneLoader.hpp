@@ -16,18 +16,18 @@ class Game;
 //
 // {
 //   "name": "intro_cutscene",
-//   "disableMovementFor": "guybrush",
+//   "disableMovementFor": "hero",
 //   "steps": [
 //     { "type": "moveCamera", "position": [100, 50], "seconds": 2.0 },
-//     { "type": "walk", "object": "guybrush", "position": [120, 80], "seconds": 3.0 },
-//     { "type": "say", "object": "guybrush", "text": "Where's the map?" },
+//     { "type": "walk", "object": "hero", "position": [120, 80], "seconds": 3.0 },
+//     { "type": "say", "object": "hero", "text": "Where's the map?" },
 //     { "type": "wait", "seconds": 1.0 },
 //     { "type": "fadeToBlack", "seconds": 1.0 },
 //     { "type": "changeScene", "scene": "nextRoom", "fadeDuration": 0.5 },
 //     { "type": "fadeFromBlack", "seconds": 1.0 },
 //     { "type": "script", "name": "someCustomStep", "waitSeconds": 0.5 },
 //     { "type": "parallel", "branches": [
-//         [ { "type": "walk", "object": "stan", "position": [10, 10], "seconds": 1.5 } ],
+//         [ { "type": "walk", "object": "merchant", "position": [10, 10], "seconds": 1.5 } ],
 //         [ { "type": "fadeToBlack", "seconds": 1.0 } ]
 //     ] }
 //   ]

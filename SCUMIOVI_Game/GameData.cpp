@@ -54,30 +54,30 @@ void ScriptLoader::loadGame(Game& game) {
     game.giveVerb->setAfterActualEvent(afterGiveEvent);
 
     // --- Animations ---
-    auto guybrushWalkRight = std::make_shared<Animation>(
-        "guybrushWalkRight",
-        "Guybrush_walk_side.png",
+    auto heroWalkRight = std::make_shared<Animation>(
+        "heroWalkRight",
+        "hero_walk.png",
         Vector2<int>(0,0),
         Vector2<int>(32,47),
         6
     );
-    auto guybrushWalkLeft = guybrushWalkRight->getMirrored("guybrushWalkLeft");
-    auto guybrushIdleRight = std::make_shared<Animation>(
-        "guybrushIdleRight",
-        "Guybrush_walk_side.png",
+    auto heroWalkLeft = heroWalkRight->getMirrored("heroWalkLeft");
+    auto heroIdleRight = std::make_shared<Animation>(
+        "heroIdleRight",
+        "hero_walk.png",
         Vector2<int>(0,0),
         Vector2<int>(32,47),
         1
     );
-    auto guybrushIdleLeft = guybrushIdleRight->getMirrored("guybrushIdleLeft");
-    auto otisIdleLeft = std::make_shared<Animation>(
-        "otisIdleLeft",
-        "LeChuck.png",
+    auto heroIdleLeft = heroIdleRight->getMirrored("heroIdleLeft");
+    auto deckhandIdleLeft = std::make_shared<Animation>(
+        "deckhandIdleLeft",
+        "deckhand.png",
         Vector2<int>(0,0),
         Vector2<int>(32,58),
         1
     );
-    auto otisIdleRight = otisIdleLeft->getMirrored("otisIdleRight");
+    auto deckhandIdleRight = deckhandIdleLeft->getMirrored("deckhandIdleRight");
 
     // --- Textures for objects ---
     auto tableTexture = std::make_shared<Texture>(
@@ -96,11 +96,9 @@ void ScriptLoader::loadGame(Game& game) {
         "mug_item",
         "mug_item.png"
     );
-    auto stanTexture = std::make_shared<Texture>(
-        "stan",
-        "Stan_transparent.png",
-		Vector2<int>(36,9),
-		Vector2<int>(37,57)
+    auto merchantTexture = std::make_shared<Texture>(
+        "merchant",
+        "merchant.png"
     );
     auto door_to_backroomOpenTexture = std::make_shared<Texture>(
         "door_to_backroom_open",
@@ -108,7 +106,7 @@ void ScriptLoader::loadGame(Game& game) {
     );
     auto door_to_barOpenTexture = std::make_shared<Texture>(
         "door_to_bar_open",
-        "room28_obj_13b_00.png"
+        "bar_door.png"
     );
 
     // --- Text formats ---
@@ -121,57 +119,57 @@ void ScriptLoader::loadGame(Game& game) {
         TEXT_ON_TOP,
         true
     );
-    int stan_text_formatFormatColor[] = { 62, 151, 230, 0xff };
-    Text stan_text_formatFormat = Text(
+    int merchant_text_formatFormatColor[] = { 62, 151, 230, 0xff };
+    Text merchant_text_formatFormat = Text(
         "",
         12,
-        stan_text_formatFormatColor,
+        merchant_text_formatFormatColor,
         true,
         TEXT_ON_TOP,
         true
     );
 
     // --- Players ---
-    auto guybrush = std::make_shared<Player>("guybrush", Vector2<>(0.0f, 0.0f));
+    auto hero = std::make_shared<Player>("hero", Vector2<>(0.0f, 0.0f));
 
-    auto guybrushIdleTexture = std::make_shared<Texture>(guybrushWalkRight->getFrames()[0]);
-    guybrushIdleTexture->setName("idle");
-    guybrush->addTexture(guybrushIdleTexture);
-    guybrush->setTexture("idle");
+    auto heroIdleTexture = std::make_shared<Texture>(heroWalkRight->getFrames()[0]);
+    heroIdleTexture->setName("idle");
+    hero->addTexture(heroIdleTexture);
+    hero->setTexture("idle");
 
-    guybrush->setMovementAnimations(
-        guybrushWalkRight,
-        guybrushWalkLeft,
+    hero->setMovementAnimations(
+        heroWalkRight,
+        heroWalkLeft,
         nullptr,
         nullptr,
-        guybrushIdleRight,
-        guybrushIdleLeft,
-        nullptr,
-        nullptr
-    );
-    guybrush->setTextFormat(defaultFormat);
-
-    game.addPlayer(guybrush);
-    auto otis = std::make_shared<Player>("otis", Vector2<>(0.0f, 0.0f));
-
-    auto otisIdleTexture = std::make_shared<Texture>(otisIdleRight->getFrames()[0]);
-    otisIdleTexture->setName("idle");
-    otis->addTexture(otisIdleTexture);
-    otis->setTexture("idle");
-
-    otis->setMovementAnimations(
-        otisIdleRight,
-        otisIdleLeft,
-        nullptr,
-        nullptr,
-        otisIdleRight,
-        otisIdleLeft,
+        heroIdleRight,
+        heroIdleLeft,
         nullptr,
         nullptr
     );
-    otis->setTextFormat(stan_text_formatFormat);
+    hero->setTextFormat(defaultFormat);
 
-    game.addPlayer(otis);
+    game.addPlayer(hero);
+    auto deckhand = std::make_shared<Player>("deckhand", Vector2<>(0.0f, 0.0f));
+
+    auto deckhandIdleTexture = std::make_shared<Texture>(deckhandIdleRight->getFrames()[0]);
+    deckhandIdleTexture->setName("idle");
+    deckhand->addTexture(deckhandIdleTexture);
+    deckhand->setTexture("idle");
+
+    deckhand->setMovementAnimations(
+        deckhandIdleRight,
+        deckhandIdleLeft,
+        nullptr,
+        nullptr,
+        deckhandIdleRight,
+        deckhandIdleLeft,
+        nullptr,
+        nullptr
+    );
+    deckhand->setTextFormat(merchant_text_formatFormat);
+
+    game.addPlayer(deckhand);
 
     // --- Scenes ---
     auto backroom = std::make_shared<Scene>();
@@ -194,10 +192,10 @@ void ScriptLoader::loadGame(Game& game) {
     // Objects
     auto backroom_door_to_bar = std::make_shared<Door>(
         "door_to_bar",
-        Vector2<>(60,100),
+        Vector2<>(60,40),
         nullptr,
         door_to_barOpenTexture,
-        game.findScene("scummbar")
+        game.findScene("tavern")
     );
     backroom_door_to_bar->setDisplayName("Bar Door");
     backroom_door_to_bar->setEntryPosition(Vector2<>(560,80));
@@ -209,13 +207,13 @@ void ScriptLoader::loadGame(Game& game) {
     backroom_door_to_bar->setExamineText("The door back to the main bar.");
 
     // Players
-    otis->moveToScene(backroom);
-    otis->setPosition(Vector2<>(300,100));
+    deckhand->moveToScene(backroom);
+    deckhand->setPosition(Vector2<>(300,78));
 
-    auto scummbar = std::make_shared<Scene>();
-    game.registerScene("scummbar", scummbar);
+    auto tavern = std::make_shared<Scene>();
+    game.registerScene("tavern", tavern);
     // Walkable area
-    auto scummbarWalk = std::make_unique<WalkableArea>(std::initializer_list<Vector2<>>{
+    auto tavernWalk = std::make_unique<WalkableArea>(std::initializer_list<Vector2<>>{
         Vector2<>(100,113), 
         Vector2<>(116,125), 
         Vector2<>(146,126), 
@@ -236,112 +234,112 @@ void ScriptLoader::loadGame(Game& game) {
         Vector2<>(80,141), 
         Vector2<>(40,127), 
     });
-    scummbar->setWalkableArea(std::move(scummbarWalk));
+    tavern->setWalkableArea(std::move(tavernWalk));
 
-    scummbar->getCamera().setZones({
+    tavern->getCamera().setZones({
         { 0.0f, 320.0f, Vector2<>(0.0f, 0.0f) },
         { 320.0f, 640.0f, Vector2<>(320.0f, 0.0f) },
     });
-    scummbar->getCamera().setObjectToFollow(guybrush);
+    tavern->getCamera().setObjectToFollow(hero);
 
     // Backgrounds
-    auto scummbarBg = scummbar->addBackground(
-        "SCUMM_BAR.png", Vector2<int>(640,144)
+    auto tavernBg = tavern->addBackground(
+        "tavern.png", Vector2<int>(640,144)
     );
 
     // Objects
-    auto scummbar_table = std::make_shared<GameObject>(
+    auto tavern_table = std::make_shared<GameObject>(
         "table",
         Vector2<>(157,115),
         Vector2<>(-1.0f, -1.0f),
         tableTexture
     );
-    scummbar_table->setDisplayName("Table");
+    tavern_table->setDisplayName("Table");
 
-    scummbar_table->moveToScene(scummbar);
-    scummbar_table->setLayer(1);
-    auto& table = scummbar_table;
-    auto scummbar_table2 = std::make_shared<GameObject>(
+    tavern_table->moveToScene(tavern);
+    tavern_table->setLayer(1);
+    auto& table = tavern_table;
+    auto tavern_table2 = std::make_shared<GameObject>(
         "table2",
         Vector2<>(20,118),
         Vector2<>(-1.0f, -1.0f),
         table2Texture
     );
-    scummbar_table2->setDisplayName("Wooden Table");
+    tavern_table2->setDisplayName("Wooden Table");
 
-    scummbar_table2->moveToScene(scummbar);
-    scummbar_table2->setLayer(1);
-    auto& table2 = scummbar_table2;
-    auto scummbar_mug = std::make_shared<Item>(
+    tavern_table2->moveToScene(tavern);
+    tavern_table2->setLayer(1);
+    auto& table2 = tavern_table2;
+    auto tavern_mug = std::make_shared<Item>(
         "mug",
         Vector2<>(124,97),
         mugTexture,
         mugItemTexture
     );
-    scummbar_mug->setDisplayName("Mug");
+    tavern_mug->setDisplayName("Mug");
 
-    scummbar_mug->moveToScene(scummbar);
-    scummbar_mug->setLayer(-1);
-    auto& mug = scummbar_mug;
-    auto scummbar_stan = std::make_shared<GameObject>(
-        "stan",
+    tavern_mug->moveToScene(tavern);
+    tavern_mug->setLayer(-1);
+    auto& mug = tavern_mug;
+    auto tavern_merchant = std::make_shared<GameObject>(
+        "merchant",
         Vector2<>(155,68),
         Vector2<>(-1.0f, -1.0f),
-        stanTexture
+        merchantTexture
     );
-    scummbar_stan->setDisplayName("=Stan");
+    tavern_merchant->setDisplayName("=Vince");
 
-    scummbar_stan->moveToScene(scummbar);
-    scummbar_stan->setLayer(-1);
-    auto& stan = scummbar_stan;
-    auto scummbar_door_to_backroom = std::make_shared<Door>(
+    tavern_merchant->moveToScene(tavern);
+    tavern_merchant->setLayer(-1);
+    auto& merchant = tavern_merchant;
+    auto tavern_door_to_backroom = std::make_shared<Door>(
         "door_to_backroom",
-        Vector2<>(594,73),
+        Vector2<>(594,42),
         nullptr,
         door_to_backroomOpenTexture,
         game.findScene("backroom")
     );
-    scummbar_door_to_backroom->setDisplayName("Backroom Door");
-    scummbar_door_to_backroom->setEntryPosition(Vector2<>(90,85));
+    tavern_door_to_backroom->setDisplayName("Backroom Door");
+    tavern_door_to_backroom->setEntryPosition(Vector2<>(90,85));
 
-    scummbar_door_to_backroom->moveToScene(scummbar);
-    scummbar_door_to_backroom->setLayer(-1);
-    auto& door_to_backroom = scummbar_door_to_backroom;
-    auto scummbar_door_to_bar = std::make_shared<Door>(
+    tavern_door_to_backroom->moveToScene(tavern);
+    tavern_door_to_backroom->setLayer(-1);
+    auto& door_to_backroom = tavern_door_to_backroom;
+    auto tavern_door_to_bar = std::make_shared<Door>(
         "door_to_bar",
-        Vector2<>(32,72),
+        Vector2<>(32,52),
         nullptr,
         door_to_barOpenTexture,
-        game.findScene("scummbar")
+        game.findScene("tavern")
     );
-    scummbar_door_to_bar->setDisplayName("Bar Door");
-    scummbar_door_to_bar->setEntryPosition(Vector2<>(560,80));
+    tavern_door_to_bar->setDisplayName("Bar Door");
+    tavern_door_to_bar->setEntryPosition(Vector2<>(560,80));
 
-    scummbar_door_to_bar->moveToScene(scummbar);
-    scummbar_door_to_bar->setLayer(-1);
+    tavern_door_to_bar->moveToScene(tavern);
+    tavern_door_to_bar->setLayer(-1);
 
-    scummbar_table->setExamineText("It's a sturdy old table. I wonder how many drinks have been spilled on it.");
-    scummbar_table2->setExamineText("Another table. It matches the first one.");
-    scummbar_mug->setExamineText("A dented tin mug. It's empty.");
-    scummbar_stan->setTextFormat(stan_text_formatFormat);
-    scummbar_stan->setExamineText("A slick-looking salesman with\nan unnervingly wide smile.");
-    scummbar_door_to_backroom->setExamineText("A heavy wooden door leading further into the bar.");
-    scummbar_door_to_bar->setExamineText("The door back to the main bar.");
+    tavern_table->setExamineText("It's a sturdy old table. I wonder how many drinks have been spilled on it.");
+    tavern_table2->setExamineText("Another table. It matches the first one.");
+    tavern_mug->setExamineText("A dented tin mug. It's empty.");
+    tavern_merchant->setTextFormat(merchant_text_formatFormat);
+    tavern_merchant->setExamineText("A slick-looking salesman with\nan unnervingly wide smile.");
+    tavern_door_to_backroom->setExamineText("A heavy wooden door leading further into the bar.");
+    tavern_door_to_bar->setExamineText("The door back to the main bar.");
 
     // Players
-    guybrush->moveToScene(scummbar);
-    guybrush->setPosition(Vector2<>(80,80));
+    hero->moveToScene(tavern);
+    hero->setPosition(Vector2<>(80,80));
 
 
     // --- Startup configuration ---
-    game.setCurrentPlayer(guybrush);
-    guybrush->setVerb("walk");
+    game.setCurrentPlayer(hero);
+    hero->setVerb("walk");
     
     if (game.getCurrentPlayer() && game.getCurrentPlayer()->getScene()) {
         game.changeScene(game.getCurrentPlayer()->getScene());
     }
     
-    guybrush->moveToScene(scummbar);
+    hero->moveToScene(tavern);
 
     // --- UI Setup ---
     // Layouts (backgrounds, verb grid, inventory grid, verb-info label, pause
@@ -373,8 +371,8 @@ void ScriptLoader::loadGame(Game& game) {
 
     auto mainNode = std::make_shared<DialogueNode>();
     mainNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
-            stan->say(
-            tr("Hello Guybrush"),
+            merchant->say(
+            tr("Hello, stranger"),
             0.6f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
                 e.game.getCurrentPlayer()->say(
@@ -390,7 +388,7 @@ void ScriptLoader::loadGame(Game& game) {
 
     auto label2Node = std::make_shared<DialogueNode>();
     label2Node->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
-            stan->say(
+            merchant->say(
             tr("I'm fine,\nwhat about you?"),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
@@ -407,7 +405,7 @@ void ScriptLoader::loadGame(Game& game) {
 
     auto mugthanksNode = std::make_shared<DialogueNode>();
     mugthanksNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
-            stan->say(
+            merchant->say(
             tr("Best mug I've ever owned"),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
@@ -419,7 +417,7 @@ void ScriptLoader::loadGame(Game& game) {
 
     auto byelabelNode = std::make_shared<DialogueNode>();
     byelabelNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
-            stan->say(
+            merchant->say(
             tr("See you"),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
@@ -431,7 +429,7 @@ void ScriptLoader::loadGame(Game& game) {
 
     auto scripttestNode = std::make_shared<DialogueNode>();
     scripttestNode->setDialogueEvent(Event(std::function<void(EventInfo)>([=](EventInfo e) {
-            stan->say(
+            merchant->say(
             tr("Sure, go ahead!"),
             0.0f,
             Event(std::function<void(EventInfo)>([=](EventInfo e) {
@@ -449,7 +447,7 @@ void ScriptLoader::loadGame(Game& game) {
         "About that mug...",
         mugthanksNode
     );
-    mainNodeOption2->setCondition([]() { return Game::getInstance().getGameState().getFlag("gave_mug_to_stan"); });
+    mainNodeOption2->setCondition([]() { return Game::getInstance().getGameState().getFlag("gave_mug_to_merchant"); });
     auto mainNodeOption3 = std::make_shared<DialogueOption>(
         "I need to go",
         byelabelNode
@@ -473,21 +471,21 @@ void ScriptLoader::loadGame(Game& game) {
 
 
     // --- Register named interaction scripts ---
-    game.registerScript("give_mug_stan", give_mug_stan);
-    game.registerScript("push_stan", push_stan);
+    game.registerScript("give_mug_merchant", give_mug_merchant);
+    game.registerScript("push_merchant", push_merchant);
     game.registerScript("push_table", push_table);
     game.registerScript("use_mug_on_table", use_mug_on_table);
     game.registerScript("pull_table2", pull_table2);
     game.registerScript("dialogue_script_test", dialogue_script_test);
     game.registerScript("show_debug", show_debug);
 
-    stan->addVerbInteraction(game.getVerb("give"), "mug", game.scriptEvent("give_mug_stan"));
-    stan->addVerbInteraction(game.getVerb("talk"), Event([=](EventInfo e) {
+    merchant->addVerbInteraction(game.getVerb("give"), "mug", game.scriptEvent("give_mug_merchant"));
+    merchant->addVerbInteraction(game.getVerb("talk"), Event([=](EventInfo e) {
 		e.player.disableMovement();
 		e.game.getUI().setLayout(e.game.getUI().getDialogueLayout()->getName());
 		mainNode->enterNode();
     }));
-    stan->addVerbInteraction(game.getVerb("push"), game.scriptEvent("push_stan"));
+    merchant->addVerbInteraction(game.getVerb("push"), game.scriptEvent("push_merchant"));
     table->addVerbInteraction(game.getVerb("push"), game.scriptEvent("push_table"));
     table->addVerbInteraction(game.getVerb("use"), "mug", game.scriptEvent("use_mug_on_table"));
     table2->addVerbInteraction(game.getVerb("pull"), game.scriptEvent("pull_table2"));

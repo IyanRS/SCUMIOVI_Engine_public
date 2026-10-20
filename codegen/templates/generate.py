@@ -110,10 +110,10 @@ def parse_scene(scene_folder, player_ids):
     """
     Returns a dict:
       {
-        'name': 'scummBar',
+        'name': 'tavern',
         'walk': [ '100;113', '116;125', … ],
-        'bg':   [ {'tex':'SCUMM_Bar.png','pos':'0;0'}, … ],
-        'player': {'id':'Guybrush','pos':'80;80'},
+        'bg':   [ {'tex':'tavern.png','pos':'0;0'}, … ],
+        'player': {'id':'hero','pos':'80;80'},
         'objects': [ {'id':'table','tex':'table.png','pos':'157;115'}, … ]
       }
     """
@@ -327,8 +327,8 @@ def parse_text_format(row):
     Parses a single text format row.
     Expected fields: format_id,file,size,color,outline,position,shadow
     Examples:
-        default,arial.ttf,12,0xffffff,true,top,true
-        stan_text_format,arial.ttf,12,0x3e97e6,true,top,true
+        default,DejaVuSans.ttf,12,0xffffff,true,top,true
+        merchant_text_format,DejaVuSans.ttf,12,0x3e97e6,true,top,true
     """
     return {
         'format_id': row['format_id'].strip(),

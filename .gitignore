@@ -382,3 +382,5 @@ tests/build/
 !SDL3_ttf/lib/x64/
 !SDL3_ttf/lib/x86/
 !SDL3_ttf/lib/arm64/
+# Runtime save slots written by the game (cwd is SCUMIOVI_Engine/ when debugging)
+SCUMIOVI_Engine/save_*.json

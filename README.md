@@ -7,8 +7,8 @@ graphic adventure — a verb/interaction system, walkable areas with pathfinding
 an inventory, branching dialogue, animated actors, scene management and
 save/load — while game content is described in data and generated into C++.
 
-This repository contains the engine, a sample game (a small *Monkey Island*
-inspired scene), a data-driven code generator, and a unit-test suite.
+This repository contains the engine, a sample game (a small two-room tavern
+scene), a data-driven code generator, and a unit-test suite.
 
 ## Repository layout
 
@@ -19,6 +19,7 @@ inspired scene), a data-driven code generator, and a unit-test suite.
 | `game/`            | Data definitions for the sample game: `Verbs.csv`, `Objects.csv`, `Players.csv`, `Scenes/`, `Dialogues/`, `Interactions.csv`, `Combinations.csv`, `TextFormats.csv`, `Settings.csv`. |
 | `codegen/`         | Python + Jinja2 generator that turns `game/*.csv` into `SCUMIOVI_Game/GameData.cpp`. |
 | `assets/`          | Textures, fonts, locale files (`assets/locales/`), UI layouts (`assets/ui/`) and `keybindings.json`, all loaded at runtime. |
+| `tools/`           | `placeholder_art.py`, which draws the sample game's textures. |
 | `tests/`           | Catch2 unit tests. |
 | `third_party/`     | Vendored single-header libraries (`json.hpp`, `catch.hpp`). |
 | `SDL3/`, `SDL3_image/`, `SDL3_ttf/` | Third-party SDL libraries (headers + prebuilt Windows binaries). |
@@ -166,8 +167,8 @@ walk/idle. Games that don't call it are unaffected — `say()` just doesn't
 touch the animation, exactly as before.
 
 ```cpp
-guybrush->setTalkAnimations(talkRight, talkLeft, nullptr, nullptr);
-guybrush->say("I'm looking for a three-headed monkey.");
+hero->setTalkAnimations(talkRight, talkLeft, nullptr, nullptr);
+hero->say("I'm looking for the harbour master.");
 ```
 
 ## Cutscenes
@@ -181,14 +182,14 @@ require by hand:
 ```cpp
 Cutscene()
     .moveCamera(scene->getCamera(), pos, 2.0f)
-    .walk(guybrush, doorPos, 3.0f)
-    .say(guybrush, "Where's the map?")
+    .walk(hero, doorPos, 3.0f)
+    .say(hero, "Where's the map?")
     .parallel({
-        Cutscene().walk(stan, spot1, 1.5f),
+        Cutscene().walk(merchant, spot1, 1.5f),
         Cutscene().fadeToBlack(1.0f)
     })
     .changeScene(nextScene, 0.5f)
-    .disableMovementFor(guybrush)   // re-enabled automatically when it ends
+    .disableMovementFor(hero)       // re-enabled automatically when it ends
     .build();                       // -> Event
 ```
 
@@ -204,10 +205,10 @@ mirroring how dialogue and UI are authored:
 ```json
 {
   "name": "intro_cutscene",
-  "disableMovementFor": "guybrush",
+  "disableMovementFor": "hero",
   "steps": [
-    { "type": "walk", "object": "guybrush", "position": [120, 80], "seconds": 3.0 },
-    { "type": "say", "object": "guybrush", "text": "Where's the map?" },
+    { "type": "walk", "object": "hero", "position": [120, 80], "seconds": 3.0 },
+    { "type": "say", "object": "hero", "text": "Where's the map?" },
     { "type": "fadeToBlack", "seconds": 1.0 },
     { "type": "changeScene", "scene": "nextRoom", "fadeDuration": 0.5 },
     { "type": "script", "name": "someCustomEffect", "waitSeconds": 0.5 }
@@ -255,13 +256,12 @@ end-to-end:
   (`push`/`pull`/`open`/`close`/`lookat` were previously defined but unused).
 - **Examine text**: objects carry an `examine_text` column (`Objects.csv`)
   resolved automatically by the `lookat` verb's default event.
-- **Dialogue with state**: `game/Dialogues/stan.txt` branches on a flag
-  (`if:gave_mug_to_stan`) set by the `give_mug_stan` interaction script.
+- **Dialogue with state**: `game/Dialogues/merchant.txt` branches on a flag
+  (`if:gave_mug_to_merchant`) set by the `give_mug_merchant` interaction script.
 - **Item combinations**: `mug` used on `table` (`Combinations.csv`).
 - **Localization**: the pause menu has EN/ES buttons wired to `setLocale`.
-- **Multi-character party**: a second player, `otis`, is registered
-  (reusing Stan's existing sprite as a placeholder — no new art). **Tab**
-  switches the active party member via `switchToNextPlayer`.
+- **Multi-character party**: a second player, `deckhand`, waits in the
+  backroom. **Tab** switches the active party member via `switchToNextPlayer`.
 - **A second room**: `game/Scenes/backroom/` plus a `door_to_backroom` /
   `door_to_bar` pair of objects (`open` verb) demonstrate `changeScene` with
   a fade between two registered scenes.
@@ -269,11 +269,10 @@ end-to-end:
   `CutsceneLoader`, showcasing camera movement, `say`, and fades together.
   **Space** skips it (`skipCutscene`).
 
-**Placeholder assets you'll need to draw in:** `assets/textures/door.png`
-(used by both doors) and the `backroom.png` background referenced by
-`game/Scenes/backroom/Background.csv`. Missing textures are logged and
-skipped rather than crashing (`ResourceManager::loadTexture`), so the demo
-runs today with those two spots simply blank until real art is dropped in.
+**Art:** every texture in `assets/textures/` is placeholder programmer art
+drawn from simple shapes by `tools/placeholder_art.py` (needs Pillow). Tweak
+it and run `python tools/placeholder_art.py` to redraw them. Text is set in
+DejaVu Sans (`assets/fonts/`, license in `LICENSE-DejaVu.txt`).
 
 ## Building
 
@@ -328,3 +327,4 @@ new keybinding or UI button that points at a not-yet-declared script.
 - SDL3_ttf — text rendering.
 - [nlohmann/json](https://github.com/nlohmann/json) — save/load serialisation (single-header, vendored).
 - [Catch2](https://github.com/catchorg/Catch2) — unit testing (single-header, vendored).
+- [DejaVu Sans](https://dejavu-fonts.github.io/) — UI and dialogue font (Bitstream Vera license, see `assets/fonts/LICENSE-DejaVu.txt`).

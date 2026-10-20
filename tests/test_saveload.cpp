@@ -52,8 +52,8 @@ TEST_CASE("Scene name set/get", "[saveload][scene]") {
 	auto scene = std::make_shared<Scene>();
 	REQUIRE(scene->getName().empty());
 
-	scene->setName("scummbar");
-	REQUIRE(scene->getName() == "scummbar");
+	scene->setName("tavern");
+	REQUIRE(scene->getName() == "tavern");
 }
 
 TEST_CASE("Scene registry", "[saveload][game]") {

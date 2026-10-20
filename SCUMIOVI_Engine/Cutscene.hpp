@@ -25,10 +25,10 @@ class Player;
 //
 //   Cutscene()
 //       .moveCamera(scene->getCamera(), pos, 2.0f)
-//       .walk(guybrush, doorPos, 3.0f)
-//       .say(guybrush, "Where's the map?")
+//       .walk(hero, doorPos, 3.0f)
+//       .say(hero, "Where's the map?")
 //       .parallel({
-//           Cutscene().walk(stan, spot1, 1.5f),
+//           Cutscene().walk(merchant, spot1, 1.5f),
 //           Cutscene().fadeToBlack(1.0f)
 //       })
 //       .changeScene(nextScene, 0.5f)

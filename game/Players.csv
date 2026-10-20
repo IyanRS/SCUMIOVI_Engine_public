@@ -1,3 +1,3 @@
 id,animationMoveRight,animationMoveLeft,animationMoveUp,animationMoveDown,animationIdleRight,animationIdleLeft,animationIdleUp,animationIdleDown,text_format
-guybrush,guybrushWalkRight,guybrushWalkLeft,,,guybrushIdleRight,guybrushIdleLeft,,,default
-otis,otisIdleRight,otisIdleLeft,,,otisIdleRight,otisIdleLeft,,,stan_text_format
+hero,heroWalkRight,heroWalkLeft,,,heroIdleRight,heroIdleLeft,,,default
+deckhand,deckhandIdleRight,deckhandIdleLeft,,,deckhandIdleRight,deckhandIdleLeft,,,merchant_text_format

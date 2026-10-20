@@ -1,7 +1,7 @@
 key,value
 window_title,SCUMIOVI
-main_scene,scummbar
-main_character,guybrush
+main_scene,tavern
+main_character,hero
 cursor,cursor.png
 default_verb,walk
 default_text_format,default

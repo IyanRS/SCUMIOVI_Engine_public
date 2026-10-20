@@ -33,7 +33,7 @@ class GameObject : public Interactable, public std::enable_shared_from_this<Game
 	std::string name;
 	std::string displayName;
 	// True when the display name's casing must be shown exactly as written
-	// (proper nouns, acronyms — "Stan") instead of being
+	// (proper nouns, acronyms — "Vince") instead of being
 	// auto-cased by verb syntax lines. Set via a leading '=' in the name
 	// passed to setDisplayName.
 	bool fixedCaseDisplayName = false;

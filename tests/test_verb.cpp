@@ -199,10 +199,10 @@ TEST_CASE("Fixed-case names work for proper nouns mid-sentence", "[verbsyntax][c
     VerbSyntax vs({ "Give", "Give $selected to $target" });
     auto mug = std::make_shared<GameObject>("mug", Vector2<>(0, 0));
     mug->setDisplayName("Mug");
-    auto stan = std::make_shared<GameObject>("stan", Vector2<>(0, 0));
-    stan->setDisplayName("=Stan");
+    auto merchant = std::make_shared<GameObject>("merchant", Vector2<>(0, 0));
+    merchant->setDisplayName("=Vince");
 
-    REQUIRE(vs.getInfo(mug, stan) == "Give mug to Stan");
+    REQUIRE(vs.getInfo(mug, merchant) == "Give mug to Vince");
 }
 
 TEST_CASE("VerbSyntax localizes display names before casing them", "[verbsyntax][casing][localization]") {

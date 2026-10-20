@@ -246,7 +246,7 @@ std::string& GameObject::getDisplayName() {
 	return displayName;
 }
 
-// A leading '=' in game data (e.g. "=Stan") declares the
+// A leading '=' in game data (e.g. "=Vince") declares the
 // display name's casing as fixed: verb syntax lines insert it exactly as
 // written instead of auto-casing it to its position in the sentence.
 constexpr char FIXED_CASE_MARKER = '=';

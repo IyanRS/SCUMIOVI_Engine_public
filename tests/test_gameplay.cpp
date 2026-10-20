@@ -459,7 +459,7 @@ TEST_CASE("Gameplay logic", "[gameplay]") {
         auto scene = std::make_shared<Scene>();
         game.changeScene(scene, 0.0f);
 
-        // An NPC like Stan: interactions but no default verb.
+        // An NPC like the merchant: interactions but no default verb.
         auto npc = std::make_shared<GameObject>("hover_npc", Vector2<>(0, 0), Vector2<>(10, 10));
         npc->addVerbInteraction(game.pickupVerb, Event([](EventInfo) {}));
         scene->addGameObject(npc);
